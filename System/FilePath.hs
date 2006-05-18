@@ -1,4 +1,8 @@
 
+{- |
+    For details see <http://www.cs.york.ac.uk/~ndm/projects/libraries.php>
+-}
+
 module System.FilePath where
 
 import Data.Maybe(isJust)
