@@ -1,10 +1,10 @@
 Name:           FilePath
 Version:        1.0
-License:        GPL
+License:        BSD3
 Author:         Neil Mitchell
 Homepage:       http://www-users.cs.york.ac.uk/~ndm/projects/libraries.php
 Category:       System
 Build-Depends:  base
 Synopsis:       Combinator library for file paths.
 Exposed-modules:
-        System.PathUtils
+        System.FilePath
