@@ -23,6 +23,16 @@ module System.FilePath
     extSeparator, isExtSeparator,
     
     getExtension, setExtension, addExtension, dropExtension, hasExtension, (<.>),
+    splitPath, getPath, pathEqual,
+    getFullName, getShortName,
+    getDrive, dropDrive,
+    getDirectoryName,
+    getFileName,
+    getPathElements, joinPathElements,
+    normaliseSlash, normalisePath,
+    isRelative, isAbsolute,
+    combine, (</>),
+    getDirectoryList, ensureDirectory,
     )
     where
 
@@ -116,7 +126,7 @@ getPath = do variable <- getEnv "PATH"
 
 -- * Name Expansion and Contraction
 
--- | If you call getFullName first this has a much better chance of working!
+-- | If you call 'getFullName' first this has a much better chance of working!
 pathEqual :: FilePath -> FilePath -> Bool
 pathEqual a b = f a == f b
     where
