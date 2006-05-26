@@ -4,6 +4,14 @@
 -}
 
 module System.FilePath
+    (
+    FilePath,
+    pathSeparator, isPathSeparator,
+    fileSeparator, isFileSeparator,
+    extSeparator, isExtSeparator,
+    
+    getExtension, setExtension, addExtension, dropExtension
+    )
     where
 
 import Data.Maybe(isJust)
