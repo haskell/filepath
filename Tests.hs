@@ -3,8 +3,8 @@ module Main where
 
 -- import the relevant modules under test
 import System.FilePath
---import qualified System.FilePath.Windows as W
---import qualified System.FilePath.Posix as P
+import qualified System.FilePath.Windows as W
+import qualified System.FilePath.Posix as P
 
 
 -- framework support for the various tests
@@ -18,11 +18,21 @@ instance Monad Test where
     
 
 (===) :: Eq a => a -> a -> Test ()
-a === b | a == b = Test 1 []
-        | a /= b = Test 1 [1]
+a === b = bool $ a == b
+
+bool :: Bool -> Test ()
+bool True  = Test 1 []
+bool False = Test 1 [1]
 
 
 tests = do
+    W.pathSeparator === '\\'
+    P.pathSeparator === '/'
+    bool $ all W.isPathSeparator "\\/"
+    W.fileSeparator === ';'
+    P.fileSeparator === ':'
+    extSeparator === '.'
+
     getExtension "file.txt" === ".txt"
     getExtension "file" === ""
     getExtension "file/file.txt" === ".txt"
@@ -37,8 +47,14 @@ tests = do
     setExtension "file.fred.bob" "txt" === "file.fred.txt"
     
     dropExtension "file.txt" === "file"
+    dropExtension "file.txt.bob" === "file.txt"
     dropExtension "file.txt/file.bob" === "file.txt/file"
     dropExtension "file/file" === "file/file"
+    dropExtension "file.." === "file."
+    
+    hasExtension "file.txt" === True
+    hasExtension "file/file.txt" === True
+    hasExtension "file.txt/file" === False
 
 
 main = if null failed then
