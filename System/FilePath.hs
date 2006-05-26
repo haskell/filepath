@@ -1,6 +1,18 @@
 
 {- |
-    For details see <http://www.cs.york.ac.uk/~ndm/projects/libraries.php>
+    Module      :  System.FilePath
+    Copyright   :  (c) Neil Mitchell 2005-2006
+    License     :  BSD3
+ 
+    Maintainer  :  http://www.cs.york.ac.uk/~ndm/
+    Stability   :  in-progress
+    Portability :  portable
+
+    A library for FilePath manipulations, designed to be cross platform.
+    This library will select the correct type of FilePath's for the
+    platform the code is running on at runtime.
+
+    For more details see <http://www.cs.york.ac.uk/~ndm/projects/libraries.php>
 -}
 
 module System.FilePath
