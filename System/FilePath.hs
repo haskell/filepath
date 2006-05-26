@@ -22,7 +22,7 @@ module System.FilePath
     fileSeparator, isFileSeparator,
     extSeparator, isExtSeparator,
     
-    getExtension, setExtension, addExtension, dropExtension
+    getExtension, setExtension, addExtension, dropExtension, hasExtension, (<.>),
     )
     where
 
@@ -168,7 +168,7 @@ getExtension x = if hasExtension x2
 -- | Set the extension of a file, overwriting one if already present
 setExtension :: FilePath -> String -> FilePath
 setExtension file "" = dropExtension file
-setExtension file (x:xs) | x == extSeparator = setExtension file xs
+setExtension file (x:xs) | isExtSeparator x = setExtension file xs
 setExtension file xs = addExtension (dropExtension file) xs
 
 -- | Alias, for people who like that sort of thing
@@ -184,12 +184,12 @@ dropExtension x = reverse $ drop lext $ reverse x
 -- | Add an extension, even if there is already one there
 addExtension :: FilePath -> String -> FilePath
 addExtension file "" = file
-addExtension file xs@(x:_) | x == extSeparator = file ++ xs
+addExtension file xs@(x:_) | isExtSeparator x = file ++ xs
                            | otherwise = file ++ [extSeparator] ++ xs
 
 -- | Does the given filename have an extension
 hasExtension :: FilePath -> Bool
-hasExtension x = extSeparator `elem` getFileName x
+hasExtension x = any isExtSeparator $ getFileName x
 
 
 -- * Split Up Path Elements
