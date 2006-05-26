@@ -16,6 +16,10 @@ import System.Environment(getEnv)
 import System.Directory(getCurrentDirectory, getDirectoryContents, doesDirectoryExist, createDirectory)
 
 
+infixr 7  <.>
+infixr 5  </>
+
+
 -- * Platform Abstraction Methods (private)
 
 data Force = ForcePosix
