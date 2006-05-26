@@ -3,7 +3,8 @@
     For details see <http://www.cs.york.ac.uk/~ndm/projects/libraries.php>
 -}
 
-module System.FilePath where
+module System.FilePath
+    where
 
 import Data.Maybe(isJust)
 import Data.Char(toLower)
@@ -15,7 +16,16 @@ import System.Environment(getEnv)
 import System.Directory(getCurrentDirectory, getDirectoryContents, doesDirectoryExist, createDirectory)
 
 
--- * Platform Abstraction Methods
+-- * Platform Abstraction Methods (private)
+
+data Force = ForcePosix
+           | ForceNone
+           | ForceWindows
+           deriving Eq
+
+forceEffectView = let forceEffect = ForceNone
+                  in forceEffect
+
 
 -- | What is the name of the OS? The real name, Hugs and GHC get this wrong...
 osName :: String
@@ -26,11 +36,11 @@ osName = if compilerName == "yhc" || os /= "mingw32"
 
 -- | Is the operating system Unix or Linux like
 isUnix :: Bool
-isUnix = not isWindows
+isUnix = not isWindows && forceEffectView /= ForceWindows
 
 -- | Is the operating system Windows like
 isWindows :: Bool
-isWindows = osName == "windows"
+isWindows = osName == "windows" && forceEffectView /= ForcePosix
 
 
 -- FIXME - windows should have \\ first, but this breaks various assumptions in
