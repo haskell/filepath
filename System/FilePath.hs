@@ -52,17 +52,28 @@ isWindows = osName == "windows" && forceEffectView /= ForcePosix
 
 -- | A list of the possible path separators, Unix = @\/@, Windows = @\/\\@.
 --   These go between path elements in a file
-pathSeparators :: [Char]
-pathSeparators = if isWindows then "/\\" else "/"
+pathSeparator :: Char
+pathSeparator = if isWindows then '\\' else '/'
+
+isPathSeparator :: Char -> Bool
+isPathSeparator x = x `elem` (if isWindows then "\\/" else "/")
+
 
 -- | A list of possible file separators, between the $PATH variable
 --   Windows = @;@, Unix = @:@
-fileSeparators :: [Char]
-fileSeparators = if isWindows then ";" else ":"
+fileSeparator :: Char
+fileSeparator = if isWindows then ';' else ':'
+
+isFileSeparator :: Char -> Bool
+isFileSeparator x = x == fileSeparator
+
 
 -- | File extension character, '.' on all systems
-extensionChar :: Char
-extensionChar = '.'
+extSeparator :: Char
+extSeparator = '.'
+
+isExtSeparator :: Char -> Bool
+isExtSeparator x = x == extSeparator
 
 
 -- * $PATH methods
@@ -75,7 +86,7 @@ splitPath var = do f var
                  else if null pre then f (tail post)
                  else if null post then [pre]
                  else pre : f (tail post)
-            where (pre, post) = break (`elem` fileSeparators) xs
+            where (pre, post) = break isFileSeparator xs
 
 -- | Get a list of filepaths in the $PATH
 getPath :: IO [FilePath]
@@ -118,7 +129,7 @@ getShortName x =
         f (a:as) (b:bs) | noLeadingSlash a == noLeadingSlash b = f as bs
         f as bs = (as,bs)
         
-        noLeadingSlash (x:xs) | x `elem` pathSeparators = xs
+        noLeadingSlash (x:xs) | isPathSeparator x = xs
         noLeadingSlash xs = xs
         
         dropLeadingSlash (x:xs) = noLeadingSlash x : xs
@@ -130,14 +141,14 @@ getShortName x =
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise
 getExtension :: FilePath -> String
 getExtension x = if hasExtension x2
-                 then extensionChar : (reverse $ takeWhile (/= extensionChar) $ reverse x2)
+                 then extSeparator : (reverse $ takeWhile (not . isExtSeparator) $ reverse x2)
                  else ""
     where x2 = getFileName x
 
 -- | Set the extension of a file, overwriting one if already present
 setExtension :: FilePath -> String -> FilePath
 setExtension file "" = dropExtension file
-setExtension file (x:xs) | x == extensionChar = setExtension file xs
+setExtension file (x:xs) | x == extSeparator = setExtension file xs
 setExtension file xs = addExtension (dropExtension file) xs
 
 -- | Alias, for people who like that sort of thing
@@ -153,12 +164,12 @@ dropExtension x = reverse $ drop lext $ reverse x
 -- | Add an extension, even if there is already one there
 addExtension :: FilePath -> String -> FilePath
 addExtension file "" = file
-addExtension file xs@(x:_) | x == extensionChar = file ++ xs
-                           | otherwise = file ++ [extensionChar] ++ xs
+addExtension file xs@(x:_) | x == extSeparator = file ++ xs
+                           | otherwise = file ++ [extSeparator] ++ xs
 
 -- | Does the given filename have an extension
 hasExtension :: FilePath -> Bool
-hasExtension x = extensionChar `elem` getFileName x
+hasExtension x = extSeparator `elem` getFileName x
 
 
 -- * Split Up Path Elements
@@ -168,7 +179,7 @@ hasExtension x = extensionChar `elem` getFileName x
 --   Do not return a trailing \\ character
 getDrive :: FilePath -> FilePath
 getDrive x | isUnix = ""
-getDrive ('\\':'\\':xs) = "\\\\" ++ takeWhile (\x -> not (x `elem` pathSeparators)) xs
+getDrive ('\\':'\\':xs) = "\\\\" ++ takeWhile (not . isPathSeparator) xs
 getDrive (x:':':_) = [x,':']
 getDrive _ = ""
 
@@ -188,7 +199,7 @@ getDirectoryName x = case getPathElements x of
 getFileName :: FilePath -> FilePath
 getFileName x = case getPathElements (dropDrive x) of
                     [] -> ""
-                    xs -> dropWhile (`elem` pathSeparators) $ last xs
+                    xs -> dropWhile isPathSeparator $ last xs
 
 
 -- | return each path, concat res = input
@@ -206,7 +217,7 @@ getPathElements x = if null drive
         drive = getDrive x2
     
         f acc [] = outAcc acc []
-        f acc (x:xs) | x `elem` pathSeparators = outAcc acc $ f [x] xs
+        f acc (x:xs) | isPathSeparator x = outAcc acc $ f [x] xs
                      | otherwise = f (x:acc) xs
         
         outAcc [] rest = rest
@@ -218,8 +229,8 @@ joinPathElements :: [FilePath] -> FilePath
 joinPathElements [] = ""
 joinPathElements (x:xs) = x ++ concatMap f xs
     where
-        f xs@(x:_) | x `elem` pathSeparators = xs
-        f x = head pathSeparators : x
+        f xs@(x:_) | isPathSeparator x = xs
+        f x = pathSeparator : x
 
 
 -- | remove the slash at the end, if there is one
@@ -230,8 +241,8 @@ normaliseSlash x = drive ++ f (dropDrive x)
     where
         drive = getDrive x
         
-        f [x] | x `elem` pathSeparators = []
-        f (a:b:xs) | (a `elem` pathSeparators) && (b `elem` pathSeparators) = f (a:xs)
+        f [x] | isPathSeparator x = []
+        f (a:b:xs) | isPathSeparator a && isPathSeparator b = f (a:xs)
         f (x:xs) = x : f xs
         f [] = []
 
@@ -239,8 +250,8 @@ normaliseSlash x = drive ++ f (dropDrive x)
 normalisePath :: FilePath -> FilePath
 normalisePath = joinPathElements . f . getPathElements . normaliseSlash
     where
-        f ([y,'.']:x) | y `elem` pathSeparators = f x
-        f ([y,'.','.']:x:xs) | y `elem` pathSeparators = f xs
+        f ([y,'.']:x) | isPathSeparator y = f x
+        f ([y,'.','.']:x:xs) | isPathSeparator y = f xs
         f (x:xs) = x : f xs
         f [] = []
 
@@ -272,7 +283,7 @@ combine a b = if isRelative b
                 move = g y
         f xs ys = joinPathElements (xs ++ ys)
         
-        g (x:xs) | x `elem` pathSeparators = g xs
+        g (x:xs) | isPathSeparator x = g xs
         g "." = Just 0
         g ".." = Just 1
         g _ = Nothing
