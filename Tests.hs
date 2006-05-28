@@ -6,6 +6,7 @@ import System.FilePath
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 
+import Test.QuickCheck
 
 -- framework support for the various tests
 data Test a = Test Int [Int]
@@ -23,6 +24,15 @@ a === b = bool $ a == b
 bool :: Bool -> Test ()
 bool True  = Test 1 []
 bool False = Test 1 [1]
+
+data QFilePath = QFilePath FilePath
+                 deriving Show
+
+instance Arbitrary QFilePath where
+    arbitrary = vector 25 >>= return . QFilePath
+
+instance Arbitrary Char where
+    arbitrary = oneof $ map return "./:\\abcd"
 
 
 tests = do
@@ -62,3 +72,6 @@ main = if null failed then
        else
             putStrLn $ "FAILURES: " ++ show failed
     where (Test count failed) = tests
+
+
+extTest (QFilePath x) = null (getExtension x) /= hasExtension x
