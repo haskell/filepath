@@ -168,6 +168,9 @@ getShortName x =
 
 -- * Extension Methods
 
+splitExtension :: FilePath -> (String, String)
+splitExtension x = (dropExtension x, getExtension x)
+
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise
 getExtension :: FilePath -> String
 getExtension x = if hasExtension x2
