@@ -69,8 +69,8 @@ osName = if compilerName == "yhc" || os /= "mingw32"
 
 
 -- | Is the operating system Unix or Linux like
-isUnix :: Bool
-isUnix = not isWindows && forceEffectView /= ForceWindows
+isPosix :: Bool
+isPosix = not isWindows && forceEffectView /= ForceWindows
 
 -- | Is the operating system Windows like
 isWindows :: Bool
@@ -130,7 +130,7 @@ getPath = do variable <- getEnv "PATH"
 pathEqual :: FilePath -> FilePath -> Bool
 pathEqual a b = f a == f b
     where
-        f x | isUnix    = normaliseSlash x
+        f x | isPosix   = normaliseSlash x
             | isWindows = map toLower $ normaliseSlash x
 
 
@@ -208,7 +208,7 @@ hasExtension x = any isExtSeparator $ getFileName x
 --   On windows it handles share names (@\\\\swale@) and drive names (@C:@)
 --   Do not return a trailing \\ character
 getDrive :: FilePath -> FilePath
-getDrive x | isUnix = ""
+getDrive x | isPosix = ""
 getDrive ('\\':'\\':xs) = "\\\\" ++ takeWhile (not . isPathSeparator) xs
 getDrive (x:':':_) = [x,':']
 getDrive _ = ""
@@ -290,7 +290,7 @@ normalisePath = joinPathElements . f . getPathElements . normaliseSlash
 
 -- | Is a path relative, or is it fixed to the root
 isRelative :: FilePath -> Bool
-isRelative x | isUnix = not $ "/" `isPrefixOf` x
+isRelative x | isPosix = not $ "/" `isPrefixOf` x
 isRelative x = null $ getDrive x
 
 
