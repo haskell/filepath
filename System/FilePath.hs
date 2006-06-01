@@ -33,17 +33,19 @@ module System.FilePath
     isRelative, isAbsolute,
     combine, (</>),
     getDirectoryList, ensureDirectory,
+    getNewTemporaryDirectory, -- is this name too long? should it be getTmpDir?
+    getNewTemporaryFilename
     )
     where
 
-import Data.Maybe(isJust)
+import Data.Maybe(isJust, fromMaybe)
 import Data.Char(toLower)
 import Data.List(isPrefixOf)
 
 import System.Info(os, compilerName)
 
 import System.Environment(getEnv)
-import System.Directory(getCurrentDirectory, getDirectoryContents, doesDirectoryExist, createDirectory)
+import System.Directory(getCurrentDirectory, getDirectoryContents, doesFileExist, doesDirectoryExist, createDirectory)
 
 
 infixr 7  <.>
@@ -189,7 +191,7 @@ setExtension file xs = addExtension (dropExtension file) xs
 (<.>) :: FilePath -> String -> FilePath
 (<.>) = setExtension
 
--- | Remove the extension, and any . following it
+-- | Remove last extension, and any . following it
 dropExtension :: FilePath -> FilePath
 dropExtension x = reverse $ drop lext $ reverse x
     where lext = length $ getExtension x
@@ -361,4 +363,43 @@ filterM f (x:xs) = do res <- f x
                       rest <- filterM f xs
                       return $ if res then x : rest else rest
 
+-- * get temporary file and directory names (beta .. I think it con be done much better Marc)
 
+-- | simply returns [prefix0suffix,prefix1suffix, ...]
+getSystemTempDir :: IO String -- IO because System dedection might be IO, too
+getSystemTempDir = do
+  let win = isWindows
+  if win then return "c:\\temp" -- should we take the users temp dir here?
+	 else return "/tmp"
+
+simpleTempNameProvider :: String -> String -> [String]
+simpleTempNameProvider prefix suffix = [ prefix ++ (show i) ++ suffix | i <- [0..]]
+
+
+-- | helper function returns new dir or file dependend on doesExist
+getNewTemporaryFilePath_ :: (FilePath -> IO Bool) -> (Maybe FilePath)  ->
+	[FilePath] -> IO FilePath
+getNewTemporaryFilePath_ doesExist tmpDir list = do
+  tmpDir_  <- maybe getSystemTempDir return tmpDir
+  takeNextNameWhileExists tmpDir_  list
+     where takeNextNameWhileExists tmpDir_ (name:list) =
+	     let tempname = tmpDir_ </> name  in do
+		 exists <-  doesExist tempname
+		 if exists then takeNextNameWhileExists tmpDir_ list -- try next
+			   else return tempname
+
+-- | returns a temporary filepath named tmpdir0, tmpdir1 if it exists etc
+-- | location in case Nothing is getSystemTempDir
+-- | result can be used for getNewTemporaryFilename if your application needs more 
+-- | than a few temporary files
+getNewTemporaryDirectory :: (Maybe FilePath) -> (IO FilePath)
+getNewTemporaryDirectory tmpDir = getNewTemporaryFilePath_ 
+      doesFileExist  tmpDir (simpleTempNameProvider "tmpdir" "" )
+    -- should we add the application name here woild be user friendly
+
+-- | returns a temporary filename named tmp0.tmp, tmp1.tmp if it exists etc
+
+-- | location in case Nothing is getSystemTempDir
+getNewTemporaryFilename :: (Maybe FilePath) -> IO FilePath
+getNewTemporaryFilename tmpDir = getNewTemporaryFilePath_ 
+      doesDirectoryExist  tmpDir (simpleTempNameProvider "tmp" ".tmp" )
