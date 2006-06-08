@@ -17,22 +17,37 @@
 
 module System.FilePath
     (
+    -- * The basic functions
     FilePath,
     pathSeparator, isPathSeparator,
     fileSeparator, isFileSeparator,
     extSeparator, isExtSeparator,
     
+    -- * Extension methods
+    splitExtension, joinExtension,
     getExtension, setExtension, addExtension, dropExtension, hasExtension, (<.>),
-    splitPath, getPath, pathEqual,
-    getFullName, getShortName,
-    getDrive, dropDrive,
-    getDirectoryName,
-    getFileName,
-    getPathElements, joinPathElements,
-    normaliseSlash, normalisePath,
-    isRelative, isAbsolute,
+    
+    -- * Drive methods
+    getDrive,
+    
+    -- * Operations on a filepath, as a list of directories
+    splitFileName, joinFileName,
+    dropFileName, getFileName, setFileName, addFileName,
+    splitPath, joinPath,
     combine, (</>),
+    
+    -- * File name manipulators
+    equalFilePath, fullFilePath, shortFilePath,
+    isRelative, isAbsolute, isValid, makeValid,
+    normaliseSlash, normalisePath, normalise,
+    
+    -- * Path methods (environment $PATH)
+    splitFiles, getPath,
+    
+    -- * Directory operations
     getDirectoryList, ensureDirectory,
+    
+    -- * Temporary file operations
     getNewTemporaryDirectory, -- is this name too long? should it be getTmpDir?
     getNewTemporaryFilename
     )
@@ -79,9 +94,6 @@ isWindows :: Bool
 isWindows = osName == "windows" && forceEffectView /= ForcePosix
 
 
--- FIXME - windows should have \\ first, but this breaks various assumptions in
--- the compiler, its a bit unix specific
-
 -- | A list of the possible path separators, Unix = @\/@, Windows = @\/\\@.
 --   These go between path elements in a file
 pathSeparator :: Char
@@ -111,50 +123,50 @@ isExtSeparator x = x == extSeparator
 -- * $PATH methods
 
 -- | Take a string, split it on the "fileSeparators" character
-splitPath :: String -> [FilePath]
-splitPath var = do f var
+splitFiles :: String -> [FilePath]
+splitFiles var = do f var
     where
         f xs = if null pre && null post then []
-                 else if null pre then f (tail post)
-                 else if null post then [pre]
-                 else pre : f (tail post)
+               else if null pre then f (tail post)
+               else if null post then [pre]
+               else pre : f (tail post)
             where (pre, post) = break isFileSeparator xs
 
 -- | Get a list of filepaths in the $PATH
 getPath :: IO [FilePath]
 getPath = do variable <- getEnv "PATH"
-             return $ splitPath variable
+             return $ splitFiles variable
 
 
 -- * Name Expansion and Contraction
 
 -- | If you call 'getFullName' first this has a much better chance of working!
-pathEqual :: FilePath -> FilePath -> Bool
-pathEqual a b = f a == f b
+equalFilePath :: FilePath -> FilePath -> Bool
+equalFilePath a b = f a == f b
     where
         f x | isPosix   = normaliseSlash x
             | isWindows = map toLower $ normaliseSlash x
 
 
 -- | Expand out a filename to its full name, with the current directory factored in
-getFullName :: FilePath -> IO FilePath
-getFullName x = do cur <- getCurrentDirectory
-                   return $ combine cur x
+fullFilePath :: FilePath -> IO FilePath
+fullFilePath x = do cur <- getCurrentDirectory
+                    return $ combine cur x
 
 -- | Contract a filename, based on its current directory
-getShortName :: FilePath -> IO FilePath
-getShortName x =
+shortFilePath :: FilePath -> IO FilePath
+shortFilePath x =
     do
         cur <- getCurrentDirectory
-        let xelem = getPathElements (normalisePath x)
-            (rescur,resfile) = f (getPathElements cur) xelem
+        let xelem = splitPath (normalisePath x)
+            (rescur,resfile) = f (splitPath cur) xelem
             lrescur = length rescur
             
         return $
             if lrescur == 0 then
-                joinPathElements $ dropLeadingSlash resfile
+                joinPath $ dropLeadingSlash resfile
             else if lrescur < 3 then
-                joinPathElements (replicate lrescur ".." ++ resfile)
+                joinPath (replicate lrescur ".." ++ resfile)
             else
                 x
     where
@@ -171,30 +183,34 @@ getShortName x =
 -- * Extension Methods
 
 splitExtension :: FilePath -> (String, String)
-splitExtension x = (dropExtension x, getExtension x)
+splitExtension x = case d of
+                       "" -> (x,"")
+                       (y:ys) -> (a ++ reverse ys, y : reverse c)
+    where
+        (a,b) = splitFileName x
+        (c,d) = break isExtSeparator $ reverse b
+
+
+joinExtension :: String -> String -> FilePath
+joinExtension = addExtension
 
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise
 getExtension :: FilePath -> String
-getExtension x = if hasExtension x2
-                 then extSeparator : (reverse $ takeWhile (not . isExtSeparator) $ reverse x2)
-                 else ""
-    where x2 = getFileName x
+getExtension x = snd $ splitExtension x
 
 -- | Set the extension of a file, overwriting one if already present
 setExtension :: FilePath -> String -> FilePath
-setExtension file "" = dropExtension file
-setExtension file (x:xs) | isExtSeparator x = setExtension file xs
-setExtension file xs = addExtension (dropExtension file) xs
+setExtension x y = joinExtension a y
+    where (a,b) = splitExtension x
 
 -- | Alias, for people who like that sort of thing
 --   Probably needs a fixity and precedence...
 (<.>) :: FilePath -> String -> FilePath
-(<.>) = setExtension
+(<.>) = addExtension
 
 -- | Remove last extension, and any . following it
 dropExtension :: FilePath -> FilePath
-dropExtension x = reverse $ drop lext $ reverse x
-    where lext = length $ getExtension x
+dropExtension x = fst $ splitExtension x
 
 -- | Add an extension, even if there is already one there
 addExtension :: FilePath -> String -> FilePath
@@ -219,22 +235,35 @@ getDrive (x:':':_) = [x,':']
 getDrive _ = ""
 
 
--- | Remove the drive from a file path, if it has one
-dropDrive :: FilePath -> FilePath
-dropDrive x = drop (length $ getDrive x) x
-
 
 -- | Get the directory name, move up one level
 getDirectoryName :: FilePath -> FilePath
-getDirectoryName x = case getPathElements x of
+getDirectoryName x = case splitPath x of
                         [] -> ""
                         xs -> concat (init xs)
 
+
+splitFileName :: FilePath -> (String, String)
+splitFileName x = (reverse b, reverse a)
+    where (a,b) = break isPathSeparator $ reverse x
+
+
+joinFileName :: FilePath -> String -> FilePath
+joinFileName x y = x ++ y
+
+
+addFileName :: FilePath -> String -> FilePath
+addFileName x y = x ++ y
+
+setFileName :: FilePath -> String -> FilePath
+setFileName x y = x ++ y
+
+dropFileName :: FilePath -> FilePath
+dropFileName x = x
+
 -- | Get the file name
 getFileName :: FilePath -> FilePath
-getFileName x = case getPathElements (dropDrive x) of
-                    [] -> ""
-                    xs -> dropWhile isPathSeparator $ last xs
+getFileName x = snd $ splitFileName x
 
 
 -- | return each path, concat res = input
@@ -243,10 +272,8 @@ getFileName x = case getPathElements (dropDrive x) of
 --
 --   slashes are attached to the front of each element
 --   i.e. \/file\/path -> [\"\/file\", \"\/path\"]
-getPathElements :: FilePath -> [FilePath]
-getPathElements x = if null drive
-                    then f "" x2
-                    else drive : f "" (dropDrive x2)
+splitPath :: FilePath -> [FilePath]
+splitPath x = f "" x2
     where
         x2 = normaliseSlash x
         drive = getDrive x2
@@ -260,9 +287,9 @@ getPathElements x = if null drive
 
 
 -- | Join path elements back together
-joinPathElements :: [FilePath] -> FilePath
-joinPathElements [] = ""
-joinPathElements (x:xs) = x ++ concatMap f xs
+joinPath :: [FilePath] -> FilePath
+joinPath [] = ""
+joinPath (x:xs) = x ++ concatMap f xs
     where
         f xs@(x:_) | isPathSeparator x = xs
         f x = pathSeparator : x
@@ -272,10 +299,8 @@ joinPathElements (x:xs) = x ++ concatMap f xs
 -- | remove multiple adjacent slashes
 -- | ignore the drive name
 normaliseSlash :: FilePath -> FilePath
-normaliseSlash x = drive ++ f (dropDrive x)
+normaliseSlash x = f x
     where
-        drive = getDrive x
-        
         f [x] | isPathSeparator x = []
         f (a:b:xs) | isPathSeparator a && isPathSeparator b = f (a:xs)
         f (x:xs) = x : f xs
@@ -283,12 +308,25 @@ normaliseSlash x = drive ++ f (dropDrive x)
 
 -- | remove .\/ and ..\/x\/
 normalisePath :: FilePath -> FilePath
-normalisePath = joinPathElements . f . getPathElements . normaliseSlash
+normalisePath = joinPath . f . splitPath . normaliseSlash
     where
         f ([y,'.']:x) | isPathSeparator y = f x
         f ([y,'.','.']:x:xs) | isPathSeparator y = f xs
         f (x:xs) = x : f xs
         f [] = []
+
+normalise :: FilePath -> FilePath
+normalise = map f . normalisePath
+    where
+        f x | isPathSeparator x = pathSeparator
+            | otherwise = x
+
+
+isValid :: FilePath -> Bool
+isValid _ = False
+
+makeValid :: FilePath -> FilePath
+makeValid x = x
 
 
 -- * Combine Two Existing Paths
@@ -307,16 +345,16 @@ isAbsolute = not . isRelative
 -- | Combine two paths, if the right path 'isAbsolute', then it returns the second
 combine :: FilePath -> FilePath -> FilePath
 combine a b = if isRelative b
-              then f (getPathElements a) (getPathElements b)
+              then f (splitPath a) (splitPath b)
               else b
     where
-        f [] ys = joinPathElements ys
+        f [] ys = joinPath ys
         f xs (y:ys) | isJust move = case move of
                 Just 0 -> f xs ys
                 Just 1 -> f (init xs) ys
             where
                 move = g y
-        f xs ys = joinPathElements (xs ++ ys)
+        f xs ys = joinPath (xs ++ ys)
         
         g (x:xs) | isPathSeparator x = g xs
         g "." = Just 0
@@ -340,12 +378,12 @@ getDirectoryList path = do x <- getDirectoryContents path
 -- |   for example ensureDirectory \".\/One\/Two\/Three\"
 -- | would create the directory \"Two\" and \"Three\" if \".\" and \"One\" already existed.
 ensureDirectory :: FilePath -> IO ()
-ensureDirectory path = f $ getPathElements path
+ensureDirectory path = f $ splitPath path
     where
         f [] = return ()
         f xs =
             do let (initx,lastx) = (init xs, last xs)
-                   path = joinPathElements xs
+                   path = joinPath xs
                exists <- doesDirectoryExist path
                if exists then
                    return ()

@@ -21,6 +21,12 @@ instance Monad Test where
 (===) :: Eq a => a -> a -> Test ()
 a === b = bool $ a == b
 
+a =/= b = bool $ a /= b
+
+with :: String -> Test () -> Bool
+with msg (Test _ []) = True
+with msg (Test _ fs) = error $ "Failed tests using " ++ show msg ++ ", on " ++ show fs
+
 bool :: Bool -> Test ()
 bool True  = Test 1 []
 bool False = Test 1 [1]
@@ -36,6 +42,7 @@ instance Arbitrary Char where
 
 
 tests = do
+    -- tests of the basic operations
     W.pathSeparator === '\\'
     P.pathSeparator === '/'
     bool $ all W.isPathSeparator "\\/"
@@ -43,28 +50,19 @@ tests = do
     P.fileSeparator === ':'
     extSeparator === '.'
 
-    getExtension "file.txt" === ".txt"
-    getExtension "file" === ""
-    getExtension "file/file.txt" === ".txt"
-    getExtension "file.txt/boris" === ""
-    getExtension "file.txt/boris.ext" === ".ext"
-    getExtension "file/path.txt.bob.fred" === ".fred"
+    splitExtension "file.txt" === ("file",".txt")
+    splitExtension "file" === ("file","")
+    splitExtension "file/file.txt" === ("file/file",".txt")
+    splitExtension "file.txt/boris" === ("file.txt/boris","")
+    splitExtension "file.txt/boris.ext" === ("file.txt/boris",".ext")
+    splitExtension "file/path.txt.bob.fred" === ("file/path.txt.bob",".fred")
+    splitExtension "file/path.txt/" === ("file/path.txt/","")
     
     setExtension "file.txt" ".bob" === "file.bob"
     setExtension "file.txt" "bob" === "file.bob"
     setExtension "file" ".bob" === "file.bob"
     setExtension "file.txt" "" === "file"
     setExtension "file.fred.bob" "txt" === "file.fred.txt"
-    
-    dropExtension "file.txt" === "file"
-    dropExtension "file.txt.bob" === "file.txt"
-    dropExtension "file.txt/file.bob" === "file.txt/file"
-    dropExtension "file/file" === "file/file"
-    dropExtension "file.." === "file."
-    
-    hasExtension "file.txt" === True
-    hasExtension "file/file.txt" === True
-    hasExtension "file.txt/file" === False
 
 
 main = if null failed then
@@ -74,4 +72,12 @@ main = if null failed then
     where (Test count failed) = tests
 
 
-extTest (QFilePath x) = null (getExtension x) /= hasExtension x
+simpleJoin (a,b) = a ++ b
+
+
+extTests (QFilePath x) = with x $ do
+    uncurry joinExtension (splitExtension x) === x
+    simpleJoin (splitExtension x) === x
+    getExtension x === snd (splitExtension x)
+    dropExtension x === fst (splitExtension x)
+    null (getExtension x) =/= hasExtension x
