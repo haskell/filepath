@@ -75,10 +75,12 @@ tests = do
     P.getDrive "file" === ""
 
 
-main = if null failed then
-            putStrLn $ "All tests passed (" ++ show count ++ ")"
-       else
-            putStrLn $ "FAILURES: " ++ show failed
+main = do
+            if null failed then
+                putStrLn $ "All tests passed (" ++ show count ++ ")"
+             else
+                putStrLn $ "FAILURES: " ++ show failed
+            quickCheck extTests
     where (Test count failed) = tests
 
 
