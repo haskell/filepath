@@ -25,16 +25,16 @@ module System.FilePath
     
     -- * Extension methods
     splitExtension, joinExtension,
-    getExtension, setExtension, addExtension, dropExtension, hasExtension, (<.>),
+    getExtension, setExtension, dropExtension, addExtension, hasExtension, (<.>),
     
     -- * Drive methods
     getDrive,
     
     -- * Operations on a filepath, as a list of directories
     splitFileName, joinFileName,
-    dropFileName, getFileName, setFileName, addFileName,
-    splitPath, joinPath,
+    getFileName, setFileName, dropFileName, addFileName,
     combine, (</>),
+    splitPath, joinPath,
     
     -- * File name manipulators
     equalFilePath, fullFilePath, shortFilePath,
@@ -259,7 +259,7 @@ setFileName :: FilePath -> String -> FilePath
 setFileName x y = x ++ y
 
 dropFileName :: FilePath -> FilePath
-dropFileName x = x
+dropFileName x = fst $ splitFileName x
 
 -- | Get the file name
 getFileName :: FilePath -> FilePath

@@ -63,6 +63,16 @@ tests = do
     setExtension "file" ".bob" === "file.bob"
     setExtension "file.txt" "" === "file"
     setExtension "file.fred.bob" "txt" === "file.fred.txt"
+    
+    addExtension "file.txt" "bib" === "file.txt.bib"
+    addExtension "file." ".bib" === "file..bib"
+    addExtension "file" ".bib" === "file.bib"
+    
+    W.getDrive "file" === ""
+    W.getDrive "c:/file" === "c:"
+    W.getDrive "\\\\shared\\test" === "\\\\shared"
+    P.getDrive "/test" === ""
+    P.getDrive "file" === ""
 
 
 main = if null failed then
@@ -76,8 +86,11 @@ simpleJoin (a,b) = a ++ b
 
 
 extTests (QFilePath x) = with x $ do
+    -- extension tests
     uncurry joinExtension (splitExtension x) === x
     simpleJoin (splitExtension x) === x
     getExtension x === snd (splitExtension x)
     dropExtension x === fst (splitExtension x)
     null (getExtension x) =/= hasExtension x
+    getExtension (addExtension x "ext") === ".ext"
+    getExtension (setExtension x "ext") === ".ext"
