@@ -33,6 +33,7 @@ module System.FilePath
     -- * Operations on a filepath, as a list of directories
     splitFileName, joinFileName,
     getFileName, setFileName, dropFileName, addFileName,
+    getDirectory,
     combine, (</>),
     splitPath, joinPath,
     
@@ -237,10 +238,11 @@ getDrive _ = ""
 
 
 -- | Get the directory name, move up one level
-getDirectoryName :: FilePath -> FilePath
-getDirectoryName x = case splitPath x of
-                        [] -> ""
-                        xs -> concat (init xs)
+getDirectory :: FilePath -> FilePath
+getDirectory x = if null res then file else res
+    where
+        res = reverse $ dropWhile isPathSeparator $ reverse file
+        file = dropFileName x
 
 
 splitFileName :: FilePath -> (String, String)
@@ -249,14 +251,16 @@ splitFileName x = (reverse b, reverse a)
 
 
 joinFileName :: FilePath -> String -> FilePath
-joinFileName x y = x ++ y
+joinFileName x y = addFileName x y
 
 
 addFileName :: FilePath -> String -> FilePath
-addFileName x y = x ++ y
+addFileName x y = if null x then y
+                  else if isPathSeparator (last x) then x ++ y
+                  else x ++ [pathSeparator] ++ y
 
 setFileName :: FilePath -> String -> FilePath
-setFileName x y = x ++ y
+setFileName x y = joinFileName (fst $ splitFileName x) y
 
 dropFileName :: FilePath -> FilePath
 dropFileName x = fst $ splitFileName x

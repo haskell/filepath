@@ -73,6 +73,10 @@ tests = do
     W.getDrive "\\\\shared\\test" === "\\\\shared"
     P.getDrive "/test" === ""
     P.getDrive "file" === ""
+    
+    splitFileName "file/bob.txt" === ("file/", "bob.txt")
+    splitFileName "file/" === ("file/", "")
+    splitFileName "bob" === ("", "bob")
 
 
 main = do
@@ -80,14 +84,14 @@ main = do
                 putStrLn $ "All tests passed (" ++ show count ++ ")"
              else
                 putStrLn $ "FAILURES: " ++ show failed
-            quickCheck extTests
+            quickCheck quickTests
     where (Test count failed) = tests
 
 
 simpleJoin (a,b) = a ++ b
 
 
-extTests (QFilePath x) = with x $ do
+quickTests (QFilePath x) = with x $ do
     -- extension tests
     uncurry joinExtension (splitExtension x) === x
     simpleJoin (splitExtension x) === x
@@ -96,3 +100,12 @@ extTests (QFilePath x) = with x $ do
     null (getExtension x) =/= hasExtension x
     getExtension (addExtension x "ext") === ".ext"
     getExtension (setExtension x "ext") === ".ext"
+
+    -- filename tests
+    uncurry joinFileName (splitFileName x) === x
+    simpleJoin (splitFileName x) === x
+    getFileName x === snd (splitFileName x)
+    dropFileName x === fst (splitFileName x)
+    getFileName (setFileName x "fred") === "fred"
+    getFileName (addFileName x "fred") === "fred"
+    bool $ addFileName (getDirectory x) (getFileName x) `equalFilePath` x
