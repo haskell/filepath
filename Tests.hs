@@ -7,15 +7,21 @@ import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 
 import Test.QuickCheck
+import Data.List
 
 -- framework support for the various tests
-data Test a = Test Int [Int]
+data Test a = Test [Answer]
+              deriving Show
+
+data Answer = Answer Bool
+            | Section String
               deriving Show
 
 instance Monad Test where
     return _ = error "Not implemented"
     _ >>= _  = error "Not implemented"
-    (Test c1 x1) >> (Test c2 x2) = Test (c1+c2) (x1 ++ map (+c1) x2)
+    
+    (Test x1) >> (Test x2) = (Test (x1 ++ x2))
     
 
 (===) :: Eq a => a -> a -> Test ()
@@ -23,13 +29,33 @@ a === b = bool $ a == b
 
 a =/= b = bool $ a /= b
 
+a =~= b = bool $ a `equalFilePath` b
+
+evalTests :: Test () -> (Int, String)
+evalTests (Test rs) = (length (filter isAnswer rs), disp $ f "" 1 rs)
+    where
+        isAnswer (Answer _) = True
+        isAnswer _ = False
+        
+        disp [] = []
+        disp xs = concatMap g $ groupBy (\a b -> fst a == fst b) xs
+
+        g xs = fst (head xs) ++ " " ++ show (map snd xs) ++ " "
+    
+        f sname snum [] = []
+        f sname snum (Section name:xs) = f name 0 xs
+        f sname snum (Answer b:xs) = [(sname,snum+1) | not b] ++ f sname (snum+1) xs
+
+
 with :: String -> Test () -> Bool
-with msg (Test _ []) = True
-with msg (Test _ fs) = error $ "Failed tests using " ++ show msg ++ ", on " ++ show fs
+with msg test = if null fs then True else error $ "Failed tests using " ++ show msg ++ ", in " ++ fs
+    where (n,fs) = evalTests test
 
 bool :: Bool -> Test ()
-bool True  = Test 1 []
-bool False = Test 1 [1]
+bool b = Test [Answer b]
+
+section :: String -> Test ()
+section name = Test [Section name]
 
 data QFilePath = QFilePath FilePath
                  deriving Show
@@ -81,18 +107,19 @@ tests = do
 
 main = do
             if null failed then
-                putStrLn $ "All tests passed (" ++ show count ++ ")"
+                putStrLn $ "All static tests passed (" ++ show count ++ ")"
              else
-                putStrLn $ "FAILURES: " ++ show failed
+                error $ "FAILURES: " ++ show failed
             quickCheck quickTests
-    where (Test count failed) = tests
+    where (count, failed) = evalTests tests
 
 
 simpleJoin (a,b) = a ++ b
 
 
 quickTests (QFilePath x) = with x $ do
-    -- extension tests
+
+    section "extension"
     uncurry joinExtension (splitExtension x) === x
     simpleJoin (splitExtension x) === x
     getExtension x === snd (splitExtension x)
@@ -101,11 +128,12 @@ quickTests (QFilePath x) = with x $ do
     getExtension (addExtension x "ext") === ".ext"
     getExtension (setExtension x "ext") === ".ext"
 
-    -- filename tests
-    uncurry joinFileName (splitFileName x) === x
-    simpleJoin (splitFileName x) === x
+    section "file"
+    uncurry joinFileName (splitFileName x) =~= x
     getFileName x === snd (splitFileName x)
     dropFileName x === fst (splitFileName x)
+    setDirectory x (getDirectory x) =~= x
+    setFileName x (getFileName x) =~= x
+    addFileName (getDirectory x) (getFileName x) =~= x
     getFileName (setFileName x "fred") === "fred"
     getFileName (addFileName x "fred") === "fred"
-    bool $ addFileName (getDirectory x) (getFileName x) `equalFilePath` x
