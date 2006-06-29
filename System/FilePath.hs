@@ -52,6 +52,7 @@ module System.FilePath
     -- * Extension methods
     splitExtension, joinExtension,
     getExtension, setExtension, dropExtension, addExtension, hasExtension, (<.>),
+    splitExtensions, dropExtensions, getExtensions,
     
     -- * Drive methods
     splitDrive, joinDrive,
@@ -229,6 +230,21 @@ hasExtension :: FilePath -> Bool
 hasExtension x = any isExtSeparator $ getFileName x
 
 
+
+-- | Split on all extensions
+splitExtensions :: FilePath -> (FilePath, String)
+splitExtensions x = (a ++ c, d)
+    where
+        (a,b) = splitFileName x
+        (c,d) = break isExtSeparator b
+
+-- | Drop all extensions
+dropExtensions :: FilePath -> FilePath
+dropExtensions = fst . splitExtensions
+
+-- | Get all extensions
+getExtensions :: FilePath -> String
+getExtensions = snd . splitExtensions
 
 
 
