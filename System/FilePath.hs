@@ -247,11 +247,11 @@ splitDrive x | isPosix = case x of
                              '/':xs -> ("/",xs)
                              xs -> ("",xs)
 splitDrive (x:':':[]) | isLetter x = ([x,':'],"")
-         -- NOTE c:/ is not a valid path!
-splitDrive (x:':':'\\':xs) | isLetter x = ([x,':','\\'],xs)
-splitDrive ('\\':'\\':xs) = case b of
-                               "" -> ("\\\\" ++ xs, "")
-                               (y:ys) -> ("\\\\" ++ a ++ [y], ys)
+splitDrive (x:':':y:xs) | isLetter x && isPathSeparator y = ([x,':',y],xs)
+splitDrive (s1:s2:xs) | isPathSeparator s1 && isPathSeparator s2 =
+    case b of
+        "" -> ([s1,s2] ++ xs, "")
+        (y:ys) -> ([s1,s2] ++ a ++ [y], ys)
     where (a,b) = break isPathSeparator xs
 splitDrive x = ("",x)
 

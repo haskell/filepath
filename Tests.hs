@@ -96,7 +96,7 @@ tests = do
     
     section "drive"
     W.splitDrive "file" === ("","file")
-    W.splitDrive "c:/file" === ("","c:/file")
+    W.splitDrive "c:/file" === ("c:/","file")
     W.splitDrive "c:\\file" === ("c:\\","file")
     W.splitDrive "\\\\shared\\test" === ("\\\\shared\\","test")
     W.splitDrive "\\\\shared" === ("\\\\shared","")
