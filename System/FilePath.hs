@@ -58,6 +58,7 @@ module System.FilePath
 import Data.Maybe(isJust, fromMaybe)
 import Data.Char(toLower)
 import Data.List(isPrefixOf)
+import Control.Monad(when)
 
 import System.Info(os, compilerName)
 
@@ -450,18 +451,18 @@ getDirectoryList path = do x <- getDirectoryContents path
 -- |   for example ensureDirectory \".\/One\/Two\/Three\"
 -- | would create the directory \"Two\" and \"Three\" if \".\" and \"One\" already existed.
 ensureDirectory :: FilePath -> IO ()
-ensureDirectory path = f $ splitPath path
+ensureDirectory path = when (not $ null pths) $ f (joinDrive drv (head pths)) (tail pths)
     where
-        f [] = return ()
-        f xs =
-            do let (initx,lastx) = (init xs, last xs)
-                   path = joinPath xs
-               exists <- doesDirectoryExist path
-               if exists then
-                   return ()
-                else
-                   do f initx
-                      createDirectory path
+        pths = splitPath pth
+        (drv,pth) = splitDrive path
+    
+        f pth todo = do
+            exist <- doesDirectoryExist pth
+            when (not exist) $ createDirectory pth
+            case todo of
+                (t:odo) -> f (pth </> t) odo
+                [] -> return ()
+
 
 -- | Is a directory a real directory, or an alias to a parent . or ..
 isFakeDirectory x = x == "." || x == ".."
