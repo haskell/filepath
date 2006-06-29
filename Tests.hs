@@ -115,6 +115,23 @@ tests = do
     W.splitPath "c:\\test\\path" === ["c:\\","test\\","path"]
     P.splitPath "/file/test" === ["/","file/","test"]
 
+    section "filepath"
+    P.normalise "/file/\\test////" === "/file/\\test/"
+    P.normalise "/file/./test" === "/file/test"
+    P.normalise "/test/file/../bob/fred/" === "/test/bob/fred/"
+    P.normalise "../bob/fred/" === "../bob/fred/"
+    P.normalise "./bob/fred/" === "bob/fred/"
+    W.normalise "c:\\file/bob\\" === "c:\\file\\bob\\"
+    W.normalise "\\\\server\\test" === "\\\\server\\test"
+    
+    P.fullPathWith "/file/test/" "/bob/dave" === "/bob/dave"
+    P.fullPathWith "/file/test/" "bob" === "/file/test/bob"
+    P.fullPathWith "/file/test/" "../bob" === "/file/bob"
+    P.shortPathWith "/fred" "bob" === "bob"
+    P.shortPathWith "/file/test" "/file/test/fred" === "fred"
+    P.shortPathWith "/file/test" "/file/test/fred/" === "fred/"
+    P.shortPathWith "/fred/dave" "/fred/bill" === "../bill"
+
 
 main = do
             if null failed then

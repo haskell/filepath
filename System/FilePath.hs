@@ -32,19 +32,20 @@ module System.FilePath
     
     -- * Drive methods
     splitDrive, joinDrive,
-    getDrive, setDrive, dropDrive,
+    getDrive, setDrive, hasDrive, dropDrive,
     
     -- * Operations on a filepath, as a list of directories
     splitFileName, joinFileName,
     getFileName, setFileName, dropFileName, addFileName,
     getDirectory, setDirectory,
     combine, (</>),
-    splitPath, joinPath,
+    splitPath, joinPath, splitDirectories,
     
     -- * File name manipulators
-    equalFilePath, fullFilePath, shortFilePath,
-    isRelative, isAbsolute, isValid, makeValid,
-    normaliseSlash, normalisePath, normalise,
+    normalise, equalFilePath,
+    fullPath, fullPathWith, shortPath, shortPathWith,
+    isRelative, isAbsolute,
+    isValid, makeValid,
     
     -- * Directory operations
     getDirectoryList, ensureDirectory,
@@ -239,6 +240,8 @@ getDrive = fst . splitDrive
 dropDrive :: FilePath -> FilePath
 dropDrive = snd . splitDrive
 
+hasDrive :: FilePath -> Bool
+hasDrive = not . null . getDrive
 
 
 
@@ -316,6 +319,18 @@ splitPath x = [a | a /= ""] ++ f b
                 (a,b) = break isPathSeparator x
                 (c,d) = break (not . isPathSeparator) b
 
+-- | return all the elements of the path
+--   without trailing slashes
+splitDirectories :: FilePath -> [FilePath]
+splitDirectories x =
+        if hasDrive x then head xs : f (tail xs)
+        else f xs
+    where
+        xs = splitPath x
+        
+        f xs = map g xs
+        g x = takeWhile (not . isPathSeparator) x
+
 
 -- | Join path elements back together
 joinPath :: [FilePath] -> FilePath
@@ -325,62 +340,48 @@ joinPath x = foldr combineAlways "" x
 
 
 
+---------------------------------------------------------------------
+-- * File name manipulators
 
-
-
-
-
-
-
-
-
--- * Name Expansion and Contraction
-
--- | If you call 'getFullName' first this has a much better chance of working!
+-- | If you call 'fullFilePath' first this has a much better chance of working!
 equalFilePath :: FilePath -> FilePath -> Bool
 equalFilePath a b = f a == f b
     where
-        f x | isPosix   = normaliseSlash x
-            | isWindows = map toLower $ normaliseSlash x
-
+        f x | isPosix   = dropTrailSlash $ normalise x
+            | isWindows = dropTrailSlash $ map toLower $ normalise x
+        
+        dropTrailSlash "" = ""
+        dropTrailSlash x | isPathSeparator (last x) = init x
+                         | otherwise = x
 
 -- | Expand out a filename to its full name, with the current directory factored in
-fullFilePath :: FilePath -> IO FilePath
-fullFilePath x = do cur <- getCurrentDirectory
-                    return $ combine cur x
+fullPathWith :: FilePath -> FilePath -> FilePath
+fullPathWith cur x = normalise $ combine cur x
+
+fullPath :: FilePath -> IO FilePath
+fullPath x = do cur <- getCurrentDirectory
+                return $ fullPathWith cur x
 
 -- | Contract a filename, based on its current directory
-shortFilePath :: FilePath -> IO FilePath
-shortFilePath x =
-    do
-        cur <- getCurrentDirectory
-        let xelem = splitPath (normalisePath x)
-            (rescur,resfile) = f (splitPath cur) xelem
-            lrescur = length rescur
-            
-        return $
-            if lrescur == 0 then
-                joinPath $ dropLeadingSlash resfile
-            else if lrescur < 3 then
-                joinPath (replicate lrescur ".." ++ resfile)
-            else
-                x
+shortPathWith :: FilePath -> FilePath -> FilePath
+shortPathWith cur x | isRelative x || isRelative cur || getDrive x /= getDrive cur = normalise x
+shortPathWith cur x = joinPath $
+                      replicate (length curdir - common) ".." ++
+                      drop common orgpth
     where
-        f (a:as) (b:bs) | noLeadingSlash a == noLeadingSlash b = f as bs
-        f as bs = (as,bs)
-        
-        noLeadingSlash (x:xs) | isPathSeparator x = xs
-        noLeadingSlash xs = xs
-        
-        dropLeadingSlash (x:xs) = noLeadingSlash x : xs
-        dropLeadingSlash [] = []
+        common = length $ takeWhile id $ zipWith (==) orgdir curdir
+        orgpth = splitPath pth
+        orgdir = splitDirectories pth
+        curdir = splitDirectories $ dropDrive $ normalise $ cur
+        (drv,pth) = splitDrive $ normalise x
 
 
--- * Split Up Path Elements
+shortPath :: FilePath -> IO FilePath
+shortPath x = do cur <- getCurrentDirectory
+                 return $ shortPathWith cur x
 
 
-
-
+{-
 -- | remove the slash at the end, if there is one
 -- | remove multiple adjacent slashes
 -- | ignore the drive name
@@ -401,12 +402,33 @@ normalisePath = joinPath . f . splitPath . normaliseSlash
         f ([y,'.','.']:x:xs) | isPathSeparator y = f xs
         f (x:xs) = x : f xs
         f [] = []
+-}
 
+-- | normalise a file
+--   // outside of the drive can be made blank
+--   / -> pathSeparator
+--   ./ -> ""
+--   item/../ -> ""
 normalise :: FilePath -> FilePath
-normalise = map f . normalisePath
+normalise "" = ""
+normalise x = joinDrive drv (f pth) ++ [pathSeparator | isPathSeparator $ last x]
     where
-        f x | isPathSeparator x = pathSeparator
-            | otherwise = x
+        (drv,pth) = splitDrive x
+    
+        f = joinPath . dropDots [] . splitDirectories . propSep
+    
+        propSep (a:b:xs) | isPathSeparator a && isPathSeparator b = propSep (a:xs)
+        propSep (a:xs) | isPathSeparator a = pathSeparator : propSep xs
+        propSep (x:xs) = x : propSep xs
+        propSep [] = []
+        
+        dropDots acc (".":xs) = dropDots acc xs
+        dropDots (a:cc) ("..":xs) = dropDots cc xs
+        dropDots [] ("..":xs) = ".." : dropDots [] xs
+        dropDots acc (x:xs) = dropDots (x:acc) xs
+        dropDots acc [] = reverse acc
+        
+        
 
 
 isValid :: FilePath -> Bool
@@ -416,17 +438,15 @@ makeValid :: FilePath -> FilePath
 makeValid x = x
 
 
--- * Combine Two Existing Paths
-
 -- | Is a path relative, or is it fixed to the root
 isRelative :: FilePath -> Bool
-isRelative x | isPosix = not $ "/" `isPrefixOf` x
 isRelative x = null $ getDrive x
 
 
 -- | not . 'isRelative'
 isAbsolute :: FilePath -> Bool
 isAbsolute = not . isRelative
+
 
 
 -- * Search Methods
