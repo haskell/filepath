@@ -178,3 +178,6 @@ quickTests (QFilePath x) = with x $ do
     dropDrive x === snd (splitDrive x)
     setDrive x (getDrive x) === x
     
+    section "validity"
+    bool $ isValid (makeValid x)
+

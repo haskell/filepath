@@ -37,7 +37,7 @@ module System.FilePath
     -- * Operations on a filepath, as a list of directories
     splitFileName, joinFileName,
     getFileName, setFileName, dropFileName, addFileName,
-    getDirectory, setDirectory,
+    getDirectory, setDirectory, isDirectory,
     combine, (</>),
     splitPath, joinPath, splitDirectories,
     
@@ -51,8 +51,7 @@ module System.FilePath
     getDirectoryList, ensureDirectory,
     
     -- * Temporary file operations
-    getNewTemporaryDirectory, -- is this name too long? should it be getTmpDir?
-    getNewTemporaryFilename
+    getTemporaryFile, getTemporaryFileNew, getTemporaryFileSeed
     )
     where
 
@@ -62,8 +61,9 @@ import Data.List(isPrefixOf)
 
 import System.Info(os, compilerName)
 
-import System.Environment(getEnv)
-import System.Directory(getCurrentDirectory, getDirectoryContents, doesFileExist, doesDirectoryExist, createDirectory)
+import System.Environment(getEnv, getProgName)
+import System.Directory(getCurrentDirectory, doesFileExist, doesDirectoryExist,
+                        getTemporaryDirectory, getDirectoryContents, createDirectory)
 
 
 infixr 7  <.>
@@ -277,6 +277,10 @@ getFileName :: FilePath -> FilePath
 getFileName x = snd $ splitFileName x
 
 
+isDirectory :: FilePath -> Bool
+isDirectory "" = False
+isDirectory x = isPathSeparator (last x)
+
 -- | Get the directory name, move up one level
 getDirectory :: FilePath -> FilePath
 getDirectory x = if null res then file else res
@@ -381,29 +385,6 @@ shortPath x = do cur <- getCurrentDirectory
                  return $ shortPathWith cur x
 
 
-{-
--- | remove the slash at the end, if there is one
--- | remove multiple adjacent slashes
--- | ignore the drive name
-normaliseSlash :: FilePath -> FilePath
-normaliseSlash x = f x
-    where
-        f [x] | isPathSeparator x = []
-        f (a:b:xs) | isPathSeparator a && isPathSeparator b = f (pathSeparator:xs)
-        f (x:xs) | isPathSeparator x = pathSeparator : f xs
-                 | otherwise = x : f xs
-        f [] = []
-
--- | remove .\/ and ..\/x\/
-normalisePath :: FilePath -> FilePath
-normalisePath = joinPath . f . splitPath . normaliseSlash
-    where
-        f ([y,'.']:x) | isPathSeparator y = f x
-        f ([y,'.','.']:x:xs) | isPathSeparator y = f xs
-        f (x:xs) = x : f xs
-        f [] = []
--}
-
 -- | normalise a file
 --   // outside of the drive can be made blank
 --   / -> pathSeparator
@@ -428,14 +409,22 @@ normalise x = joinDrive drv (f pth) ++ [pathSeparator | isPathSeparator $ last x
         dropDots acc (x:xs) = dropDots (x:acc) xs
         dropDots acc [] = reverse acc
         
-        
 
+badCharacters = ":*?><|"
 
 isValid :: FilePath -> Bool
-isValid _ = False
+isValid x | isPosix = False
+isValid x = not $ any (`elem` badCharacters) $ dropDrive x
+    
 
 makeValid :: FilePath -> FilePath
-makeValid x = x
+makeValid x | isPosix = x
+makeValid x = joinDrive drv (map f pth)
+    where
+        (drv,pth) = splitDrive x
+        
+        f x | x `elem` badCharacters = '_'
+            | otherwise = x
 
 
 -- | Is a path relative, or is it fixed to the root
@@ -484,43 +473,24 @@ filterM f (x:xs) = do res <- f x
                       rest <- filterM f xs
                       return $ if res then x : rest else rest
 
--- * get temporary file and directory names (beta .. I think it con be done much better Marc)
-
--- | simply returns [prefix0suffix,prefix1suffix, ...]
-getSystemTempDir :: IO String -- IO because System dedection might be IO, too
-getSystemTempDir = do
-  let win = isWindows
-  if win then return "c:\\temp" -- should we take the users temp dir here?
-	 else return "/tmp"
-
-simpleTempNameProvider :: String -> String -> [String]
-simpleTempNameProvider prefix suffix = [ prefix ++ (show i) ++ suffix | i <- [0..]]
+-- * Temporary File Names
 
 
--- | helper function returns new dir or file dependend on doesExist
-getNewTemporaryFilePath_ :: (FilePath -> IO Bool) -> (Maybe FilePath)  ->
-	[FilePath] -> IO FilePath
-getNewTemporaryFilePath_ doesExist tmpDir list = do
-  tmpDir_  <- maybe getSystemTempDir return tmpDir
-  takeNextNameWhileExists tmpDir_  list
-     where takeNextNameWhileExists tmpDir_ (name:list) =
-	     let tempname = tmpDir_ </> name  in do
-		 exists <-  doesExist tempname
-		 if exists then takeNextNameWhileExists tmpDir_ list -- try next
-			   else return tempname
+getTemporaryFile :: String -> IO FilePath
+getTemporaryFile ext = getTemporaryFileSeed 1 ext
 
--- | returns a temporary filepath named tmpdir0, tmpdir1 if it exists etc
--- | location in case Nothing is getSystemTempDir
--- | result can be used for getNewTemporaryFilename if your application needs more 
--- | than a few temporary files
-getNewTemporaryDirectory :: (Maybe FilePath) -> (IO FilePath)
-getNewTemporaryDirectory tmpDir = getNewTemporaryFilePath_ 
-      doesFileExist  tmpDir (simpleTempNameProvider "tmpdir" "" )
-    -- should we add the application name here woild be user friendly
 
--- | returns a temporary filename named tmp0.tmp, tmp1.tmp if it exists etc
+getTemporaryFileSeed :: Int -> String -> IO FilePath
+getTemporaryFileSeed n ext = do
+    prog <- getProgName
+    tmpdir <- getTemporaryDirectory
+    return $ makeValid $ tmpdir </> (prog ++ show n) <.> ext
+    
 
--- | location in case Nothing is getSystemTempDir
-getNewTemporaryFilename :: (Maybe FilePath) -> IO FilePath
-getNewTemporaryFilename tmpDir = getNewTemporaryFilePath_ 
-      doesDirectoryExist  tmpDir (simpleTempNameProvider "tmp" ".tmp" )
+getTemporaryFileNew :: String -> IO (Maybe FilePath)
+getTemporaryFileNew ext = f [1..100]
+    where
+        f [] = return Nothing
+        f (x:xs) = do fil <- getTemporaryFileSeed x ext
+                      b <- doesFileExist fil
+                      if b then f xs else return $ Just fil
