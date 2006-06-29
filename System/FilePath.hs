@@ -13,6 +13,29 @@
     platform the code is running on at runtime.
 
     For more details see <http://www.cs.york.ac.uk/~ndm/projects/libraries.php>
+    
+    Some short examples:
+    
+    You are given a C file, you want to figure out the corresponding object (.o) file:
+    
+    @'setExtension' file \"o\"@
+    
+    Haskell module Main imports Test, you have the file named main:
+    
+    @['setFileName' path_to_main \"Test\" '<.>' ext | ext <- \"hs\",\"lhs\"]@
+    
+    You want to download a file from the web and save it to disk:
+    
+    @do let file = 'makeValid' url
+   'ensureDirectory' ('getDirectory' file)@
+    
+    You want to compile a Haskell file, but put the hi file under \"interface\"
+    
+    @'getDirectory' file '</>' \"interface\" '</>' 'setExtension' ('getFileName' file) \"hi\"@
+    
+    You want to display a filename to the user, as neatly as possible
+    
+    @'shortPath' file >>= putStrLn@
 -}
 
 module System.FilePath
