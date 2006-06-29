@@ -185,7 +185,7 @@ setExtension :: FilePath -> String -> FilePath
 setExtension x y = joinExtension a y
     where (a,b) = splitExtension x
 
--- | Alias, for people who like that sort of thing
+-- | Alias to 'addExtension', for people who like that sort of thing.
 --   Probably needs a fixity and precedence...
 (<.>) :: FilePath -> String -> FilePath
 (<.>) = addExtension
