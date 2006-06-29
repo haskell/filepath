@@ -349,7 +349,6 @@ combineAlways a b | null a = b
                   | otherwise = a ++ [pathSeparator] ++ b
 
 -- | A nice alias for 'combine'
---   Probably needs a fixity and precedence...
 (</>) :: FilePath -> FilePath -> FilePath
 (</>) = combine
 
