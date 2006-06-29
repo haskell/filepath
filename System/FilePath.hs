@@ -75,7 +75,7 @@ infixr 5  </>
 
 
 ---------------------------------------------------------------------
--- * Platform Abstraction Methods (private)
+-- Platform Abstraction Methods (private)
 
 data Force = ForcePosix
            | ForceNone
@@ -106,7 +106,7 @@ isWindows = osName == "windows" && forceEffectView /= ForcePosix
 
 
 ---------------------------------------------------------------------
--- * The basic functions
+-- The basic functions
 
 -- | A list of the possible path separators, Unix = @\/@, Windows = @\/\\@.
 --   These go between path elements in a file
@@ -138,7 +138,7 @@ isExtSeparator x = x == extSeparator
 
 
 ---------------------------------------------------------------------
--- * Path methods (environment $PATH)
+-- Path methods (environment $PATH)
 
 -- | Take a string, split it on the "fileSeparators" character
 splitFiles :: String -> [FilePath]
@@ -157,7 +157,7 @@ getPath = do variable <- getEnv "PATH"
 
 
 ---------------------------------------------------------------------
--- * Extension methods
+-- Extension methods
 
 splitExtension :: FilePath -> (String, String)
 splitExtension x = case d of
@@ -204,7 +204,7 @@ hasExtension x = any isExtSeparator $ getFileName x
 
 
 ---------------------------------------------------------------------
--- * Drive methods
+-- Drive methods
 
 -- only a-z and A-Z are letters, not isAlpha which is more unicodey
 isLetter :: Char -> Bool
@@ -248,7 +248,7 @@ hasDrive = not . null . getDrive
 
 
 ---------------------------------------------------------------------
--- * Operations on a filepath, as a list of directories
+-- Operations on a filepath, as a list of directories
 
 splitFileName :: FilePath -> (String, String)
 splitFileName x = (c ++ reverse b, reverse a)
@@ -346,7 +346,7 @@ joinPath x = foldr combineAlways "" x
 
 
 ---------------------------------------------------------------------
--- * File name manipulators
+-- File name manipulators
 
 -- | If you call 'fullFilePath' first this has a much better chance of working!
 equalFilePath :: FilePath -> FilePath -> Bool
@@ -387,10 +387,10 @@ shortPath x = do cur <- getCurrentDirectory
 
 
 -- | normalise a file
---   // outside of the drive can be made blank
---   / -> pathSeparator
---   ./ -> ""
---   item/../ -> ""
+--   \/\/ outside of the drive can be made blank
+--   \/ -> pathSeparator
+--   .\/ -> \"\"
+--   item\/..\/ -> \"\"
 normalise :: FilePath -> FilePath
 normalise "" = ""
 normalise x = joinDrive drv (f pth) ++ [pathSeparator | isPathSeparator $ last x]
@@ -439,7 +439,7 @@ isAbsolute = not . isRelative
 
 
 
--- * Search Methods
+-- Search Methods
 
 -- | Get a list of all the directories within this directory
 getDirectoryList :: FilePath -> IO [String]
@@ -474,7 +474,7 @@ filterM f (x:xs) = do res <- f x
                       rest <- filterM f xs
                       return $ if res then x : rest else rest
 
--- * Temporary File Names
+-- Temporary File Names
 
 
 getTemporaryFile :: String -> IO FilePath
