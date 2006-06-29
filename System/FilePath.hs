@@ -113,6 +113,8 @@ isWindows = osName == "windows" && forceEffectView /= ForcePosix
 pathSeparator :: Char
 pathSeparator = if isWindows then '\\' else '/'
 
+-- | Is the separator a PathSeparator, do not use == 'pathSeparator',
+--   instead use this
 isPathSeparator :: Char -> Bool
 isPathSeparator x = x `elem` (if isWindows then "\\/" else "/")
 
@@ -122,6 +124,7 @@ isPathSeparator x = x `elem` (if isWindows then "\\/" else "/")
 fileSeparator :: Char
 fileSeparator = if isWindows then ';' else ':'
 
+-- | Is the character a file separator
 isFileSeparator :: Char -> Bool
 isFileSeparator x = x == fileSeparator
 
@@ -130,6 +133,7 @@ isFileSeparator x = x == fileSeparator
 extSeparator :: Char
 extSeparator = '.'
 
+-- | Is the character an extension character
 isExtSeparator :: Char -> Bool
 isExtSeparator x = x == extSeparator
 
@@ -159,6 +163,7 @@ getPath = do variable <- getEnv "PATH"
 ---------------------------------------------------------------------
 -- Extension methods
 
+-- | Split of the extension
 splitExtension :: FilePath -> (String, String)
 splitExtension x = case d of
                        "" -> (x,"")
@@ -167,7 +172,7 @@ splitExtension x = case d of
         (a,b) = splitFileName x
         (c,d) = break isExtSeparator $ reverse b
 
-
+-- | Join an extension and a filepath
 joinExtension :: String -> String -> FilePath
 joinExtension = addExtension
 
@@ -212,6 +217,8 @@ isLetter x | x >= 'a' && x <= 'z' = True
            | x >= 'A' && x <= 'Z' = True
            | otherwise = False
 
+-- | Split a path into a drive and a path.
+--   On Unix, \/ is a Drive.
 splitDrive :: FilePath -> (FilePath, FilePath)
 splitDrive x | isPosix = case x of
                              '/':xs -> ("/",xs)
@@ -226,21 +233,26 @@ splitDrive ('\\':'\\':xs) = case b of
 splitDrive x = ("",x)
 
 
+-- | Join a drive and the rest of the path
 joinDrive :: FilePath -> FilePath -> FilePath
 joinDrive a b | isPosix = a ++ b
               | null a = b
               | isPathSeparator (last a) = a ++ b
               | otherwise = a ++ [pathSeparator] ++ b
 
+-- | Set the drive, from the filepath
 setDrive :: FilePath -> String -> FilePath
 setDrive x drv = joinDrive drv (dropDrive x)
 
+-- | Get the drive from a filepath
 getDrive :: FilePath -> FilePath
 getDrive = fst . splitDrive
 
+-- | Delete the drive, if it exists
 dropDrive :: FilePath -> FilePath
 dropDrive = snd . splitDrive
 
+-- | Does a path have a drive
 hasDrive :: FilePath -> Bool
 hasDrive = not . null . getDrive
 
@@ -250,6 +262,7 @@ hasDrive = not . null . getDrive
 ---------------------------------------------------------------------
 -- Operations on a filepath, as a list of directories
 
+-- | Split a filename into directory and file
 splitFileName :: FilePath -> (String, String)
 splitFileName x = (c ++ reverse b, reverse a)
     where
@@ -257,18 +270,22 @@ splitFileName x = (c ++ reverse b, reverse a)
         (c,d) = splitDrive x
 
 
+-- | Join a directory and filename
 joinFileName :: FilePath -> String -> FilePath
 joinFileName x y = addFileName x y
 
 
+-- | Add a filename onto the end of a path
 addFileName :: FilePath -> String -> FilePath
 addFileName x y = if null x then y
                   else if isPathSeparator (last x) then x ++ y
                   else x ++ [pathSeparator] ++ y
 
+-- | Set the filename
 setFileName :: FilePath -> String -> FilePath
 setFileName x y = joinFileName (fst $ splitFileName x) y
 
+-- | Drop the filename
 dropFileName :: FilePath -> FilePath
 dropFileName x = reverse $ dropWhile (not . isPathSeparator) $ reverse x
 
@@ -278,6 +295,8 @@ getFileName :: FilePath -> FilePath
 getFileName x = snd $ splitFileName x
 
 
+-- | Is an item a directory, is the last character a path separator.
+--   This does not query the file system.
 isDirectory :: FilePath -> Bool
 isDirectory "" = False
 isDirectory x = isPathSeparator (last x)
@@ -289,6 +308,7 @@ getDirectory x = if null res then file else res
         res = reverse $ dropWhile isPathSeparator $ reverse file
         file = dropFileName x
 
+-- | Set the directory, keeping the filename the same
 setDirectory :: FilePath -> String -> FilePath
 setDirectory x dir = joinFileName dir (getFileName x)
 
@@ -348,7 +368,7 @@ joinPath x = foldr combineAlways "" x
 ---------------------------------------------------------------------
 -- File name manipulators
 
--- | If you call 'fullFilePath' first this has a much better chance of working!
+-- | If you call 'fullPath' first this has a much better chance of working!
 equalFilePath :: FilePath -> FilePath -> Bool
 equalFilePath a b = f a == f b
     where
@@ -359,15 +379,16 @@ equalFilePath a b = f a == f b
         dropTrailSlash x | isPathSeparator (last x) = init x
                          | otherwise = x
 
--- | Expand out a filename to its full name, with the current directory factored in
+-- | Expand out a filename to its full name, with the a directory factored in
 fullPathWith :: FilePath -> FilePath -> FilePath
 fullPathWith cur x = normalise $ combine cur x
 
+-- | 'fullPathWith' and the current directory
 fullPath :: FilePath -> IO FilePath
 fullPath x = do cur <- getCurrentDirectory
                 return $ fullPathWith cur x
 
--- | Contract a filename, based on its current directory
+-- | Contract a filename, based on a relative path
 shortPathWith :: FilePath -> FilePath -> FilePath
 shortPathWith cur x | isRelative x || isRelative cur || getDrive x /= getDrive cur = normalise x
 shortPathWith cur x = joinPath $
@@ -380,7 +401,7 @@ shortPathWith cur x = joinPath $
         curdir = splitDirectories $ dropDrive $ normalise $ cur
         (drv,pth) = splitDrive $ normalise x
 
-
+-- | 'shortPathWith' using the current directory
 shortPath :: FilePath -> IO FilePath
 shortPath x = do cur <- getCurrentDirectory
                  return $ shortPathWith cur x
@@ -413,11 +434,14 @@ normalise x = joinDrive drv (f pth) ++ [pathSeparator | isPathSeparator $ last x
 
 badCharacters = ":*?><|"
 
+-- | Is a FilePath valid, i.e. could you create a file like it
 isValid :: FilePath -> Bool
 isValid x | isPosix = False
 isValid x = not $ any (`elem` badCharacters) $ dropDrive x
     
 
+-- | Take a FilePath and make it valid, does not change already
+--   valid FilePaths.
 makeValid :: FilePath -> FilePath
 makeValid x | isPosix = x
 makeValid x = joinDrive drv (map f pth)
@@ -476,18 +500,21 @@ filterM f (x:xs) = do res <- f x
 
 -- Temporary File Names
 
-
+-- | Get a temporary file name
 getTemporaryFile :: String -> IO FilePath
 getTemporaryFile ext = getTemporaryFileSeed 1 ext
 
 
+-- | Get a temporary file name, using a specified number as a seed
 getTemporaryFileSeed :: Int -> String -> IO FilePath
 getTemporaryFileSeed n ext = do
     prog <- getProgName
     tmpdir <- getTemporaryDirectory
     return $ makeValid $ tmpdir </> (prog ++ show n) <.> ext
     
-
+-- | Get a temporary file name which does not exist
+--   Beware of race conditions, the file may be created after
+--   this function returns
 getTemporaryFileNew :: String -> IO (Maybe FilePath)
 getTemporaryFileNew ext = f [1..100]
     where
