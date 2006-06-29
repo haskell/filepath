@@ -512,9 +512,10 @@ getTemporaryFileSeed n ext = do
     tmpdir <- getTemporaryDirectory
     return $ makeValid $ tmpdir </> (prog ++ show n) <.> ext
     
--- | Get a temporary file name which does not exist
+-- | Get a temporary file name which does not exist.
 --   Beware of race conditions, the file may be created after
---   this function returns
+--   this function returns.
+--   Nothing may be returned if a new item is not found in 100 tries.
 getTemporaryFileNew :: String -> IO (Maybe FilePath)
 getTemporaryFileNew ext = f [1..100]
     where
