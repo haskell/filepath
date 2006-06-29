@@ -23,12 +23,16 @@ module System.FilePath
     fileSeparator, isFileSeparator,
     extSeparator, isExtSeparator,
     
+    -- * Path methods (environment $PATH)
+    splitFiles, getPath,
+    
     -- * Extension methods
     splitExtension, joinExtension,
     getExtension, setExtension, dropExtension, addExtension, hasExtension, (<.>),
     
     -- * Drive methods
-    getDrive,
+    splitDrive, joinDrive,
+    getDrive, setDrive, dropDrive,
     
     -- * Operations on a filepath, as a list of directories
     splitFileName, joinFileName,
@@ -41,9 +45,6 @@ module System.FilePath
     equalFilePath, fullFilePath, shortFilePath,
     isRelative, isAbsolute, isValid, makeValid,
     normaliseSlash, normalisePath, normalise,
-    
-    -- * Path methods (environment $PATH)
-    splitFiles, getPath,
     
     -- * Directory operations
     getDirectoryList, ensureDirectory,
@@ -68,6 +69,10 @@ infixr 7  <.>
 infixr 5  </>
 
 
+
+
+
+---------------------------------------------------------------------
 -- * Platform Abstraction Methods (private)
 
 data Force = ForcePosix
@@ -95,6 +100,12 @@ isWindows :: Bool
 isWindows = osName == "windows" && forceEffectView /= ForcePosix
 
 
+
+
+
+---------------------------------------------------------------------
+-- * The basic functions
+
 -- | A list of the possible path separators, Unix = @\/@, Windows = @\/\\@.
 --   These go between path elements in a file
 pathSeparator :: Char
@@ -121,7 +132,11 @@ isExtSeparator :: Char -> Bool
 isExtSeparator x = x == extSeparator
 
 
--- * $PATH methods
+
+
+
+---------------------------------------------------------------------
+-- * Path methods (environment $PATH)
 
 -- | Take a string, split it on the "fileSeparators" character
 splitFiles :: String -> [FilePath]
@@ -137,6 +152,186 @@ splitFiles var = do f var
 getPath :: IO [FilePath]
 getPath = do variable <- getEnv "PATH"
              return $ splitFiles variable
+
+
+---------------------------------------------------------------------
+-- * Extension methods
+
+splitExtension :: FilePath -> (String, String)
+splitExtension x = case d of
+                       "" -> (x,"")
+                       (y:ys) -> (a ++ reverse ys, y : reverse c)
+    where
+        (a,b) = splitFileName x
+        (c,d) = break isExtSeparator $ reverse b
+
+
+joinExtension :: String -> String -> FilePath
+joinExtension = addExtension
+
+-- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise
+getExtension :: FilePath -> String
+getExtension x = snd $ splitExtension x
+
+-- | Set the extension of a file, overwriting one if already present
+setExtension :: FilePath -> String -> FilePath
+setExtension x y = joinExtension a y
+    where (a,b) = splitExtension x
+
+-- | Alias, for people who like that sort of thing
+--   Probably needs a fixity and precedence...
+(<.>) :: FilePath -> String -> FilePath
+(<.>) = addExtension
+
+-- | Remove last extension, and any . following it
+dropExtension :: FilePath -> FilePath
+dropExtension x = fst $ splitExtension x
+
+-- | Add an extension, even if there is already one there
+addExtension :: FilePath -> String -> FilePath
+addExtension file "" = file
+addExtension file xs@(x:_) | isExtSeparator x = file ++ xs
+                           | otherwise = file ++ [extSeparator] ++ xs
+
+-- | Does the given filename have an extension
+hasExtension :: FilePath -> Bool
+hasExtension x = any isExtSeparator $ getFileName x
+
+
+
+
+
+---------------------------------------------------------------------
+-- * Drive methods
+
+-- only a-z and A-Z are letters, not isAlpha which is more unicodey
+isLetter :: Char -> Bool
+isLetter x | x >= 'a' && x <= 'z' = True
+           | x >= 'A' && x <= 'Z' = True
+           | otherwise = False
+
+splitDrive :: FilePath -> (FilePath, FilePath)
+splitDrive x | isPosix = case x of
+                             '/':xs -> ("/",xs)
+                             xs -> ("",xs)
+splitDrive (x:':':[]) | isLetter x = ([x,':'],"")
+         -- NOTE c:/ is not a valid path!
+splitDrive (x:':':'\\':xs) | isLetter x = ([x,':','\\'],xs)
+splitDrive ('\\':'\\':xs) = case b of
+                               "" -> ("\\\\" ++ xs, "")
+                               (y:ys) -> ("\\\\" ++ a ++ [y], ys)
+    where (a,b) = break isPathSeparator xs
+splitDrive x = ("",x)
+
+
+joinDrive :: FilePath -> FilePath -> FilePath
+joinDrive a b | isPosix = a ++ b
+              | null a = b
+              | isPathSeparator (last a) = a ++ b
+              | otherwise = a ++ [pathSeparator] ++ b
+
+setDrive :: FilePath -> String -> FilePath
+setDrive x drv = joinDrive drv (dropDrive x)
+
+getDrive :: FilePath -> FilePath
+getDrive = fst . splitDrive
+
+dropDrive :: FilePath -> FilePath
+dropDrive = snd . splitDrive
+
+
+
+
+
+---------------------------------------------------------------------
+-- * Operations on a filepath, as a list of directories
+
+splitFileName :: FilePath -> (String, String)
+splitFileName x = (c ++ reverse b, reverse a)
+    where
+        (a,b) = break isPathSeparator $ reverse d
+        (c,d) = splitDrive x
+
+
+joinFileName :: FilePath -> String -> FilePath
+joinFileName x y = addFileName x y
+
+
+addFileName :: FilePath -> String -> FilePath
+addFileName x y = if null x then y
+                  else if isPathSeparator (last x) then x ++ y
+                  else x ++ [pathSeparator] ++ y
+
+setFileName :: FilePath -> String -> FilePath
+setFileName x y = joinFileName (fst $ splitFileName x) y
+
+dropFileName :: FilePath -> FilePath
+dropFileName x = reverse $ dropWhile (not . isPathSeparator) $ reverse x
+
+
+-- | Get the file name
+getFileName :: FilePath -> FilePath
+getFileName x = snd $ splitFileName x
+
+
+-- | Get the directory name, move up one level
+getDirectory :: FilePath -> FilePath
+getDirectory x = if null res then file else res
+    where
+        res = reverse $ dropWhile isPathSeparator $ reverse file
+        file = dropFileName x
+
+setDirectory :: FilePath -> String -> FilePath
+setDirectory x dir = joinFileName dir (getFileName x)
+
+
+-- | Combine two paths, if the right path 'isAbsolute', then it returns the second
+combine :: FilePath -> FilePath -> FilePath
+combine a b | isAbsolute b = b
+            | otherwise = combineAlways a b
+
+-- | Combine two paths, assuming rhs is NOT absolute
+combineAlways :: FilePath -> FilePath -> FilePath
+combineAlways a b | null a = b
+                  | null b = a
+                  | isPathSeparator (last a) = a ++ b
+                  | otherwise = a ++ [pathSeparator] ++ b
+
+-- | A nice alias for 'combine'
+--   Probably needs a fixity and precedence...
+(</>) :: FilePath -> FilePath -> FilePath
+(</>) = combine
+
+
+-- | return each path, concat res = input
+--   slashes go at the end of each element
+splitPath :: FilePath -> [FilePath]
+splitPath x = [a | a /= ""] ++ f b
+    where
+        (a,b) = splitDrive x
+        
+        f "" = []
+        f x = (a++c) : f d
+            where
+                (a,b) = break isPathSeparator x
+                (c,d) = break (not . isPathSeparator) b
+
+
+-- | Join path elements back together
+joinPath :: [FilePath] -> FilePath
+joinPath x = foldr combineAlways "" x
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 -- * Name Expansion and Contraction
@@ -181,126 +376,9 @@ shortFilePath x =
         dropLeadingSlash [] = []
 
 
--- * Extension Methods
-
-splitExtension :: FilePath -> (String, String)
-splitExtension x = case d of
-                       "" -> (x,"")
-                       (y:ys) -> (a ++ reverse ys, y : reverse c)
-    where
-        (a,b) = splitFileName x
-        (c,d) = break isExtSeparator $ reverse b
-
-
-joinExtension :: String -> String -> FilePath
-joinExtension = addExtension
-
--- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise
-getExtension :: FilePath -> String
-getExtension x = snd $ splitExtension x
-
--- | Set the extension of a file, overwriting one if already present
-setExtension :: FilePath -> String -> FilePath
-setExtension x y = joinExtension a y
-    where (a,b) = splitExtension x
-
--- | Alias, for people who like that sort of thing
---   Probably needs a fixity and precedence...
-(<.>) :: FilePath -> String -> FilePath
-(<.>) = addExtension
-
--- | Remove last extension, and any . following it
-dropExtension :: FilePath -> FilePath
-dropExtension x = fst $ splitExtension x
-
--- | Add an extension, even if there is already one there
-addExtension :: FilePath -> String -> FilePath
-addExtension file "" = file
-addExtension file xs@(x:_) | isExtSeparator x = file ++ xs
-                           | otherwise = file ++ [extSeparator] ++ xs
-
--- | Does the given filename have an extension
-hasExtension :: FilePath -> Bool
-hasExtension x = any isExtSeparator $ getFileName x
-
-
 -- * Split Up Path Elements
 
--- | Get the drive of the file path, on Unix this is a noop (returns @\"\"@)
---   On windows it handles share names (@\\\\swale@) and drive names (@C:@)
---   Do not return a trailing \\ character
-getDrive :: FilePath -> FilePath
-getDrive x | isPosix = ""
-getDrive ('\\':'\\':xs) = "\\\\" ++ takeWhile (not . isPathSeparator) xs
-getDrive (x:':':_) = [x,':']
-getDrive _ = ""
 
-
-
--- | Get the directory name, move up one level
-getDirectory :: FilePath -> FilePath
-getDirectory x = if null res then file else res
-    where
-        res = reverse $ dropWhile isPathSeparator $ reverse file
-        file = dropFileName x
-
-setDirectory :: FilePath -> String -> FilePath
-setDirectory x dir = joinFileName dir (getFileName x)
-
-
-splitFileName :: FilePath -> (String, String)
-splitFileName x = (reverse b, reverse a)
-    where (a,b) = break isPathSeparator $ reverse x
-
-
-joinFileName :: FilePath -> String -> FilePath
-joinFileName x y = addFileName x y
-
-
-addFileName :: FilePath -> String -> FilePath
-addFileName x y = if null x then y
-                  else if isPathSeparator (last x) then x ++ y
-                  else x ++ [pathSeparator] ++ y
-
-setFileName :: FilePath -> String -> FilePath
-setFileName x y = joinFileName (fst $ splitFileName x) y
-
-dropFileName :: FilePath -> FilePath
-dropFileName x = reverse $ dropWhile (not . isPathSeparator) $ reverse x
-
-
--- | Get the file name
-getFileName :: FilePath -> FilePath
-getFileName x = snd $ splitFileName x
-
-
--- | return each path, concat res = input
---   unless there is a trailing slash, in which case its deleted
---   and multiple slashes after each other are removed
---
---   slashes are attached to the front of each element
---   i.e. \/file\/path -> [\"\/file\", \"\/path\"]
-splitPath :: FilePath -> [FilePath]
-splitPath x = f "" x2
-    where
-        x2 = normaliseSlash x
-        drive = getDrive x2
-    
-        f acc [] = outAcc acc []
-        f acc (x:xs) | isPathSeparator x = outAcc acc $ f [x] xs
-                     | otherwise = f (x:acc) xs
-        
-        outAcc [] rest = rest
-        outAcc a  rest = reverse a : rest
-
-
--- | Join path elements back together
-joinPath :: [FilePath] -> FilePath
-joinPath [] = ""
-joinPath (x:xs) = x ++ concatMap f xs
-    where
-        f xs@(x:_) | isPathSeparator x = xs
-        f x = pathSeparator : x
 
 
 -- | remove the slash at the end, if there is one
@@ -350,30 +428,6 @@ isRelative x = null $ getDrive x
 isAbsolute :: FilePath -> Bool
 isAbsolute = not . isRelative
 
-
--- | Combine two paths, if the right path 'isAbsolute', then it returns the second
-combine :: FilePath -> FilePath -> FilePath
-combine a b = if isRelative b
-              then f (splitPath a) (splitPath b)
-              else b
-    where
-        f [] ys = joinPath ys
-        f xs (y:ys) | isJust move = case move of
-                Just 0 -> f xs ys
-                Just 1 -> f (init xs) ys
-            where
-                move = g y
-        f xs ys = joinPath (xs ++ ys)
-        
-        g (x:xs) | isPathSeparator x = g xs
-        g "." = Just 0
-        g ".." = Just 1
-        g _ = Nothing
-
--- | A nice alias for 'combine'
---   Probably needs a fixity and precedence...
-(</>) :: FilePath -> FilePath -> FilePath
-(</>) = combine
 
 -- * Search Methods
 

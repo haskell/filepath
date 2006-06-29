@@ -94,15 +94,26 @@ tests = do
     addExtension "file." ".bib" === "file..bib"
     addExtension "file" ".bib" === "file.bib"
     
-    W.getDrive "file" === ""
-    W.getDrive "c:/file" === "c:"
-    W.getDrive "\\\\shared\\test" === "\\\\shared"
-    P.getDrive "/test" === ""
-    P.getDrive "file" === ""
+    section "drive"
+    W.splitDrive "file" === ("","file")
+    W.splitDrive "c:/file" === ("","c:/file")
+    W.splitDrive "c:\\file" === ("c:\\","file")
+    W.splitDrive "\\\\shared\\test" === ("\\\\shared\\","test")
+    W.splitDrive "\\\\shared" === ("\\\\shared","")
+    P.splitDrive "/test" === ("/","test")
+    P.splitDrive "test/file" === ("","test/file")
+    P.splitDrive "file" === ("","file")
     
+    section "filename"
     splitFileName "file/bob.txt" === ("file/", "bob.txt")
     splitFileName "file/" === ("file/", "")
     splitFileName "bob" === ("", "bob")
+    P.splitFileName "/" === ("/","")
+    W.splitFileName "c:" === ("c:","")
+    splitPath "test//item/" === ["test//","item/"]
+    splitPath "test/item/file" === ["test/","item/","file"]
+    W.splitPath "c:\\test\\path" === ["c:\\","test\\","path"]
+    P.splitPath "/file/test" === ["/","file/","test"]
 
 
 main = do
@@ -129,11 +140,24 @@ quickTests (QFilePath x) = with x $ do
     getExtension (setExtension x "ext") === ".ext"
 
     section "file"
-    uncurry joinFileName (splitFileName x) =~= x
+    uncurry joinFileName (splitFileName x) === x
+    simpleJoin (splitFileName x) === x
     getFileName x === snd (splitFileName x)
     dropFileName x === fst (splitFileName x)
     setDirectory x (getDirectory x) =~= x
-    setFileName x (getFileName x) =~= x
+    setFileName x (getFileName x) === x
     addFileName (getDirectory x) (getFileName x) =~= x
     getFileName (setFileName x "fred") === "fred"
     getFileName (addFileName x "fred") === "fred"
+    
+    section "file path"
+    joinPath (splitPath x) === x
+    concat (splitPath x) === x
+
+    section "drive"
+    uncurry joinDrive (splitDrive x) === x
+    simpleJoin (splitDrive x) === x
+    getDrive x === fst (splitDrive x)
+    dropDrive x === snd (splitDrive x)
+    setDrive x (getDrive x) === x
+    
