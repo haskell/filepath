@@ -115,6 +115,10 @@ tests = do
     W.splitPath "c:\\test\\path" === ["c:\\","test\\","path"]
     P.splitPath "/file/test" === ["/","file/","test"]
     P.combine "/" "test" === "/test"
+    setBaseName "file/test.txt" "bob" === "file/bob.txt"
+    setBaseName "fred" "bill" === "bill"
+    getBaseName "file/test.txt" === "test"
+    getBaseName "dave.ext" === "dave"
 
     section "filepath"
     P.normalise "/file/\\test////" === "/file/\\test/"

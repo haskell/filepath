@@ -60,6 +60,7 @@ module System.FilePath
     -- * Operations on a filepath, as a list of directories
     splitFileName, joinFileName,
     getFileName, setFileName, dropFileName, addFileName,
+    getBaseName, setBaseName,
     getDirectory, setDirectory, isDirectory,
     combine, (</>),
     splitPath, joinPath, splitDirectories,
@@ -317,6 +318,16 @@ dropFileName x = reverse $ dropWhile (not . isPathSeparator) $ reverse x
 getFileName :: FilePath -> FilePath
 getFileName x = snd $ splitFileName x
 
+-- | Get the base name, without an extension or path
+getBaseName :: FilePath -> String
+getBaseName = dropExtension . getFileName
+
+-- | Set the base name
+setBaseName :: FilePath -> String -> FilePath
+setBaseName pth nam = joinFileName a (joinExtension nam d)
+    where
+        (a,b) = splitFileName pth
+        (c,d) = splitExtension b
 
 -- | Is an item a directory, is the last character a path separator.
 --   This does not query the file system.
