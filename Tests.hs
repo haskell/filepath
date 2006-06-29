@@ -114,6 +114,7 @@ tests = do
     splitPath "test/item/file" === ["test/","item/","file"]
     W.splitPath "c:\\test\\path" === ["c:\\","test\\","path"]
     P.splitPath "/file/test" === ["/","file/","test"]
+    P.combine "/" "test" === "/test"
 
     section "filepath"
     P.normalise "/file/\\test////" === "/file/\\test/"
