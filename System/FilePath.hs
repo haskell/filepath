@@ -82,7 +82,7 @@ module System.FilePath
 import Data.Maybe(isJust, fromMaybe)
 import Data.Char(toLower)
 import Data.List(isPrefixOf)
-import Control.Monad(when)
+import Control.Monad(when, filterM)
 
 import System.Info(os, compilerName)
 
@@ -146,7 +146,7 @@ pathSeparators = if isWindows then "\\/" else "/"
 -- | Rather than using @(== 'pathSeperator')@, use this.
 --   @isPathSeperator = (\`elem\` pathSeperators)@
 isPathSeparator :: Char -> Bool
-isPathSeparator = (`elem` pathSeperators)
+isPathSeparator = (`elem` pathSeparators)
 
 
 -- | A list of possible file separators, between the $PATH variable
