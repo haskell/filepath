@@ -7,5 +7,8 @@ cpphs --noline System\FilePath\Posix.hs -D__HADDOCK__ > docs\System\FilePath\Pos
 
 haddock -h docs\System\FilePath.hs docs\System\FilePath\Posix.hs docs\System\FilePath\Windows.hs --odir=docs
 
+copy d:\bin\hscolour.css docs\hscolour.css
+hscolour -css System\FilePath.hs > docs\FilePath.html
+
 if "%1" == "deploy" copy "docs\*.*" "W:\projects\filepath\*.*"
 
