@@ -334,6 +334,7 @@ splitDrive x = ("",x)
 joinDrive :: FilePath -> FilePath -> FilePath
 joinDrive a b | isPosix = a ++ b
               | null a = b
+              | null b = a
               | isPathSeparator (last a) = a ++ b
               | otherwise = a ++ [pathSeparator] ++ b
 
