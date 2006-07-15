@@ -65,10 +65,23 @@ joinLex :: [String] -> String
 joinLex = unwords
 
 
+-- would be concat, but GHC has 'issues'
+rejoinTests :: [String] -> String
+rejoinTests xs = unlines $
+                     [" block" ++ show i | i <- [1..length res]] ++
+                     concat (zipWith rejoin [1..] res)
+    where
+        res = divide xs
+    
+        divide [] = []
+        divide x = a : divide b
+            where (a,b) = splitAt 50 x
+        
+        rejoin n xs = ("block" ++ show n ++ " = do") : xs
 
 
 genTests :: [(Int, Test)] -> String
-genTests xs = unlines $ concatMap f $ zip [1..] xs
+genTests xs = rejoinTests $ concatMap f $ zip [1..] xs
     where
         f (tno,(lno,test)) =
             [" putStrLn \"Test " ++ show tno ++ ", from line " ++ show lno ++ "\""
