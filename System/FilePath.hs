@@ -555,7 +555,7 @@ badCharacters = ":*?><|"
 
 -- | Is a FilePath valid, i.e. could you create a file like it?
 isValid :: FilePath -> Bool
-isValid x | isPosix = False
+isValid x | isPosix = True
 isValid x = not $ any (`elem` badCharacters) $ dropDrive x
     
 
