@@ -27,7 +27,7 @@ top of the file.
 Acknowledgements
 ----------------
 
-Thanks to Marc Webber, shapr, Lemmih, others...
+Thanks to Marc Webber, shapr, David House, Lemmih, others...
 
 
 Competitors
