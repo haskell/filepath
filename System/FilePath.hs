@@ -268,6 +268,7 @@ dropExtension x = fst $ splitExtension x
 
 -- | Add an extension, even if there is already one there. 
 --   E.g. @addExtension \"foo.txt\" \"bat\" -> \"foo.txt.bat\"@.
+--
 -- > addExtension "file.txt" "bib" == "file.txt.bib"
 -- > addExtension "file." ".bib" == "file..bib"
 -- > addExtension "file" ".bib" == "file.bib"
@@ -316,6 +317,16 @@ isLetter x | x >= 'a' && x <= 'z' = True
 
 -- | Split a path into a drive and a path.
 --   On Unix, \/ is a Drive.
+--
+-- > uncurry (++) (splitDrive x) == x
+-- > Windows: splitDrive "file" == ("","file")
+-- > Windows: splitDrive "c:/file" == ("c:/","file")
+-- > Windows: splitDrive "c:\\file" == ("c:\\","file")
+-- > Windows: splitDrive "\\\\shared\\test" == ("\\\\shared\\","test")
+-- > Windows: splitDrive "\\\\shared" == ("\\\\shared","")
+-- > Posix:   splitDrive "/test" == ("/","test")
+-- > Posix:   splitDrive "test/file" == ("","test/file")
+-- > Posix:   splitDrive "file" == ("","file")
 splitDrive :: FilePath -> (FilePath, FilePath)
 splitDrive x | isPosix = case x of
                              '/':xs -> ("/",xs)
@@ -331,6 +342,8 @@ splitDrive x = ("",x)
 
 
 -- | Join a drive and the rest of the path.
+--
+-- > uncurry joinDrive (splitDrive x) == x
 joinDrive :: FilePath -> FilePath -> FilePath
 joinDrive a b | isPosix = a ++ b
               | null a = b
@@ -339,18 +352,26 @@ joinDrive a b | isPosix = a ++ b
               | otherwise = a ++ [pathSeparator] ++ b
 
 -- | Set the drive, from the filepath.
+--
+-- > setDrive x (getDrive x) == x
 setDrive :: FilePath -> String -> FilePath
 setDrive x drv = joinDrive drv (dropDrive x)
 
 -- | Get the drive from a filepath.
+--
+-- > getDrive x == fst (splitDrive x)
 getDrive :: FilePath -> FilePath
 getDrive = fst . splitDrive
 
 -- | Delete the drive, if it exists.
+--
+-- > dropDrive x == snd (splitDrive x)
 dropDrive :: FilePath -> FilePath
 dropDrive = snd . splitDrive
 
 -- | Does a path have a drive.
+--
+-- > not (hasDrive x) == null (getDrive x)
 hasDrive :: FilePath -> Bool
 hasDrive = not . null . getDrive
 
@@ -361,6 +382,13 @@ hasDrive = not . null . getDrive
 -- Operations on a filepath, as a list of directories
 
 -- | Split a filename into directory and file.
+--
+-- > uncurry (++) (splitFileName x) == x
+-- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
+-- > splitFileName "file/" == ("file/", "")
+-- > splitFileName "bob" == ("", "bob")
+-- > Posix:   splitFileName "/" == ("/","")
+-- > Windows: splitFileName "c:" == ("c:","")
 splitFileName :: FilePath -> (String, String)
 splitFileName x = (c ++ reverse b, reverse a)
     where
@@ -369,35 +397,53 @@ splitFileName x = (c ++ reverse b, reverse a)
 
 
 -- | Join a directory and filename.
+--
+-- > uncurry joinFileName (splitFileName x) == x
 joinFileName :: FilePath -> String -> FilePath
 joinFileName x y = addFileName x y
 
 
 -- | Add a filename onto the end of a path.
+--
+-- > addFileName (getDirectory x) (getFileName x) `equalFilePath` x
 addFileName :: FilePath -> String -> FilePath
 addFileName x y = if null x then y
                   else if isPathSeparator (last x) then x ++ y
                   else x ++ [pathSeparator] ++ y
 
 -- | Set the filename.
+--
+-- > setFileName x (getFileName x) == x
 setFileName :: FilePath -> String -> FilePath
 setFileName x y = joinFileName (fst $ splitFileName x) y
 
 -- | Drop the filename.
+--
+-- > dropFileName x == fst (splitFileName x)
 dropFileName :: FilePath -> FilePath
 dropFileName x = reverse $ dropWhile (not . isPathSeparator) $ reverse x
 
 
 -- | Get the file name.
+--
+-- > getFileName "test/" == ""
+-- > getFileName x == snd (splitFileName x)
+-- > getFileName (setFileName x "fred") == "fred"
+-- > getFileName (addFileName x "fred") == "fred"
 getFileName :: FilePath -> FilePath
 getFileName x = snd $ splitFileName x
 
 -- | Get the base name, without an extension or path.
---   E.g. @getBaseName \"bar\/foo.txt\" -> \"foo\"@
+--
+-- > getBaseName "file/test.txt" == "test"
+-- > getBaseName "dave.ext" == "dave"
 getBaseName :: FilePath -> String
 getBaseName = dropExtension . getFileName
 
 -- | Set the base name.
+--
+-- > setBaseName "file/test.txt" "bob" == "file/bob.txt"
+-- > setBaseName "fred" "bill" == "bill"
 setBaseName :: FilePath -> String -> FilePath
 setBaseName pth nam = joinFileName a (joinExtension nam d)
     where
@@ -406,13 +452,17 @@ setBaseName pth nam = joinFileName a (joinExtension nam d)
 
 -- | Is an item either a directory or the last character a path separator?
 --   This does not query the file system.
+--
+-- > isDirectory "test" == False
+-- > isDirectory "test/" == True
 isDirectory :: FilePath -> Bool
 isDirectory "" = False
 isDirectory x = isPathSeparator (last x)
 
 -- | Get the directory name, move up one level.
---   E.g. @getDirectory \"\/foo\/bar\/baz\"  -> \"\/foo\/bar\"@,
---        @getDirectory \"\/foo\/bar\/baz\/\" -> \"\/foo\/bar\/baz\"@
+--
+-- > Posix:    getDirectory "/foo/bar/baz" == "/foo/bar"
+-- > Posix:    getDirectory "/foo/bar/baz/" == "/foo/bar/baz"
 getDirectory :: FilePath -> FilePath
 getDirectory x = if null res then file else res
     where
@@ -420,11 +470,17 @@ getDirectory x = if null res then file else res
         file = dropFileName x
 
 -- | Set the directory, keeping the filename the same.
+--
+-- > setDirectory x (getDirectory x) `equalFilePath` x
 setDirectory :: FilePath -> String -> FilePath
 setDirectory x dir = joinFileName dir (getFileName x)
 
 
 -- | Combine two paths, if the right path 'isAbsolute', then it returns the second.
+--
+-- > Posix:   combine "/" "test" == "/test"
+-- > Posix:   combine "home" "bob" == "home/bob"
+-- > Windows: combine "home" "bob" == "home\\bob"
 combine :: FilePath -> FilePath -> FilePath
 combine a b | isAbsolute b = b
             | otherwise = combineAlways a b
@@ -443,7 +499,12 @@ combineAlways a b | null a = b
 
 
 -- | Split a path by the directory seperator. 
---   E.g. @splitPath \"foo\/bar\/baz\" -> [ \"foo\/\", \"bar\/\", \"baz\" ]@ on Unix.
+--
+-- > concat (splitPath x) == x
+-- > splitPath "test//item/" == ["test//","item/"]
+-- > splitPath "test/item/file" == ["test/","item/","file"]
+-- > Windows: splitPath "c:\\test\\path" == ["c:\\","test\\","path"]
+-- > Posix:   splitPath "/file/test" == ["/","file/","test"]
 splitPath :: FilePath -> [FilePath]
 splitPath x = [a | a /= ""] ++ f b
     where
@@ -456,6 +517,10 @@ splitPath x = [a | a /= ""] ++ f b
                 (c,d) = break (not . isPathSeparator) b
 
 -- | Just as 'splitPath', but don't add the trailing slashes to each element.
+--
+-- > splitDirectories "test/file" == ["test","file"]
+-- > splitDirectories "/test/file" == ["/","test","file"]
+-- > joinPath (splitDirectories x) `equalFilePath` x
 splitDirectories :: FilePath -> [FilePath]
 splitDirectories x =
         if hasDrive x then head xs : f (tail xs)
@@ -469,6 +534,8 @@ splitDirectories x =
 
 
 -- | Join path elements back together.
+--
+-- > joinPath (splitPath x) == x
 joinPath :: [FilePath] -> FilePath
 joinPath x = foldr combineAlways "" x
 
@@ -493,8 +560,10 @@ equalFilePath a b = f a == f b
                          | otherwise = x
 
 -- | Expand out a filename to its full name, with the a directory factored in.
---   E.g. @fullPathWith \"\/home\/\" \"bob\/repo\/foo\" -> \"\/home\/bob\/repo\/foo\"@,
---        @fullPathWith \"\/home\/\" \"\/bob\/repo\/foo\" -> \"\/bob\/repo\/foo\"@ on Unix.
+--
+-- > Posix:   fullPathWith "/file/test/" "/bob/dave" == "/bob/dave"
+-- > Posix:   fullPathWith "/file/test/" "bob" == "/file/test/bob"
+-- > Posix:   fullPathWith "/file/test/" "../bob" == "/file/bob"
 fullPathWith :: FilePath -> FilePath -> FilePath
 fullPathWith cur x = normalise $ combine cur x
 
@@ -504,7 +573,12 @@ fullPath x = do cur <- getCurrentDirectory
                 return $ fullPathWith cur x
 
 -- | Contract a filename, based on a relative path.
---   E.g. @shortPathWith \"\/home\/\" \"\/home\/bob\/foo\/bar\" -> \"bob\/foo\/bar\"@.
+--
+-- > Posix:   shortPathWith "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
+-- > Posix:   shortPathWith "/fred" "bob" == "bob"
+-- > Posix:   shortPathWith "/file/test" "/file/test/fred" == "fred"
+-- > Posix:   shortPathWith "/file/test" "/file/test/fred/" == "fred/"
+-- > Posix:   shortPathWith "/fred/dave" "/fred/bill" == "../bill"
 shortPathWith :: FilePath -> FilePath -> FilePath
 shortPathWith cur x | isRelative x || isRelative cur || getDrive x /= getDrive cur = normalise x
 shortPathWith cur x = joinPath $
@@ -532,6 +606,14 @@ shortPath x = do cur <- getCurrentDirectory
 -- * .\/ -> \"\"
 --
 -- * item\/..\/ -> \"\"
+--
+-- > Posix:   normalise "/file/\\test////" == "/file/\\test/"
+-- > Posix:   normalise "/file/./test" == "/file/test"
+-- > Posix:   normalise "/test/file/../bob/fred/" == "/test/bob/fred/"
+-- > Posix:   normalise "../bob/fred/" == "../bob/fred/"
+-- > Posix:   normalise "./bob/fred/" == "bob/fred/"
+-- > Windows: normalise "c:\\file/bob\\" == "c:\\file\\bob\\"
+-- > Windows: normalise "\\\\server\\test" == "\\\\server\\test"
 normalise :: FilePath -> FilePath
 normalise "" = ""
 normalise x = joinDrive drv (f pth) ++ [pathSeparator | isPathSeparator $ last x]
@@ -555,12 +637,21 @@ normalise x = joinDrive drv (f pth) ++ [pathSeparator | isPathSeparator $ last x
 badCharacters = ":*?><|"
 
 -- | Is a FilePath valid, i.e. could you create a file like it?
+--
+-- > Posix:   isValid "/random_ path:*" == True
+-- > Posix:   isValid x == True
+-- > Windows: isValid "c:\\test" == True
+-- > Windows: isValid "c:\\test:of_test" == False
+-- > Windows: isValid "test*" == False
 isValid :: FilePath -> Bool
 isValid x | isPosix = True
 isValid x = not $ any (`elem` badCharacters) $ dropDrive x
     
 
 -- | Take a FilePath and make it valid; does not change already valid FilePaths.
+--
+-- > isValid (makeValid x)
+-- > if isValid x then makeValid x == x else True
 makeValid :: FilePath -> FilePath
 makeValid x | isPosix = x
 makeValid x = joinDrive drv (map f pth)
@@ -572,11 +663,18 @@ makeValid x = joinDrive drv (map f pth)
 
 
 -- | Is a path relative, or is it fixed to the root?
+--
+-- > Windows: isRelative "path\\test" == True
+-- > Windows: isRelative "c:\\test" == False
+-- > Posix:   isRelative "test/path" == True
+-- > Posix:   isRelative "/test" == False
 isRelative :: FilePath -> Bool
 isRelative x = null $ getDrive x
 
 
 -- | @not . 'isRelative'@
+--
+-- > isAbsolute x == not (isRelative x)
 isAbsolute :: FilePath -> Bool
 isAbsolute = not . isRelative
 
@@ -608,6 +706,7 @@ ensureDirectory path = when (not $ null pths) $ f (joinDrive drv (head pths)) (t
 
 
 -- | Is a directory a real directory, or an alias to a parent . or ..?
+isFakeDirectory :: FilePath -> Bool
 isFakeDirectory x = x == "." || x == ".."
 
 -- Temporary File Names
