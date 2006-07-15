@@ -41,7 +41,7 @@ module System.FilePath
     (
     -- * The basic functions
     FilePath,
-    pathSeparator, isPathSeparator, pathSeparators,
+    pathSeparator, pathSeparators, isPathSeparator,
     fileSeparator, isFileSeparator,
     extSeparator, isExtSeparator,
     
@@ -132,41 +132,56 @@ isWindows = osName == "windows" && forceEffectView /= ForcePosix
 ---------------------------------------------------------------------
 -- The basic functions
 
--- | The character that seperates directories. Unix = @\/@, Windows = @\\@. In
---   the case where more than one character is possible, 'pathSeperator' is the
---   'ideal' one.
+-- | The character that seperates directories. In the case where more than
+--   one character is possible, 'pathSeperator' is the 'ideal' one.
+--
+-- > Windows: pathSeparator == '\\'
+-- > Posix:   pathSeparator ==  '/'
+-- > isPathSeparator pathSeparator
 pathSeparator :: Char
 pathSeparator = if isWindows then '\\' else '/'
 
--- | The list of all possible seperators. Unix = @[\'\/\']@, Windows = 
---   @[\'\/\',\'\\\']@
+-- | The list of all possible seperators.
+--
+-- > Windows: pathSeparators == ['\\', '/']
+-- > Posix:   pathSeparators == ['/']
+-- > pathSeparator `elem` pathSeparators
 pathSeparators :: [Char]
 pathSeparators = if isWindows then "\\/" else "/"
 
--- | Rather than using @(== 'pathSeperator')@, use this.
---   @isPathSeperator = (\`elem\` pathSeperators)@
+-- | Rather than using @(== 'pathSeperator')@, use this. Test if something
+--   is a path separator.
+--
+-- > isPathSeparator a == (a `elem` pathSeparators)
 isPathSeparator :: Char -> Bool
 isPathSeparator = (`elem` pathSeparators)
 
 
 -- | A list of possible file separators, between the $PATH variable
---   Windows = @;@, Unix = @:@.
+--
+-- > Windows: fileSeparator == ';'
+-- > Posix:   fileSeparator == ':'
 fileSeparator :: Char
 fileSeparator = if isWindows then ';' else ':'
 
 -- | Is the character a file separator?
+--
+-- > isFileSeparator a == (a == fileSeparator)
 isFileSeparator :: Char -> Bool
 isFileSeparator = (== fileSeparator)
 
 
--- | File extension character, '.' on all systems.
+-- | File extension character
+--
+-- > extSeparator == '.'
 extSeparator :: Char
 extSeparator = '.'
 
 -- | Is the character an extension character?
+--
+-- > isExtSeparator x == (x == extSeparator)
 isExtSeparator :: Char -> Bool
 isExtSeparator = (== extSeparator)
-
 
 
 
