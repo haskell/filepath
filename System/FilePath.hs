@@ -35,6 +35,9 @@ You want to compile a Haskell file, but put the hi file under \"interface\"
 You want to display a filename to the user, as neatly as possible
 
 @'shortPath' file >>= putStrLn@
+
+The examples in code format descibed by each function are used to generate
+tests, and should give clear semantics for the functions.
 -}
 
 module System.FilePath
@@ -179,7 +182,7 @@ extSeparator = '.'
 
 -- | Is the character an extension character?
 --
--- > isExtSeparator x == (x == extSeparator)
+-- > isExtSeparator a == (a == extSeparator)
 isExtSeparator :: Char -> Bool
 isExtSeparator = (== extSeparator)
 
@@ -190,6 +193,9 @@ isExtSeparator = (== extSeparator)
 -- Path methods (environment $PATH)
 
 -- | Take a string, split it on the 'fileSeparators' character.
+--
+-- > Windows: splitFiles "File1;File2;File3" == ["File1","File2","File3"]
+-- > Posix:   splitFiles "File1:File2:File3" == ["File1","File2","File3"]
 splitFiles :: String -> [FilePath]
 splitFiles var = do f var
     where
@@ -207,7 +213,16 @@ getPath = fmap splitFiles (getEnv "PATH")
 ---------------------------------------------------------------------
 -- Extension methods
 
--- | Split on the extension. @\"foo.txt\" -> (\"foo\", \".txt\")@
+-- | Split on the extension.
+--
+-- > uncurry (++) (splitExtension x) == x
+-- > splitExtension "file.txt" == ("file",".txt")
+-- > splitExtension "file" == ("file","")
+-- > splitExtension "file/file.txt" == ("file/file",".txt")
+-- > splitExtension "file.txt/boris" == ("file.txt/boris","")
+-- > splitExtension "file.txt/boris.ext" == ("file.txt/boris",".ext")
+-- > splitExtension "file/path.txt.bob.fred" == ("file/path.txt.bob",".fred")
+-- > splitExtension "file/path.txt/" == ("file/path.txt/","")
 splitExtension :: FilePath -> (String, String)
 splitExtension x = case d of
                        "" -> (x,"")
@@ -217,41 +232,60 @@ splitExtension x = case d of
         (c,d) = break isExtSeparator $ reverse b
 
 -- | Join an extension and a filepath.
+--
+-- > uncurry joinExtension (splitExtension x) == x
 joinExtension :: String -> String -> FilePath
 joinExtension = addExtension
 
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
+--
+-- > getExtension x == snd (splitExtension x)
+-- > getExtension (addExtension x "ext") == ".ext"
+-- > getExtension (setExtension x "ext") == ".ext"
 getExtension :: FilePath -> String
 getExtension x = snd $ splitExtension x
 
 -- | Set the extension of a file, overwriting one if already present.
+--
+-- > setExtension "file.txt" ".bob" == "file.bob"
+-- > setExtension "file.txt" "bob" == "file.bob"
+-- > setExtension "file" ".bob" == "file.bob"
+-- > setExtension "file.txt" "" == "file"
+-- > setExtension "file.fred.bob" "txt" == "file.fred.txt"
 setExtension :: FilePath -> String -> FilePath
 setExtension x y = joinExtension a y
     where (a,b) = splitExtension x
 
 -- | Alias to 'addExtension', for people who like that sort of thing.
---   Probably needs a fixity and precedence...
 (<.>) :: FilePath -> String -> FilePath
 (<.>) = addExtension
 
 -- | Remove last extension, and any . following it.
+--
+-- > dropExtension x == fst (splitExtension x)
 dropExtension :: FilePath -> FilePath
 dropExtension x = fst $ splitExtension x
 
 -- | Add an extension, even if there is already one there. 
 --   E.g. @addExtension \"foo.txt\" \"bat\" -> \"foo.txt.bat\"@.
+-- > addExtension "file.txt" "bib" == "file.txt.bib"
+-- > addExtension "file." ".bib" == "file..bib"
+-- > addExtension "file" ".bib" == "file.bib"
 addExtension :: FilePath -> String -> FilePath
 addExtension file "" = file
 addExtension file xs@(x:_) | isExtSeparator x = file ++ xs
                            | otherwise = file ++ [extSeparator] ++ xs
 
 -- | Does the given filename have an extension?
+--
+-- > null (getExtension x) == not (hasExtension x)
 hasExtension :: FilePath -> Bool
 hasExtension x = any isExtSeparator $ getFileName x
 
 
-
 -- | Split on all extensions
+--
+-- > splitExtensions "file.tar.gz" == ("file",".tar.gz")
 splitExtensions :: FilePath -> (FilePath, String)
 splitExtensions x = (a ++ c, d)
     where
@@ -259,6 +293,8 @@ splitExtensions x = (a ++ c, d)
         (c,d) = break isExtSeparator b
 
 -- | Drop all extensions
+--
+-- > not $ hasExtension (dropExtensions x)
 dropExtensions :: FilePath -> FilePath
 dropExtensions = fst . splitExtensions
 
