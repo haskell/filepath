@@ -44,7 +44,7 @@ addPrefix pre str | all isAlpha str && length str > 1 && not (str `elem` prelude
                   | otherwise = str
 
 
-prelude = ["elem"]
+prelude = ["elem","uncurry","snd","fst","not","null"]
 
 
 grabTest :: String -> Test
@@ -77,4 +77,7 @@ genTests xs = unlines $ concatMap f $ zip [1..] xs
 -- the result must be a line of the type "IO ()"
 genTest :: Test -> String
 genTest (Expr x) = "constTest (" ++ x ++ ")"
-genTest (Test free x) = "quickCheck (\\" ++ concatMap (' ':) free ++ " -> (" ++ x ++ "))"
+genTest (Test free x) = "quickCheck (\\" ++ concatMap ((' ':) . f) free ++ " -> (" ++ x ++ "))"
+    where
+        f [a] | a >= 'x' = "(QFilePath " ++ [a] ++ ")"
+        f x = x

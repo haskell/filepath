@@ -11,14 +11,11 @@ constTest False = error "Failed on constTest"
 
 
 
-{-
 data QFilePath = QFilePath FilePath
                  deriving Show
 
 instance Arbitrary QFilePath where
     arbitrary = vector 25 >>= return . QFilePath
-
--}
 
 
 instance Arbitrary Char where
