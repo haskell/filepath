@@ -44,7 +44,7 @@ addPrefix pre str | all isAlpha str && length str > 1 && not (str `elem` prelude
                   | otherwise = str
 
 
-prelude = ["elem","uncurry","snd","fst","not","null"]
+prelude = ["elem","uncurry","snd","fst","not","null","if","then","else","True","False","concat"]
 
 
 grabTest :: String -> Test
