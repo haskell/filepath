@@ -90,7 +90,7 @@ genTests xs = rejoinTests $ concatMap f $ zip [1..] xs
 -- the result must be a line of the type "IO ()"
 genTest :: Test -> String
 genTest (Expr x) = "constTest (" ++ x ++ ")"
-genTest (Test free x) = "quickCheck (\\" ++ concatMap ((' ':) . f) free ++ " -> (" ++ x ++ "))"
+genTest (Test free x) = "quickSafe (\\" ++ concatMap ((' ':) . f) free ++ " -> (" ++ x ++ "))"
     where
         f [a] | a >= 'x' = "(QFilePath " ++ [a] ++ ")"
         f x = x
