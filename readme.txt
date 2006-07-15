@@ -18,7 +18,6 @@ Haddock: http://www-users.cs.york.ac.uk/~ndm/projects/filepath/System-FilePath.h
 Darcs: darcs get http://www.cs.york.ac.uk/fp/darcs/filepath
 Source: http://www.cs.york.ac.uk/fp/darcs/filepath/System/FilePath.hs
 Homepage: http://www-users.cs.york.ac.uk/~ndm/projects/libraries.php
-Tests: http://www.cs.york.ac.uk/fp/darcs/filepath/Tests.hs
 
 If you go to the haddock page there are a few little examples at the
 top of the file.
