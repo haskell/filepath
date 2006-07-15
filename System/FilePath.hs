@@ -463,7 +463,8 @@ splitDirectories x =
         xs = splitPath x
         
         f xs = map g xs
-        g x = takeWhile (not . isPathSeparator) x
+        g x = if null res then x else res
+            where res = takeWhile (not . isPathSeparator) x
 
 
 -- | Join path elements back together.
