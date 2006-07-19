@@ -71,6 +71,7 @@ module System.FilePath
     splitPath, joinPath, splitDirectories,
     
     -- * File name manipulators
+    canonicalPath,
     normalise, equalFilePath,
     fullPath, fullPathWith, shortPath, shortPathWith,
     isRelative, isAbsolute,
