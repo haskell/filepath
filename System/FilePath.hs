@@ -85,7 +85,7 @@ module System.FilePath
     where
 
 import Data.Maybe(isJust, fromMaybe)
-import Data.Char(toLower)
+import Data.Char(toLower, toUpper)
 import Data.List(isPrefixOf)
 import Control.Monad(when, filterM)
 
@@ -639,7 +639,13 @@ normalise x = joinDrive drv (f pth) ++ [pathSeparator | isPathSeparator $ last x
         dropDots acc [] = reverse acc
         
 
+-- information for validity functions on Windows
+
+
+-- see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/fileio/fs/naming_a_file.asp
 badCharacters = ":*?><|"
+badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "CLOCK$"]
+
 
 -- | Is a FilePath valid, i.e. could you create a file like it?
 --
@@ -648,9 +654,14 @@ badCharacters = ":*?><|"
 -- > Windows: isValid "c:\\test" == True
 -- > Windows: isValid "c:\\test:of_test" == False
 -- > Windows: isValid "test*" == False
+-- > Windows: isValid "c:\\test\\nul" == False
+-- > Windows: isValid "c:\\test\\prn.txt" == False
 isValid :: FilePath -> Bool
 isValid x | isPosix = True
-isValid x = not $ any (`elem` badCharacters) $ dropDrive x
+isValid x = not (any (`elem` badCharacters) x2) && not (any f $ splitDirectories x2)
+    where
+        x2 = dropDrive x
+        f x = map toUpper (dropExtensions x) `elem` badElements
     
 
 -- | Take a FilePath and make it valid; does not change already valid FilePaths.
