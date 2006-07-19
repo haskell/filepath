@@ -84,7 +84,7 @@ module System.FilePath
     )
     where
 
-import Data.Maybe(isJust, fromMaybe)
+import Data.Maybe(isJust, fromMaybe, fromJust)
 import Data.Char(toLower, toUpper)
 import Data.List(isPrefixOf)
 import Control.Monad(when, filterM)
@@ -331,6 +331,8 @@ isLetter x | x >= 'a' && x <= 'z' = True
 -- > Windows: splitDrive "c:\\file" == ("c:\\","file")
 -- > Windows: splitDrive "\\\\shared\\test" == ("\\\\shared\\","test")
 -- > Windows: splitDrive "\\\\shared" == ("\\\\shared","")
+-- > Windows: splitDrive "\\\\?\\UNC\\shared\\file" == ("\\\\?\\UNC\\shared\\","file")
+-- > Windows: splitDrive "\\\\?\\d:\\file" == ("\\\\?\\d:\\","file")
 -- > Posix:   splitDrive "/test" == ("/","test")
 -- > Posix:   splitDrive "test/file" == ("","test/file")
 -- > Posix:   splitDrive "file" == ("","file")
@@ -338,15 +340,54 @@ splitDrive :: FilePath -> (FilePath, FilePath)
 splitDrive x | isPosix = case x of
                              '/':xs -> ("/",xs)
                              xs -> ("",xs)
-splitDrive [x,':'] | isLetter x = ([x,':'],"")
-splitDrive (x:':':y:xs) | isLetter x && isPathSeparator y = addSlash [x,':'] (y:xs)
-splitDrive (s1:s2:xs) | isPathSeparator s1 && isPathSeparator s2 =
-        addSlash (s1:s2:a) b
-    where (a,b) = break isPathSeparator xs
+
+splitDrive x | isJust y = fromJust y
+    where y = readDriveLetter x
+
+splitDrive x | isJust y = fromJust y
+    where y = readDriveUNC x
+
+splitDrive x | isJust y = fromJust y
+    where y = readDriveShare x
+
 splitDrive x = ("",x)
 
 addSlash a xs = (a++c,d)
     where (c,d) = span isPathSeparator xs
+
+-- http://msdn.microsoft.com/library/default.asp?url=/library/en-us/fileio/fs/naming_a_file.asp
+-- "\\?\D:\<path>" or "\\?\UNC\<server>\<share>"
+-- a is "\\?\"
+readDriveUNC :: FilePath -> Maybe (FilePath, FilePath)
+readDriveUNC (s1:s2:'?':s3:xs) | all isPathSeparator [s1,s2,s3] =
+    case map toUpper xs of
+        ('U':'N':'C':s4:_) | isPathSeparator s4 ->
+            let (a,b) = readDriveShareName (drop 4 xs)
+            in Just (s1:s2:'?':s3:take 4 xs ++ a, b)
+        _ -> case readDriveLetter xs of
+                 Just (a,b) -> Just (s1:s2:'?':s3:a,b)
+                 Nothing -> Nothing
+readDriveUNC x = Nothing
+
+-- c:\
+readDriveLetter :: String -> Maybe (FilePath, FilePath)
+readDriveLetter [x,':'] | isLetter x = Just ([x,':'],"")
+readDriveLetter (x:':':y:xs) | isLetter x && isPathSeparator y = Just $ addSlash [x,':'] (y:xs)
+readDriveLetter x = Nothing
+
+-- \\sharename\
+readDriveShare :: String -> Maybe (FilePath, FilePath)
+readDriveShare (s1:s2:xs) | isPathSeparator s1 && isPathSeparator s2 =
+        Just (s1:s2:a,b)
+    where (a,b) = readDriveShareName xs
+readDriveShare x = Nothing
+
+-- assume you have already seen \\
+-- share\bob -> "share","\","bob"
+readDriveShareName :: String -> (FilePath, FilePath)
+readDriveShareName name = addSlash a b
+    where (a,b) = break isPathSeparator name
+    
 
 
 -- | Join a drive and the rest of the path.
