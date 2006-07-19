@@ -57,8 +57,10 @@ module System.FilePath
     splitExtensions, dropExtensions, getExtensions,
     
     -- * Drive methods
+    {- DRIVE_SECTION
     splitDrive, joinDrive,
     getDrive, setDrive, hasDrive, dropDrive,
+    END_DRIVE_SECTION -}
     
     -- * Operations on a filepath, as a list of directories
     splitFileName, joinFileName,

@@ -18,6 +18,11 @@ module System.FilePath.Posix
 
 #define forceEffect ForcePosix
 #define module --
+#ifdef TESTING
+# define DRIVE_SECTION -}
+# define END_DRIVE_SECTION {-
+#endif
+
 #include "../FilePath.hs"
 
 #endif
