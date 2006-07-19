@@ -505,6 +505,7 @@ combineAlways a b | null a = b
 -- > concat (splitPath x) == x
 -- > splitPath "test//item/" == ["test//","item/"]
 -- > splitPath "test/item/file" == ["test/","item/","file"]
+-- > splitPath "" == []
 -- > Windows: splitPath "c:\\test\\path" == ["c:\\","test\\","path"]
 -- > Posix:   splitPath "/file/test" == ["/","file/","test"]
 splitPath :: FilePath -> [FilePath]
@@ -523,6 +524,7 @@ splitPath x = [a | a /= ""] ++ f b
 -- > splitDirectories "test/file" == ["test","file"]
 -- > splitDirectories "/test/file" == ["/","test","file"]
 -- > joinPath (splitDirectories x) `equalFilePath` x
+-- > splitDirectories "" == []
 splitDirectories :: FilePath -> [FilePath]
 splitDirectories x =
         if hasDrive x then head xs : f (tail xs)
