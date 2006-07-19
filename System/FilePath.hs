@@ -56,8 +56,8 @@ module System.FilePath
     getExtension, setExtension, dropExtension, addExtension, hasExtension, (<.>),
     splitExtensions, dropExtensions, getExtensions,
     
-    -- * Drive methods
     {- DRIVE_SECTION
+    -- * Drive methods
     splitDrive, joinDrive,
     getDrive, setDrive, hasDrive, dropDrive,
     END_DRIVE_SECTION -}
