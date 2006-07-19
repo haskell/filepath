@@ -663,6 +663,7 @@ badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5
 -- > Windows: isValid "test*" == False
 -- > Windows: isValid "c:\\test\\nul" == False
 -- > Windows: isValid "c:\\test\\prn.txt" == False
+-- > Windows: isValid "c:\\nul\\file" == False
 isValid :: FilePath -> Bool
 isValid x | isPosix = True
 isValid x = not (any (`elem` badCharacters) x2) && not (any f $ splitDirectories x2)
@@ -675,15 +676,28 @@ isValid x = not (any (`elem` badCharacters) x2) && not (any f $ splitDirectories
 --
 -- > isValid (makeValid x)
 -- > if isValid x then makeValid x == x else True
+-- > Windows: makeValid "c:\\test:of_test" == "c:\\test_of_test"
+-- > Windows: makeValid "test*" == "test_"
+-- > Windows: makeValid "c:\\test\\nul" == "c:\\test\\nul_"
+-- > Windows: makeValid "c:\\test\\prn.txt" == "c:\\test\\prn_.txt"
+-- > Windows: makeValid "c:\\test/prn.txt" == "c:\\test/prn_.txt"
+-- > Windows: makeValid "c:\\nul\\file" == "c:\\nul_\\file"
 makeValid :: FilePath -> FilePath
 makeValid x | isPosix = x
-makeValid x = joinDrive drv (map f pth)
+makeValid x = joinDrive drv $ validElements $ validChars pth
     where
         (drv,pth) = splitDrive x
         
+        validChars x = map f x
         f x | x `elem` badCharacters = '_'
             | otherwise = x
 
+        validElements x = joinPath $ map g $ splitPath x
+        g x = h (reverse b) ++ reverse a
+            where (a,b) = span isPathSeparator $ reverse x
+        h x = if map toUpper a `elem` badElements then joinExtension (a ++ "_") b else x
+            where (a,b) = splitExtensions x
+        
 
 -- | Is a path relative, or is it fixed to the root?
 --
