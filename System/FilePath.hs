@@ -430,7 +430,7 @@ setFileName x y = joinFileName (fst $ splitFileName x) y
 --
 -- > dropFileName x == fst (splitFileName x)
 dropFileName :: FilePath -> FilePath
-dropFileName x = reverse $ dropWhile (not . isPathSeparator) $ reverse x
+dropFileName x = fst (splitFileName x)
 
 
 -- | Get the file name.
