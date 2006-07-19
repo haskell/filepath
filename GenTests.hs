@@ -59,6 +59,7 @@ splitLex :: String -> [String]
 splitLex x = case lex x of
                 [("","")] -> []
                 [(x,y)] -> x : splitLex y
+                y -> error $ "GenTests.splitLex, " ++ show x ++ " -> " ++ show y
 
 
 joinLex :: [String] -> String
