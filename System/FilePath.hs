@@ -274,10 +274,15 @@ dropExtension x = fst $ splitExtension x
 -- > addExtension "file.txt" "bib" == "file.txt.bib"
 -- > addExtension "file." ".bib" == "file..bib"
 -- > addExtension "file" ".bib" == "file.bib"
+-- > Windows: addExtension "\\\\share" ".txt" == "\\\\share\\.txt"
 addExtension :: FilePath -> String -> FilePath
 addExtension file "" = file
-addExtension file xs@(x:_) | isExtSeparator x = file ++ xs
-                           | otherwise = file ++ [extSeparator] ++ xs
+addExtension file xs@(x:_) = joinDrive a res
+    where 
+        res = if isExtSeparator x then b ++ xs
+              else b ++ [extSeparator] ++ xs
+                
+        (a,b) = splitDrive file
 
 -- | Does the given filename have an extension?
 --
