@@ -334,6 +334,7 @@ isLetter x | x >= 'a' && x <= 'z' = True
 -- > Windows: splitDrive "\\\\shared" == ("\\\\shared","")
 -- > Windows: splitDrive "\\\\?\\UNC\\shared\\file" == ("\\\\?\\UNC\\shared\\","file")
 -- > Windows: splitDrive "\\\\?\\d:\\file" == ("\\\\?\\d:\\","file")
+-- > Windows: splitDrive "/d" == ("/","d")
 -- > Posix:   splitDrive "/test" == ("/","test")
 -- > Posix:   splitDrive "test/file" == ("","test/file")
 -- > Posix:   splitDrive "file" == ("","file")
@@ -350,6 +351,8 @@ splitDrive x | isJust y = fromJust y
 
 splitDrive x | isJust y = fromJust y
     where y = readDriveShare x
+
+splitDrive (x:xs) | isPathSeparator x = addSlash [x] xs
 
 splitDrive x = ("",x)
 
