@@ -86,7 +86,7 @@ module System.FilePath
 
 import Data.Maybe(isJust, fromMaybe, fromJust)
 import Data.Char(toLower, toUpper)
-import Data.List(isPrefixOf)
+import Data.List(isPrefixOf, inits)
 import Control.Monad(when, filterM)
 
 import System.Info(os, compilerName)
@@ -598,6 +598,47 @@ joinPath x = foldr combineAlways "" x
 
 ---------------------------------------------------------------------
 -- File name manipulators
+
+-- | Find the canoncial path, if the file exists then the case will be correct
+--   on Windows, if the file is a directory it will have a trailing slash
+--   appended on all operating systems.
+canonicalPath :: FilePath -> IO FilePath
+canonicalPath x = do
+        x2 <- fixElements $ normalise x
+        x3 <- fixSlash x2
+        return x3
+    where
+        fixElements x | isPosix = return x
+        fixElements x = do
+                fixed <- mapM (uncurry fixElement) tests
+                return $ joinPath $ [head dirs | isAbsolute x] ++ fixed
+            where
+                tests = map (\x -> (joinPath $ init x, last x)) $ drop 2 $ inits dirs
+                dirs = ["."|isRelative x] ++ splitDirectories x
+            
+        
+        -- take a context, and an element, and return the new element
+        fixElement :: FilePath -> FilePath -> IO FilePath
+        fixElement context element = do
+            let item = context </> element
+            b1 <- doesDirectoryExist item
+            b2 <- doesFileExist item
+            if b1 || b2 then do
+                items <- getDirectoryContents context
+                let uelement = map toUpper element
+                    i = [x | x <- items, map toUpper x == uelement]
+                if null i then return element else return $ head i
+             else
+                return element
+        
+        fixSlash :: FilePath -> IO FilePath
+        fixSlash file = do
+            b <- doesDirectoryExist file
+            if b && not (isDirectory file) then
+                return $ file ++ [pathSeparator]
+             else
+                return file
+
 
 -- | Equality of two 'FilePaths'. If you call 'fullPath' first this has a much
 --   better chance of working. Note that this doesn't follow symlinks or
