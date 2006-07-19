@@ -473,10 +473,11 @@ isDirectory x = isPathSeparator (last x)
 -- > Posix:    getDirectory "/foo/bar/baz" == "/foo/bar"
 -- > Posix:    getDirectory "/foo/bar/baz/" == "/foo/bar/baz"
 getDirectory :: FilePath -> FilePath
-getDirectory x = if null res then file else res
+getDirectory x = a ++ if null res then file else res
     where
+        (a,b) = splitDrive x
         res = reverse $ dropWhile isPathSeparator $ reverse file
-        file = dropFileName x
+        file = dropFileName b
 
 -- | Set the directory, keeping the filename the same.
 --
