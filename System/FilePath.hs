@@ -338,14 +338,15 @@ splitDrive :: FilePath -> (FilePath, FilePath)
 splitDrive x | isPosix = case x of
                              '/':xs -> ("/",xs)
                              xs -> ("",xs)
-splitDrive (x:':':[]) | isLetter x = ([x,':'],"")
-splitDrive (x:':':y:xs) | isLetter x && isPathSeparator y = ([x,':',y],xs)
+splitDrive [x,':'] | isLetter x = ([x,':'],"")
+splitDrive (x:':':y:xs) | isLetter x && isPathSeparator y = addSlash [x,':'] (y:xs)
 splitDrive (s1:s2:xs) | isPathSeparator s1 && isPathSeparator s2 =
-    case b of
-        "" -> ([s1,s2] ++ xs, "")
-        (y:ys) -> ([s1,s2] ++ a ++ [y], ys)
+        addSlash (s1:s2:a) b
     where (a,b) = break isPathSeparator xs
 splitDrive x = ("",x)
+
+addSlash a xs = (a++c,d)
+    where (c,d) = span isPathSeparator xs
 
 
 -- | Join a drive and the rest of the path.
