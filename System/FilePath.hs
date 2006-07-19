@@ -410,6 +410,7 @@ joinFileName x y = addFileName x y
 -- > addFileName (getDirectory x) (getFileName x) `equalFilePath` x
 addFileName :: FilePath -> String -> FilePath
 addFileName x y = if null x then y
+                  else if null y then x
                   else if isPathSeparator (last x) then x ++ y
                   else x ++ [pathSeparator] ++ y
 
