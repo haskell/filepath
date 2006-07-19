@@ -665,15 +665,18 @@ shortPath x = do cur <- getCurrentDirectory
 -- > Posix:   normalise "/test/file/../bob/fred/" == "/test/bob/fred/"
 -- > Posix:   normalise "../bob/fred/" == "../bob/fred/"
 -- > Posix:   normalise "./bob/fred/" == "bob/fred/"
--- > Windows: normalise "c:\\file/bob\\" == "c:\\file\\bob\\"
+-- > Windows: normalise "c:\\file/bob\\" == "C:\\file\\bob\\"
 -- > Windows: normalise "\\\\server\\test" == "\\\\server\\test"
+-- > Windows: normalise "c:/file" == "C:\\file"
 normalise :: FilePath -> FilePath
 normalise "" = ""
-normalise x = joinDrive drv (f pth) ++ [pathSeparator | isPathSeparator $ last x]
+normalise x = joinDrive (normaliseDrive drv) (f pth) ++ [pathSeparator | isPathSeparator $ last x]
     where
         (drv,pth) = splitDrive x
     
         f = joinPath . dropDots [] . splitDirectories . propSep
+        
+        g x = if isPathSeparator x then pathSeparator else x
     
         propSep (a:b:xs) | isPathSeparator a && isPathSeparator b = propSep (a:xs)
         propSep (a:xs) | isPathSeparator a = pathSeparator : propSep xs
@@ -685,7 +688,17 @@ normalise x = joinDrive drv (f pth) ++ [pathSeparator | isPathSeparator $ last x
         dropDots [] ("..":xs) = ".." : dropDots [] xs
         dropDots acc (x:xs) = dropDots (x:acc) xs
         dropDots acc [] = reverse acc
+
+normaliseDrive :: FilePath -> FilePath
+normaliseDrive x | isPosix = x
+normaliseDrive x = if isJust $ readDriveLetter x2 then
+                       map toUpper x2
+                   else
+                       x
+    where
+        x2 = map repSlash x
         
+        repSlash x = if isPathSeparator x then pathSeparator else x
 
 -- information for validity functions on Windows
 
