@@ -200,13 +200,13 @@ isExtSeparator = (== extSeparator)
 -- > Windows: splitFiles "File1;File2;File3" == ["File1","File2","File3"]
 -- > Posix:   splitFiles "File1:File2:File3" == ["File1","File2","File3"]
 splitFiles :: String -> [FilePath]
-splitFiles var = do f var
+splitFiles = f
     where
-        f xs = if null pre && null post then []
-               else if null pre then f (tail post)
-               else if null post then [pre]
-               else pre : f (tail post)
-            where (pre, post) = break isFileSeparator xs
+    f xs = case break isFileSeparator xs of
+           ([],  [])   -> []
+           ([],  post) -> f (tail post)
+           (pre, [])   -> [pre]
+           (pre, post) -> pre : f (tail post)
 
 -- | Get a list of filepaths in the $PATH.
 getPath :: IO [FilePath]
@@ -246,7 +246,7 @@ joinExtension = addExtension
 -- > getExtension (addExtension x "ext") == ".ext"
 -- > getExtension (setExtension x "ext") == ".ext"
 getExtension :: FilePath -> String
-getExtension x = snd $ splitExtension x
+getExtension = snd . splitExtension
 
 -- | Set the extension of a file, overwriting one if already present.
 --
@@ -267,7 +267,7 @@ setExtension x y = joinExtension a y
 --
 -- > dropExtension x == fst (splitExtension x)
 dropExtension :: FilePath -> FilePath
-dropExtension x = fst $ splitExtension x
+dropExtension = fst . splitExtension
 
 -- | Add an extension, even if there is already one there. 
 --   E.g. @addExtension \"foo.txt\" \"bat\" -> \"foo.txt.bat\"@.
@@ -289,7 +289,7 @@ addExtension file xs@(x:_) = joinDrive a res
 --
 -- > null (getExtension x) == not (hasExtension x)
 hasExtension :: FilePath -> Bool
-hasExtension x = any isExtSeparator $ getFileName x
+hasExtension = any isExtSeparator . getFileName
 
 
 -- | Split on all extensions
