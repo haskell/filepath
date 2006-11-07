@@ -362,8 +362,8 @@ readDriveUNC x = Nothing
 
 -- c:\
 readDriveLetter :: String -> Maybe (FilePath, FilePath)
-readDriveLetter [x,':'] | isLetter x = Just ([x,':'],"")
 readDriveLetter (x:':':y:xs) | isLetter x && isPathSeparator y = Just $ addSlash [x,':'] (y:xs)
+readDriveLetter (x:':':xs) | isLetter x = Just ([x,':'], xs)
 readDriveLetter x = Nothing
 
 -- \\sharename\
@@ -389,7 +389,9 @@ joinDrive a b | isPosix = a ++ b
               | null a = b
               | null b = a
               | isPathSeparator (last a) = a ++ b
-              | otherwise = a ++ [pathSeparator] ++ b
+              | otherwise = case a of
+                                [a1,':'] | isLetter a1 -> a ++ b
+                                _ -> a ++ [pathSeparator] ++ b
 
 -- | Set the drive, from the filepath.
 --
@@ -416,6 +418,9 @@ hasDrive :: FilePath -> Bool
 hasDrive = not . null . takeDrive
 
 
+-- | Is an element a drive
+isDrive :: FilePath -> Bool
+isDrive = null . dropDrive
 
 
 ---------------------------------------------------------------------
@@ -441,10 +446,7 @@ splitFileName x = (c ++ reverse b, reverse a)
 --
 -- > addFileName (getDirectory x) (getFileName x) `equalFilePath` x
 addFileName :: FilePath -> String -> FilePath
-addFileName x y = if null x then y
-                  else if null y then x
-                  else if isPathSeparator (last x) then x ++ y
-                  else x ++ [pathSeparator] ++ y
+addFileName x y = combineAlways x y
 
 -- | Set the filename.
 --
@@ -501,11 +503,10 @@ isDirectory x = isPathSeparator (last x)
 -- > Posix:    getDirectory "/foo/bar/baz" == "/foo/bar"
 -- > Posix:    getDirectory "/foo/bar/baz/" == "/foo/bar/baz"
 getDirectory :: FilePath -> FilePath
-getDirectory x = a ++ if null res then file else res
+getDirectory x = if isDrive file then file else res
     where
-        (a,b) = splitDrive x
         res = reverse $ dropWhile isPathSeparator $ reverse file
-        file = dropFileName b
+        file = dropFileName x
 
 -- | Set the directory, keeping the filename the same.
 --
@@ -528,6 +529,7 @@ combineAlways :: FilePath -> FilePath -> FilePath
 combineAlways a b | null a = b
                   | null b = a
                   | isPathSeparator (last a) = a ++ b
+                  | isDrive a = joinDrive a b
                   | otherwise = a ++ [pathSeparator] ++ b
 
 -- | A nice alias for 'combine'.
