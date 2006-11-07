@@ -21,16 +21,16 @@ You are given a C file, you want to figure out the corresponding object (.o) fil
 
 Haskell module Main imports Test, you have the file named main:
 
-@['setFileName' path_to_main \"Test\" '<.>' ext | ext <- [\"hs\",\"lhs\"] ]@
+@['replaceFileName' path_to_main \"Test\" '<.>' ext | ext <- [\"hs\",\"lhs\"] ]@
 
 You want to download a file from the web and save it to disk:
 
 @do let file = 'makeValid' url
-   'ensureDirectory' ('getDirectory' file)@
+   'ensureDirectory' ('takeDirectory' file)@
 
 You want to compile a Haskell file, but put the hi file under \"interface\"
 
-@'getDirectory' file '</>' \"interface\" '</>' ('getFileName' file \`replaceExtension\` \"hi\"@)
+@'takeDirectory' file '</>' \"interface\" '</>' ('takeFileName' file \`replaceExtension\` \"hi\"@)
 
 You want to display a filename to the user, as neatly as possible
 
@@ -64,9 +64,9 @@ module System.FilePath
     
     -- * Operations on a filepath, as a list of directories
     splitFileName,
-    getFileName, setFileName, dropFileName, addFileName,
-    getBaseName, setBaseName,
-    getDirectory, setDirectory, isDirectory,
+    takeFileName, replaceFileName, dropFileName, addFileName,
+    takeBaseName, replaceBaseName,
+    takeDirectory, replaceDirectory, isDirectory,
     combine, (</>),
     splitPath, joinPath, splitDirectories,
     
@@ -276,7 +276,7 @@ addExtension file xs@(x:_) = joinDrive a res
 --
 -- > null (takeExtension x) == not (hasExtension x)
 hasExtension :: FilePath -> Bool
-hasExtension = any isExtSeparator . getFileName
+hasExtension = any isExtSeparator . takeFileName
 
 
 -- | Split on all extensions
@@ -444,15 +444,15 @@ splitFileName x = (c ++ reverse b, reverse a)
 
 -- | Add a filename onto the end of a path.
 --
--- > addFileName (getDirectory x) (getFileName x) `equalFilePath` x
+-- > addFileName (takeDirectory x) (takeFileName x) `equalFilePath` x
 addFileName :: FilePath -> String -> FilePath
 addFileName x y = combineAlways x y
 
 -- | Set the filename.
 --
--- > setFileName x (getFileName x) == x
-setFileName :: FilePath -> String -> FilePath
-setFileName x y = addFileName (dropFileName x) y
+-- > replaceFileName x (takeFileName x) == x
+replaceFileName :: FilePath -> String -> FilePath
+replaceFileName x y = addFileName (dropFileName x) y
 
 -- | Drop the filename.
 --
@@ -463,28 +463,28 @@ dropFileName x = fst (splitFileName x)
 
 -- | Get the file name.
 --
--- > getFileName "test/" == ""
--- > getFileName x == snd (splitFileName x)
--- > getFileName (setFileName x "fred") == "fred"
--- > getFileName (addFileName x "fred") == "fred"
-getFileName :: FilePath -> FilePath
-getFileName x = snd $ splitFileName x
+-- > takeFileName "test/" == ""
+-- > takeFileName x == snd (splitFileName x)
+-- > takeFileName (replaceFileName x "fred") == "fred"
+-- > takeFileName (addFileName x "fred") == "fred"
+takeFileName :: FilePath -> FilePath
+takeFileName x = snd $ splitFileName x
 
 -- | Get the base name, without an extension or path.
 --
--- > getBaseName "file/test.txt" == "test"
--- > getBaseName "dave.ext" == "dave"
-getBaseName :: FilePath -> String
-getBaseName = dropExtension . getFileName
+-- > takeBaseName "file/test.txt" == "test"
+-- > takeBaseName "dave.ext" == "dave"
+takeBaseName :: FilePath -> String
+takeBaseName = dropExtension . takeFileName
 
 -- | Set the base name.
 --
--- > setBaseName "file/test.txt" "bob" == "file/bob.txt"
--- > setBaseName "fred" "bill" == "bill"
--- > setBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
--- > setBaseName x (getBaseName x) == x
-setBaseName :: FilePath -> String -> FilePath
-setBaseName pth nam = addFileName a (addExtension nam d)
+-- > replaceBaseName "file/test.txt" "bob" == "file/bob.txt"
+-- > replaceBaseName "fred" "bill" == "bill"
+-- > replaceBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
+-- > replaceBaseName x (takeBaseName x) == x
+replaceBaseName :: FilePath -> String -> FilePath
+replaceBaseName pth nam = addFileName a (addExtension nam d)
     where
         (a,b) = splitFileName pth
         (c,d) = splitExtension b
@@ -500,10 +500,10 @@ isDirectory x = isPathSeparator (last x)
 
 -- | Get the directory name, move up one level.
 --
--- > Posix:    getDirectory "/foo/bar/baz" == "/foo/bar"
--- > Posix:    getDirectory "/foo/bar/baz/" == "/foo/bar/baz"
-getDirectory :: FilePath -> FilePath
-getDirectory x = if isDrive file then file
+-- > Posix:    takeDirectory "/foo/bar/baz" == "/foo/bar"
+-- > Posix:    takeDirectory "/foo/bar/baz/" == "/foo/bar/baz"
+takeDirectory :: FilePath -> FilePath
+takeDirectory x = if isDrive file then file
                   else if null res && not (null file) then file
                   else res
     where
@@ -512,9 +512,9 @@ getDirectory x = if isDrive file then file
 
 -- | Set the directory, keeping the filename the same.
 --
--- > setDirectory x (getDirectory x) `equalFilePath` x
-setDirectory :: FilePath -> String -> FilePath
-setDirectory x dir = addFileName dir (getFileName x)
+-- > replaceDirectory x (takeDirectory x) `equalFilePath` x
+replaceDirectory :: FilePath -> String -> FilePath
+replaceDirectory x dir = addFileName dir (takeFileName x)
 
 
 -- | Combine two paths, if the right path 'isAbsolute', then it returns the second.

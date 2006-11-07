@@ -481,7 +481,7 @@ addFileName x y = if null x then y
                   else if isPathSeparator (last x) then x ++ y
                   else x ++ [pathSeparator] ++ y
 
--- | Set the filename.
+-- | /RENAMED/ - @replaceFileName@. Set the filename.
 --
 -- > setFileName x (getFileName x) == x
 setFileName :: FilePath -> String -> FilePath
@@ -494,7 +494,7 @@ dropFileName :: FilePath -> FilePath
 dropFileName x = fst (splitFileName x)
 
 
--- | Get the file name.
+-- | /RENAMED/ - @takeFileName@. Get the file name.
 --
 -- > getFileName "test/" == ""
 -- > getFileName x == snd (splitFileName x)
@@ -503,14 +503,15 @@ dropFileName x = fst (splitFileName x)
 getFileName :: FilePath -> FilePath
 getFileName x = snd $ splitFileName x
 
--- | Get the base name, without an extension or path.
+-- | /RENAMED/ - @takeBaseName@. 
+--   Get the base name, without an extension or path.
 --
 -- > getBaseName "file/test.txt" == "test"
 -- > getBaseName "dave.ext" == "dave"
 getBaseName :: FilePath -> String
 getBaseName = dropExtension . getFileName
 
--- | Set the base name.
+-- | /RENAMED/ - @replaceBaseName@. Set the base name.
 --
 -- > setBaseName "file/test.txt" "bob" == "file/bob.txt"
 -- > setBaseName "fred" "bill" == "bill"
@@ -529,7 +530,8 @@ isDirectory :: FilePath -> Bool
 isDirectory "" = False
 isDirectory x = isPathSeparator (last x)
 
--- | Get the directory name, move up one level.
+-- | /RENAMED/ - @takeDirectory@.
+--   Get the directory name, move up one level.
 --
 -- > Posix:    getDirectory "/foo/bar/baz" == "/foo/bar"
 -- > Posix:    getDirectory "/foo/bar/baz/" == "/foo/bar/baz"
@@ -540,7 +542,8 @@ getDirectory x = a ++ if null res then file else res
         res = reverse $ dropWhile isPathSeparator $ reverse file
         file = dropFileName b
 
--- | Set the directory, keeping the filename the same.
+-- | /RENAMED/ - @replaceDirectory@.
+--   Set the directory, keeping the filename the same.
 --
 -- > setDirectory x (getDirectory x) `equalFilePath` x
 setDirectory :: FilePath -> String -> FilePath
