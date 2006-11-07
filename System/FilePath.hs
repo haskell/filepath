@@ -17,7 +17,7 @@ Some short examples:
 
 You are given a C file, you want to figure out the corresponding object (.o) file:
 
-@'setExtension' file \"o\"@
+@'replaceExtension' file \"o\"@
 
 Haskell module Main imports Test, you have the file named main:
 
@@ -30,7 +30,7 @@ You want to download a file from the web and save it to disk:
 
 You want to compile a Haskell file, but put the hi file under \"interface\"
 
-@'getDirectory' file '</>' \"interface\" '</>' ('getFileName' file \`setExtension\` \"hi\"@)
+@'getDirectory' file '</>' \"interface\" '</>' ('getFileName' file \`replaceExtension\` \"hi\"@)
 
 You want to display a filename to the user, as neatly as possible
 
@@ -53,8 +53,8 @@ module System.FilePath
     
     -- * Extension methods
     splitExtension, joinExtension,
-    getExtension, setExtension, dropExtension, addExtension, hasExtension, (<.>),
-    splitExtensions, dropExtensions, getExtensions,
+    takeExtension, replaceExtension, dropExtension, addExtension, hasExtension, (<.>),
+    splitExtensions, dropExtensions, takeExtensions,
     
     {- DRIVE_SECTION
     -- * Drive methods
@@ -236,21 +236,21 @@ joinExtension = addExtension
 
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
 --
--- > getExtension x == snd (splitExtension x)
--- > getExtension (addExtension x "ext") == ".ext"
--- > getExtension (setExtension x "ext") == ".ext"
-getExtension :: FilePath -> String
-getExtension = snd . splitExtension
+-- > takeExtension x == snd (splitExtension x)
+-- > takeExtension (addExtension x "ext") == ".ext"
+-- > takeExtension (replaceExtension x "ext") == ".ext"
+takeExtension :: FilePath -> String
+takeExtension = snd . splitExtension
 
 -- | Set the extension of a file, overwriting one if already present.
 --
--- > setExtension "file.txt" ".bob" == "file.bob"
--- > setExtension "file.txt" "bob" == "file.bob"
--- > setExtension "file" ".bob" == "file.bob"
--- > setExtension "file.txt" "" == "file"
--- > setExtension "file.fred.bob" "txt" == "file.fred.txt"
-setExtension :: FilePath -> String -> FilePath
-setExtension x y = joinExtension a y
+-- > replaceExtension "file.txt" ".bob" == "file.bob"
+-- > replaceExtension "file.txt" "bob" == "file.bob"
+-- > replaceExtension "file" ".bob" == "file.bob"
+-- > replaceExtension "file.txt" "" == "file"
+-- > replaceExtension "file.fred.bob" "txt" == "file.fred.txt"
+replaceExtension :: FilePath -> String -> FilePath
+replaceExtension x y = joinExtension a y
     where (a,b) = splitExtension x
 
 -- | Alias to 'addExtension', for people who like that sort of thing.
@@ -281,7 +281,7 @@ addExtension file xs@(x:_) = joinDrive a res
 
 -- | Does the given filename have an extension?
 --
--- > null (getExtension x) == not (hasExtension x)
+-- > null (takeExtension x) == not (hasExtension x)
 hasExtension :: FilePath -> Bool
 hasExtension = any isExtSeparator . getFileName
 
@@ -302,8 +302,8 @@ dropExtensions :: FilePath -> FilePath
 dropExtensions = fst . splitExtensions
 
 -- | Get all extensions
-getExtensions :: FilePath -> String
-getExtensions = snd . splitExtensions
+takeExtensions :: FilePath -> String
+takeExtensions = snd . splitExtensions
 
 
 
