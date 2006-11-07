@@ -13,9 +13,9 @@ Please use "System.FilePath" (or email me and I'll send you a patch)
 
 I have used 3 codes to indicate what happened to each method:
 
-    * /gone/ means the method is entirely removed - with where the best alternative is
+    * /GONE/ means the method is entirely removed - with where the best alternative is
 
-    * /renamed/ means the method got renamed
+    * /RENAMED/ means the method got renamed
 
     * Nothing means the method remains the same.
 
@@ -858,18 +858,21 @@ isFakeDirectory x = x == "." || x == ".."
 
 -- Temporary File Names
 
--- | Get a temporary file name.
+-- | /GONE/ - see @System.IO.openTempFile@.
+--   Get a temporary file name.
 getTemporaryFile :: String -> IO FilePath
 getTemporaryFile ext = getTemporaryFileSeed 1 ext
 
--- | Get a temporary file name, using a specified number as a seed.
+-- | /GONE/ - see @System.IO.openTempFile@.
+--   Get a temporary file name, using a specified number as a seed.
 getTemporaryFileSeed :: Int -> String -> IO FilePath
 getTemporaryFileSeed n ext = do
     prog <- getProgName
     tmpdir <- getTemporaryDirectory
     return $ makeValid $ tmpdir </> (prog ++ show n) <.> ext
     
--- | Get a temporary file name which does not exist.
+-- | /GONE/ - see @System.IO.openTempFile@.
+--   Get a temporary file name which does not exist.
 --   Beware of race conditions, the file may be created after this function
 --   returns. Nothing may be returned if a new item is not found in 100 tries.
 getTemporaryFileNew :: String -> IO (Maybe FilePath)

@@ -78,10 +78,7 @@ module System.FilePath
     isValid, makeValid,
     
     -- * Directory operations
-    getDirectoryList, ensureDirectory,
-    
-    -- * Temporary file operations
-    getTemporaryFile, getTemporaryFileNew, getTemporaryFileSeed
+    getDirectoryList, ensureDirectory
     )
     where
 
@@ -844,27 +841,3 @@ ensureDirectory path = when (not $ null pths) $ f (joinDrive drv (head pths)) (t
 -- | Is a directory a real directory, or an alias to a parent . or ..?
 isFakeDirectory :: FilePath -> Bool
 isFakeDirectory x = x == "." || x == ".."
-
--- Temporary File Names
-
--- | Get a temporary file name.
-getTemporaryFile :: String -> IO FilePath
-getTemporaryFile ext = getTemporaryFileSeed 1 ext
-
--- | Get a temporary file name, using a specified number as a seed.
-getTemporaryFileSeed :: Int -> String -> IO FilePath
-getTemporaryFileSeed n ext = do
-    prog <- getProgName
-    tmpdir <- getTemporaryDirectory
-    return $ makeValid $ tmpdir </> (prog ++ show n) <.> ext
-    
--- | Get a temporary file name which does not exist.
---   Beware of race conditions, the file may be created after this function
---   returns. Nothing may be returned if a new item is not found in 100 tries.
-getTemporaryFileNew :: String -> IO (Maybe FilePath)
-getTemporaryFileNew ext = f [1..100]
-    where
-        f [] = return Nothing
-        f (x:xs) = do fil <- getTemporaryFileSeed x ext
-                      b <- doesFileExist fil
-                      if b then f xs else return $ Just fil
