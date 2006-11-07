@@ -59,7 +59,7 @@ module System.FilePath
     {- DRIVE_SECTION
     -- * Drive methods
     splitDrive, joinDrive,
-    getDrive, setDrive, hasDrive, dropDrive,
+    takeDrive, replaceDrive, hasDrive, dropDrive,
     END_DRIVE_SECTION -}
     
     -- * Operations on a filepath, as a list of directories
@@ -393,15 +393,15 @@ joinDrive a b | isPosix = a ++ b
 
 -- | Set the drive, from the filepath.
 --
--- > setDrive x (getDrive x) == x
-setDrive :: FilePath -> String -> FilePath
-setDrive x drv = joinDrive drv (dropDrive x)
+-- > replaceDrive x (takeDrive x) == x
+replaceDrive :: FilePath -> String -> FilePath
+replaceDrive x drv = joinDrive drv (dropDrive x)
 
 -- | Get the drive from a filepath.
 --
--- > getDrive x == fst (splitDrive x)
-getDrive :: FilePath -> FilePath
-getDrive = fst . splitDrive
+-- > takeDrive x == fst (splitDrive x)
+takeDrive :: FilePath -> FilePath
+takeDrive = fst . splitDrive
 
 -- | Delete the drive, if it exists.
 --
@@ -411,9 +411,9 @@ dropDrive = snd . splitDrive
 
 -- | Does a path have a drive.
 --
--- > not (hasDrive x) == null (getDrive x)
+-- > not (hasDrive x) == null (takeDrive x)
 hasDrive :: FilePath -> Bool
-hasDrive = not . null . getDrive
+hasDrive = not . null . takeDrive
 
 
 
@@ -613,7 +613,7 @@ equalFilePath a b = f a == f b
 -- > Posix:   shortPathWith "/file/test" "/file/test/fred/" == "fred/"
 -- > Posix:   shortPathWith "/fred/dave" "/fred/bill" == "../bill"
 shortPathWith :: FilePath -> FilePath -> FilePath
-shortPathWith cur x | isRelative x || isRelative cur || getDrive x /= getDrive cur = normalise x
+shortPathWith cur x | isRelative x || isRelative cur || takeDrive x /= takeDrive cur = normalise x
 shortPathWith cur x = joinPath $
                       replicate (length curdir - common) ".." ++
                       drop common orgpth
@@ -738,7 +738,7 @@ makeValid x = joinDrive drv $ validElements $ validChars pth
 -- > Posix:   isRelative "test/path" == True
 -- > Posix:   isRelative "/test" == False
 isRelative :: FilePath -> Bool
-isRelative x = null $ getDrive x
+isRelative x = null $ takeDrive x
 
 
 -- | @not . 'isRelative'@
