@@ -66,7 +66,8 @@ module System.FilePath
     splitFileName,
     takeFileName, replaceFileName, dropFileName, addFileName,
     takeBaseName, replaceBaseName,
-    takeDirectory, replaceDirectory, isDirectory,
+    takeDirectory, replaceDirectory,
+    isDirectory, isFile, asDirectory, asFile,
     combine, (</>),
     splitPath, joinPath, splitDirectories,
     
@@ -495,6 +496,33 @@ replaceBaseName pth nam = addFileName a (addExtension nam ext)
 isDirectory :: FilePath -> Bool
 isDirectory "" = False
 isDirectory x = isPathSeparator (last x)
+
+-- | Is an item a file, does not query the file system.
+--
+-- > isDirectory x == not (isFile x)
+isFile :: FilePath -> Bool
+isFile = not . isDirectory
+
+
+-- | Make something look like a directory
+--
+-- > isDirectory (asDirectory x)
+-- > if isDirectory x then asDirectory x == x else True
+-- > Posix:    asDirectory "test/rest" == "test/rest/"
+asDirectory :: FilePath -> FilePath
+asDirectory x = if isDirectory x then x else x ++ [pathSeparator]
+
+
+-- | Make something look like a file
+--
+-- > asFile "file/test/" == "file/test"
+-- > not (isDirectory (asFile x)) || isDrive x
+-- > Posix:    asFile "/" == "/"
+asFile :: FilePath -> FilePath
+asFile x = if isDirectory x && not (isDrive x)
+           then reverse $ dropWhile isPathSeparator $ reverse x
+           else x
+
 
 -- | Get the directory name, move up one level.
 --
