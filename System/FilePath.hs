@@ -306,9 +306,8 @@ takeExtensions = snd . splitExtensions
 -- | Is the given character a valid drive letter?
 -- only a-z and A-Z are letters, not isAlpha which is more unicodey
 isLetter :: Char -> Bool
-isLetter x | x >= 'a' && x <= 'z' = True
-           | x >= 'A' && x <= 'Z' = True
-           | otherwise = False
+isLetter x = (x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z')
+
 
 -- | Split a path into a drive and a path.
 --   On Unix, \/ is a Drive.
