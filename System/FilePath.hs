@@ -503,7 +503,9 @@ isDirectory x = isPathSeparator (last x)
 -- > Posix:    getDirectory "/foo/bar/baz" == "/foo/bar"
 -- > Posix:    getDirectory "/foo/bar/baz/" == "/foo/bar/baz"
 getDirectory :: FilePath -> FilePath
-getDirectory x = if isDrive file then file else res
+getDirectory x = if isDrive file then file
+                  else if null res && not (null file) then file
+                  else res
     where
         res = reverse $ dropWhile isPathSeparator $ reverse file
         file = dropFileName x
