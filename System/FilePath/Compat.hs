@@ -11,6 +11,14 @@ Portability :  portable
 This is the old interface for System.FilePath - now depreciated.
 Please use "System.FilePath" (or email me and I'll send you a patch)
 
+I have used 3 codes to indicate what happened to each method:
+
+    * /gone/ means the method is entirely removed - with where the best alternative is
+
+    * /renamed/ means the method got renamed
+
+    * Nothing means the method remains the same.
+
 A library for FilePath manipulations, designed to be cross platform.
 This library will select the correct type of FilePath's for the
 platform the code is running on at runtime. For more details see 
