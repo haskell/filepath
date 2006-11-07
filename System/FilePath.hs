@@ -456,7 +456,7 @@ replaceFileName x y = addFileName (dropFileName x) y
 --
 -- > dropFileName x == fst (splitFileName x)
 dropFileName :: FilePath -> FilePath
-dropFileName x = fst (splitFileName x)
+dropFileName = fst . splitFileName
 
 
 -- | Get the file name.
@@ -466,7 +466,7 @@ dropFileName x = fst (splitFileName x)
 -- > takeFileName (replaceFileName x "fred") == "fred"
 -- > takeFileName (addFileName x "fred") == "fred"
 takeFileName :: FilePath -> FilePath
-takeFileName x = snd $ splitFileName x
+takeFileName = snd . splitFileName
 
 -- | Get the base name, without an extension or path.
 --
@@ -482,10 +482,10 @@ takeBaseName = dropExtension . takeFileName
 -- > replaceBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
 -- > replaceBaseName x (takeBaseName x) == x
 replaceBaseName :: FilePath -> String -> FilePath
-replaceBaseName pth nam = addFileName a (addExtension nam d)
+replaceBaseName pth nam = addFileName a (addExtension nam ext)
     where
         (a,b) = splitFileName pth
-        (c,d) = splitExtension b
+        ext = takeExtension b
 
 -- | Is an item either a directory or the last character a path separator?
 --   This does not query the file system.
@@ -739,7 +739,7 @@ makeValid x = joinDrive drv $ validElements $ validChars pth
 -- > Posix:   isRelative "test/path" == True
 -- > Posix:   isRelative "/test" == False
 isRelative :: FilePath -> Bool
-isRelative x = null $ takeDrive x
+isRelative = null . takeDrive
 
 
 -- | @not . 'isRelative'@
