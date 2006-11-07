@@ -251,7 +251,8 @@ splitExtension x = case d of
 joinExtension :: String -> String -> FilePath
 joinExtension = addExtension
 
--- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
+-- | /RENAMED/ - @takeExtension@.
+--   Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
 --
 -- > getExtension x == snd (splitExtension x)
 -- > getExtension (addExtension x "ext") == ".ext"
@@ -259,7 +260,8 @@ joinExtension = addExtension
 getExtension :: FilePath -> String
 getExtension = snd . splitExtension
 
--- | Set the extension of a file, overwriting one if already present.
+-- | /RENAMED/ - @replaceExtension@.
+--   Set the extension of a file, overwriting one if already present.
 --
 -- > setExtension "file.txt" ".bob" == "file.bob"
 -- > setExtension "file.txt" "bob" == "file.bob"
@@ -318,7 +320,8 @@ splitExtensions x = (a ++ c, d)
 dropExtensions :: FilePath -> FilePath
 dropExtensions = fst . splitExtensions
 
--- | Get all extensions
+-- | /RENAMED/ - @takeExtensions.@
+--   Get all extensions
 getExtensions :: FilePath -> String
 getExtensions = snd . splitExtensions
 
