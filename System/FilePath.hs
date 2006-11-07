@@ -52,7 +52,7 @@ module System.FilePath
     splitFiles, getPath,
     
     -- * Extension methods
-    splitExtension, joinExtension,
+    splitExtension,
     takeExtension, replaceExtension, dropExtension, addExtension, hasExtension, (<.>),
     splitExtensions, dropExtensions, takeExtensions,
     
@@ -210,9 +210,10 @@ getPath = fmap splitFiles (getEnv "PATH")
 ---------------------------------------------------------------------
 -- Extension methods
 
--- | Split on the extension.
+-- | Split on the extension. 'addExtension' is the inverse.
 --
 -- > uncurry (++) (splitExtension x) == x
+-- > uncurry addExtension (splitExtension x) == x
 -- > splitExtension "file.txt" == ("file",".txt")
 -- > splitExtension "file" == ("file","")
 -- > splitExtension "file/file.txt" == ("file/file",".txt")
@@ -227,12 +228,6 @@ splitExtension x = case d of
     where
         (a,b) = splitFileName x
         (c,d) = break isExtSeparator $ reverse b
-
--- | Join an extension and a filepath.
---
--- > uncurry joinExtension (splitExtension x) == x
-joinExtension :: String -> String -> FilePath
-joinExtension = addExtension
 
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
 --
@@ -250,8 +245,7 @@ takeExtension = snd . splitExtension
 -- > replaceExtension "file.txt" "" == "file"
 -- > replaceExtension "file.fred.bob" "txt" == "file.fred.txt"
 replaceExtension :: FilePath -> String -> FilePath
-replaceExtension x y = joinExtension a y
-    where (a,b) = splitExtension x
+replaceExtension x y = dropExtension x <.> y
 
 -- | Alias to 'addExtension', for people who like that sort of thing.
 (<.>) :: FilePath -> String -> FilePath
@@ -493,7 +487,7 @@ getBaseName = dropExtension . getFileName
 -- > setBaseName "file/test.txt" "bob" == "file/bob.txt"
 -- > setBaseName "fred" "bill" == "bill"
 setBaseName :: FilePath -> String -> FilePath
-setBaseName pth nam = joinFileName a (joinExtension nam d)
+setBaseName pth nam = joinFileName a (addExtension nam d)
     where
         (a,b) = splitFileName pth
         (c,d) = splitExtension b
@@ -788,7 +782,7 @@ makeValid x = joinDrive drv $ validElements $ validChars pth
         validElements x = joinPath $ map g $ splitPath x
         g x = h (reverse b) ++ reverse a
             where (a,b) = span isPathSeparator $ reverse x
-        h x = if map toUpper a `elem` badElements then joinExtension (a ++ "_") b else x
+        h x = if map toUpper a `elem` badElements then addExtension (a ++ "_") b else x
             where (a,b) = splitExtensions x
         
 

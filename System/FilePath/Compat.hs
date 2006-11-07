@@ -245,7 +245,8 @@ splitExtension x = case d of
         (a,b) = splitFileName x
         (c,d) = break isExtSeparator $ reverse b
 
--- | Join an extension and a filepath.
+-- | /RENAMED/ - @addExtension@.
+--   Join an extension and a filepath.
 --
 -- > uncurry joinExtension (splitExtension x) == x
 joinExtension :: String -> String -> FilePath
