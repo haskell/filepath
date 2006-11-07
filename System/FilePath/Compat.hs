@@ -464,7 +464,8 @@ splitFileName x = (c ++ reverse b, reverse a)
         (c,d) = splitDrive x
 
 
--- | Join a directory and filename.
+-- | /RENAMED/ - @addFileName@.
+--   Join a directory and filename.
 --
 -- > uncurry joinFileName (splitFileName x) == x
 joinFileName :: FilePath -> String -> FilePath

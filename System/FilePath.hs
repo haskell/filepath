@@ -63,7 +63,7 @@ module System.FilePath
     END_DRIVE_SECTION -}
     
     -- * Operations on a filepath, as a list of directories
-    splitFileName, joinFileName,
+    splitFileName,
     getFileName, setFileName, dropFileName, addFileName,
     getBaseName, setBaseName,
     getDirectory, setDirectory, isDirectory,
@@ -421,9 +421,10 @@ hasDrive = not . null . takeDrive
 ---------------------------------------------------------------------
 -- Operations on a filepath, as a list of directories
 
--- | Split a filename into directory and file.
+-- | Split a filename into directory and file. 'addFileName' is the inverse.
 --
 -- > uncurry (++) (splitFileName x) == x
+-- > uncurry addFileName (splitFileName x) == x
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
 -- > splitFileName "file/" == ("file/", "")
 -- > splitFileName "bob" == ("", "bob")
@@ -434,13 +435,6 @@ splitFileName x = (c ++ reverse b, reverse a)
     where
         (a,b) = break isPathSeparator $ reverse d
         (c,d) = splitDrive x
-
-
--- | Join a directory and filename.
---
--- > uncurry joinFileName (splitFileName x) == x
-joinFileName :: FilePath -> String -> FilePath
-joinFileName x y = addFileName x y
 
 
 -- | Add a filename onto the end of a path.
@@ -456,7 +450,7 @@ addFileName x y = if null x then y
 --
 -- > setFileName x (getFileName x) == x
 setFileName :: FilePath -> String -> FilePath
-setFileName x y = joinFileName (fst $ splitFileName x) y
+setFileName x y = addFileName (dropFileName x) y
 
 -- | Drop the filename.
 --
@@ -486,7 +480,7 @@ getBaseName = dropExtension . getFileName
 -- > setBaseName "file/test.txt" "bob" == "file/bob.txt"
 -- > setBaseName "fred" "bill" == "bill"
 setBaseName :: FilePath -> String -> FilePath
-setBaseName pth nam = joinFileName a (addExtension nam d)
+setBaseName pth nam = addFileName a (addExtension nam d)
     where
         (a,b) = splitFileName pth
         (c,d) = splitExtension b
@@ -515,7 +509,7 @@ getDirectory x = a ++ if null res then file else res
 --
 -- > setDirectory x (getDirectory x) `equalFilePath` x
 setDirectory :: FilePath -> String -> FilePath
-setDirectory x dir = joinFileName dir (getFileName x)
+setDirectory x dir = addFileName dir (getFileName x)
 
 
 -- | Combine two paths, if the right path 'isAbsolute', then it returns the second.
