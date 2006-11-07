@@ -829,13 +829,15 @@ isAbsolute = not . isRelative
 
 -- Search Methods
 
--- | Get a list of all the directories within this directory.
+-- | /GONE/ - I miss this :(.
+--   Get a list of all the directories within this directory.
 getDirectoryList :: FilePath -> IO [String]
 getDirectoryList path = do x <- getDirectoryContents path
                            let xfull = filter (not . isFakeDirectory) x
                            filterM (\a -> doesDirectoryExist $ combine path a) xfull
 
--- | Makes a directory and all its parents (mkdir -p). For example 
+-- | /GONE/  see @System.Directory.createDirectoryIfMissing@.
+--   Makes a directory and all its parents (mkdir -p). For example 
 --   ensureDirectory \".\/One\/Two\/Three\" would create the directory \"Two\" 
 --   and \"Three\" if \".\" and \"One\" already existed.
 ensureDirectory :: FilePath -> IO ()

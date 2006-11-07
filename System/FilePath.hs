@@ -75,10 +75,7 @@ module System.FilePath
     normalise, equalFilePath,
     fullPath, fullPathWith, shortPath, shortPathWith,
     isRelative, isAbsolute,
-    isValid, makeValid,
-    
-    -- * Directory operations
-    getDirectoryList, ensureDirectory
+    isValid, makeValid
     )
     where
 
@@ -810,34 +807,3 @@ isRelative x = null $ getDrive x
 -- > isAbsolute x == not (isRelative x)
 isAbsolute :: FilePath -> Bool
 isAbsolute = not . isRelative
-
-
-
--- Search Methods
-
--- | Get a list of all the directories within this directory.
-getDirectoryList :: FilePath -> IO [String]
-getDirectoryList path = do x <- getDirectoryContents path
-                           let xfull = filter (not . isFakeDirectory) x
-                           filterM (\a -> doesDirectoryExist $ combine path a) xfull
-
--- | Makes a directory and all its parents (mkdir -p). For example 
---   ensureDirectory \".\/One\/Two\/Three\" would create the directory \"Two\" 
---   and \"Three\" if \".\" and \"One\" already existed.
-ensureDirectory :: FilePath -> IO ()
-ensureDirectory path = when (not $ null pths) $ f (joinDrive drv (head pths)) (tail pths)
-    where
-        pths = splitPath pth
-        (drv,pth) = splitDrive path
-    
-        f pth todo = do
-            exist <- doesDirectoryExist pth
-            when (not exist) $ createDirectory pth
-            case todo of
-                (t:odo) -> f (pth </> t) odo
-                [] -> return ()
-
-
--- | Is a directory a real directory, or an alias to a parent . or ..?
-isFakeDirectory :: FilePath -> Bool
-isFakeDirectory x = x == "." || x == ".."
