@@ -1,5 +1,5 @@
 Name:           FilePath
-Version:        0.1
+Version:        0.10
 License:        BSD3
 Author:         Neil Mitchell
 Homepage:       http://www-users.cs.york.ac.uk/~ndm/projects/libraries.php
@@ -10,4 +10,5 @@ Exposed-modules:
         System.FilePath
         System.FilePath.Posix
         System.FilePath.Windows
+        System.FilePath.Compat
 Extensions: CPP
