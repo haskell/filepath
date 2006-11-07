@@ -479,6 +479,8 @@ getBaseName = dropExtension . getFileName
 --
 -- > setBaseName "file/test.txt" "bob" == "file/bob.txt"
 -- > setBaseName "fred" "bill" == "bill"
+-- > setBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
+-- > setBaseName x (getBaseName x) == x
 setBaseName :: FilePath -> String -> FilePath
 setBaseName pth nam = addFileName a (addExtension nam d)
     where
