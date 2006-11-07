@@ -26,7 +26,7 @@ Haskell module Main imports Test, you have the file named main:
 You want to download a file from the web and save it to disk:
 
 @do let file = 'makeValid' url
-   'ensureDirectory' ('takeDirectory' file)@
+   System.IO.createDirectoryIfMissing True ('takeDirectory' file)@
 
 You want to compile a Haskell file, but put the hi file under \"interface\"
 
