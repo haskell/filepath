@@ -528,7 +528,7 @@ combineAlways a b | null a = b
                   | isPathSeparator (last a) = a ++ b
                   | otherwise = a ++ [pathSeparator] ++ b
 
--- | A nice alias for 'combine'. E.g. @\"home\" '</>' \"bob\" -> \"home\/bob\"@
+-- | A nice alias for 'combine'.
 --   on Unix or @\"home\\bob\"@ on Windows.
 (</>) :: FilePath -> FilePath -> FilePath
 (</>) = combine
