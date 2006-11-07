@@ -59,7 +59,7 @@ module System.FilePath
     {- DRIVE_SECTION
     -- * Drive methods
     splitDrive, joinDrive,
-    takeDrive, replaceDrive, hasDrive, dropDrive,
+    takeDrive, replaceDrive, hasDrive, dropDrive, isDrive,
     END_DRIVE_SECTION -}
     
     -- * Operations on a filepath, as a list of directories
