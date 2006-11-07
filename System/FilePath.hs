@@ -323,12 +323,11 @@ isLetter x | x >= 'a' && x <= 'z' = True
 -- > Windows: splitDrive "\\\\?\\d:\\file" == ("\\\\?\\d:\\","file")
 -- > Windows: splitDrive "/d" == ("/","d")
 -- > Posix:   splitDrive "/test" == ("/","test")
+-- > Posix:   splitDrive "//test" == ("//","test")
 -- > Posix:   splitDrive "test/file" == ("","test/file")
 -- > Posix:   splitDrive "file" == ("","file")
 splitDrive :: FilePath -> (FilePath, FilePath)
-splitDrive x | isPosix = case x of
-                             '/':xs -> ("/",xs)
-                             xs -> ("",xs)
+splitDrive x | isPosix = span (== '/') x
 
 splitDrive x | isJust y = fromJust y
     where y = readDriveLetter x
@@ -563,7 +562,7 @@ splitPath x = [a | a /= ""] ++ f b
 --
 -- > splitDirectories "test/file" == ["test","file"]
 -- > splitDirectories "/test/file" == ["/","test","file"]
--- > joinPath (splitDirectories x) `equalFilePath` x
+-- > joinPath (splitDirectories (makeValid x)) `equalFilePath` makeValid x
 -- > splitDirectories "" == []
 splitDirectories :: FilePath -> [FilePath]
 splitDirectories x =
@@ -579,9 +578,12 @@ splitDirectories x =
 
 -- | Join path elements back together.
 --
--- > joinPath (splitPath x) == x
+-- > joinPath (splitPath (makeValid x)) == makeValid x
+
+-- Note that this definition on c:\\c:\\, join then split will give c:\\
 joinPath :: [FilePath] -> FilePath
-joinPath x = foldr combineAlways "" x
+joinPath x = foldr combine "" x
+
 
 
 
