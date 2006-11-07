@@ -618,7 +618,8 @@ joinPath x = foldr combineAlways "" x
 ---------------------------------------------------------------------
 -- File name manipulators
 
--- | Find the canoncial path, if the file exists then the case will be correct
+-- | /GONE/ - see @System.Directory.canonicalizePath@.
+--   Find the canoncial path, if the file exists then the case will be correct
 --   on Windows, if the file is a directory it will have a trailing slash
 --   appended on all operating systems.
 canonicalPath :: FilePath -> IO FilePath
@@ -672,7 +673,8 @@ equalFilePath a b = f a == f b
         dropTrailSlash x | isPathSeparator (last x) = init x
                          | otherwise = x
 
--- | Expand out a filename to its full name, with the a directory factored in.
+-- | /GONE/ - see @System.Directory.canonicalizePath@.
+--   Expand out a filename to its full name, with the a directory factored in.
 --
 -- > Posix:   fullPathWith "/file/test/" "/bob/dave" == "/bob/dave"
 -- > Posix:   fullPathWith "/file/test/" "bob" == "/file/test/bob"
@@ -680,7 +682,8 @@ equalFilePath a b = f a == f b
 fullPathWith :: FilePath -> FilePath -> FilePath
 fullPathWith cur x = normalise $ combine cur x
 
--- | 'fullPathWith' the current directory.
+-- | /GONE/ - see @System.Directory.canonicalizePath@.
+--   'fullPathWith' the current directory.
 fullPath :: FilePath -> IO FilePath
 fullPath x = do cur <- getCurrentDirectory
                 return $ fullPathWith cur x

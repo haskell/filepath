@@ -71,9 +71,8 @@ module System.FilePath
     splitPath, joinPath, splitDirectories,
     
     -- * File name manipulators
-    canonicalPath,
     normalise, equalFilePath,
-    fullPath, fullPathWith, shortPath, shortPathWith,
+    shortPath, shortPathWith,
     isRelative, isAbsolute,
     isValid, makeValid
     )
@@ -591,50 +590,10 @@ joinPath x = foldr combineAlways "" x
 ---------------------------------------------------------------------
 -- File name manipulators
 
--- | Find the canoncial path, if the file exists then the case will be correct
---   on Windows, if the file is a directory it will have a trailing slash
---   appended on all operating systems.
-canonicalPath :: FilePath -> IO FilePath
-canonicalPath x = do
-        x2 <- fixElements $ normalise x
-        x3 <- fixSlash x2
-        return x3
-    where
-        fixElements x | isPosix = return x
-        fixElements x = do
-                fixed <- mapM (uncurry fixElement) tests
-                return $ joinPath $ [head dirs | isAbsolute x] ++ fixed
-            where
-                tests = map (\x -> (joinPath $ init x, last x)) $ drop 2 $ inits dirs
-                dirs = ["."|isRelative x] ++ splitDirectories x
-            
-        
-        -- take a context, and an element, and return the new element
-        fixElement :: FilePath -> FilePath -> IO FilePath
-        fixElement context element = do
-            let item = context </> element
-            b1 <- doesDirectoryExist item
-            b2 <- doesFileExist item
-            if b1 || b2 then do
-                items <- getDirectoryContents context
-                let uelement = map toUpper element
-                    i = [x | x <- items, map toUpper x == uelement]
-                if null i then return element else return $ head i
-             else
-                return element
-        
-        fixSlash :: FilePath -> IO FilePath
-        fixSlash file = do
-            b <- doesDirectoryExist file
-            if b && not (isDirectory file) then
-                return $ file ++ [pathSeparator]
-             else
-                return file
-
-
--- | Equality of two 'FilePaths'. If you call 'fullPath' first this has a much
---   better chance of working. Note that this doesn't follow symlinks or
---   DOSNAM~1s. 
+-- | Equality of two 'FilePath's.
+--   If you call @System.Directory.canonicalizePath@
+--   first this has a much better chance of working.
+--   Note that this doesn't follow symlinks or DOSNAM~1s. 
 equalFilePath :: FilePath -> FilePath -> Bool
 equalFilePath a b = f a == f b
     where
@@ -645,18 +604,6 @@ equalFilePath a b = f a == f b
         dropTrailSlash x | isPathSeparator (last x) = init x
                          | otherwise = x
 
--- | Expand out a filename to its full name, with the a directory factored in.
---
--- > Posix:   fullPathWith "/file/test/" "/bob/dave" == "/bob/dave"
--- > Posix:   fullPathWith "/file/test/" "bob" == "/file/test/bob"
--- > Posix:   fullPathWith "/file/test/" "../bob" == "/file/bob"
-fullPathWith :: FilePath -> FilePath -> FilePath
-fullPathWith cur x = normalise $ combine cur x
-
--- | 'fullPathWith' the current directory.
-fullPath :: FilePath -> IO FilePath
-fullPath x = do cur <- getCurrentDirectory
-                return $ fullPathWith cur x
 
 -- | Contract a filename, based on a relative path.
 --
@@ -734,8 +681,6 @@ normaliseDrive x = if isJust $ readDriveLetter x2 then
         repSlash x = if isPathSeparator x then pathSeparator else x
 
 -- information for validity functions on Windows
-
-
 -- see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/fileio/fs/naming_a_file.asp
 badCharacters = ":*?><|"
 badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "CLOCK$"]
