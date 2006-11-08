@@ -9,7 +9,8 @@ Stability   :  depreciated
 Portability :  portable
 
 This is the old interface for System.FilePath - now depreciated.
-Please use "System.FilePath" (or email me and I'll send you a patch)
+Please use "System.FilePath" for new programs, and think about
+converting your old ones over (or email me and I'll send you a patch)
 
 I have used 3 codes to indicate what happened to each method:
 
