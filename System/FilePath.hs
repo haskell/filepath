@@ -49,7 +49,7 @@ module System.FilePath
     extSeparator, isExtSeparator,
     
     -- * Path methods (environment $PATH)
-    splitFiles, getPath,
+    splitFiles, getSearchPath,
     
     -- * Extension methods
     splitExtension,
@@ -203,8 +203,8 @@ splitFiles = f
            (pre, post) -> pre : f (tail post)
 
 -- | Get a list of filepaths in the $PATH.
-getPath :: IO [FilePath]
-getPath = fmap splitFiles (getEnv "PATH")
+getSearchPath :: IO [FilePath]
+getSearchPath = fmap splitFiles (getEnv "PATH")
 
 
 ---------------------------------------------------------------------

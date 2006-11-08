@@ -219,7 +219,8 @@ splitFiles = f
            (pre, [])   -> [pre]
            (pre, post) -> pre : f (tail post)
 
--- | Get a list of filepaths in the $PATH.
+-- | /RENAMED/ - getSearchPath.
+--   Get a list of filepaths in the $PATH.
 getPath :: IO [FilePath]
 getPath = fmap splitFiles (getEnv "PATH")
 
