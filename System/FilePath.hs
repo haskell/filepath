@@ -667,11 +667,9 @@ shortPath x = do cur <- getCurrentDirectory
 --
 -- * .\/ -> \"\"
 --
--- * item\/..\/ -> \"\"
---
 -- > Posix:   normalise "/file/\\test////" == "/file/\\test/"
 -- > Posix:   normalise "/file/./test" == "/file/test"
--- > Posix:   normalise "/test/file/../bob/fred/" == "/test/bob/fred/"
+-- > Posix:   normalise "/test/file/../bob/fred/" == "/test/file/../bob/fred/"
 -- > Posix:   normalise "../bob/fred/" == "../bob/fred/"
 -- > Posix:   normalise "./bob/fred/" == "bob/fred/"
 -- > Windows: normalise "c:\\file/bob\\" == "C:\\file\\bob\\"
@@ -693,8 +691,6 @@ normalise x = joinDrive (normaliseDrive drv) (f pth) ++ [pathSeparator | isPathS
         propSep [] = []
         
         dropDots acc (".":xs) = dropDots acc xs
-        dropDots (a:cc) ("..":xs) = dropDots cc xs
-        dropDots [] ("..":xs) = ".." : dropDots [] xs
         dropDots acc (x:xs) = dropDots (x:acc) xs
         dropDots acc [] = reverse acc
 
