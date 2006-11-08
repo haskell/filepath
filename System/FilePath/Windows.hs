@@ -23,7 +23,7 @@ module System.FilePath.Windows
 # define END_DRIVE_SECTION {-
 #endif
 
-#include "../FilePath.hs"
+#include "Version_0_10.hs"
 
 #endif
 

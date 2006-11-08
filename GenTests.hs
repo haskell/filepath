@@ -11,7 +11,7 @@ data Test = Expr String
           deriving Show
 
 
-main = do src <- readFile "System/FilePath.hs"
+main = do src <- readFile "System/FilePath/Version_0_10.hs"
           let tests = concatMap getTest $ zip [1..] (lines src)
           writeFile "FilePath_Test.hs" (prefix ++ genTests tests)
 

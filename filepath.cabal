@@ -10,5 +10,6 @@ Exposed-modules:
         System.FilePath
         System.FilePath.Posix
         System.FilePath.Windows
-        System.FilePath.Compat
+        System.FilePath.Version_0_09
+        System.FilePath.Version_0_10
 Extensions: CPP

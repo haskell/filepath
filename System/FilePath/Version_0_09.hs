@@ -1,12 +1,24 @@
 
 {- |
-Module      :  System.FilePath
+Module      :  System.FilePath.Version_0_09
 Copyright   :  (c) Neil Mitchell 2005-2006
 License     :  BSD3
 
 Maintainer  :  http://www.cs.york.ac.uk/~ndm/
-Stability   :  in-progress
+Stability   :  depreciated
 Portability :  portable
+
+This is the old interface for System.FilePath - now depreciated.
+Please use "System.FilePath" for new programs, and think about
+converting your old ones over (or email me and I'll send you a patch)
+
+I have used 3 codes to indicate what happened to each method:
+
+    * /GONE/ means the method is entirely removed - with where the best alternative is
+
+    * /RENAMED/ means the method got renamed
+
+    * Nothing means the method remains the same.
 
 A library for FilePath manipulations, designed to be cross platform.
 This library will select the correct type of FilePath's for the
@@ -17,20 +29,20 @@ Some short examples:
 
 You are given a C file, you want to figure out the corresponding object (.o) file:
 
-@'replaceExtension' file \"o\"@
+@'setExtension' file \"o\"@
 
 Haskell module Main imports Test, you have the file named main:
 
-@['replaceFileName' path_to_main \"Test\" '<.>' ext | ext <- [\"hs\",\"lhs\"] ]@
+@['setFileName' path_to_main \"Test\" '<.>' ext | ext <- [\"hs\",\"lhs\"] ]@
 
 You want to download a file from the web and save it to disk:
 
 @do let file = 'makeValid' url
-   System.IO.createDirectoryIfMissing True ('takeDirectory' file)@
+   'ensureDirectory' ('getDirectory' file)@
 
 You want to compile a Haskell file, but put the hi file under \"interface\"
 
-@'takeDirectory' file '</>' \"interface\" '</>' ('takeFileName' file \`replaceExtension\` \"hi\"@)
+@'getDirectory' file '</>' \"interface\" '</>' ('getFileName' file \`setExtension\` \"hi\"@)
 
 You want to display a filename to the user, as neatly as possible
 
@@ -40,7 +52,7 @@ The examples in code format descibed by each function are used to generate
 tests, and should give clear semantics for the functions.
 -}
 
-module System.FilePath
+module System.FilePath.Version_0_09
     (
     -- * The basic functions
     FilePath,
@@ -49,33 +61,39 @@ module System.FilePath
     extSeparator, isExtSeparator,
     
     -- * Path methods (environment $PATH)
-    splitFiles, getSearchPath,
+    splitFiles, getPath,
     
     -- * Extension methods
-    splitExtension,
-    takeExtension, replaceExtension, dropExtension, addExtension, hasExtension, (<.>),
-    splitExtensions, dropExtensions, takeExtensions,
+    splitExtension, joinExtension,
+    getExtension, setExtension, dropExtension, addExtension, hasExtension, (<.>),
+    splitExtensions, dropExtensions, getExtensions,
     
     {- DRIVE_SECTION
     -- * Drive methods
     splitDrive, joinDrive,
-    takeDrive, replaceDrive, hasDrive, dropDrive, isDrive,
+    getDrive, setDrive, hasDrive, dropDrive,
     END_DRIVE_SECTION -}
     
     -- * Operations on a filepath, as a list of directories
-    splitFileName,
-    takeFileName, replaceFileName, dropFileName, addFileName,
-    takeBaseName, replaceBaseName,
-    takeDirectory, replaceDirectory,
-    isDirectory, isFile, asDirectory, asFile,
+    splitFileName, joinFileName,
+    getFileName, setFileName, dropFileName, addFileName,
+    getBaseName, setBaseName,
+    getDirectory, setDirectory, isDirectory,
     combine, (</>),
     splitPath, joinPath, splitDirectories,
     
     -- * File name manipulators
+    canonicalPath,
     normalise, equalFilePath,
-    shortPath, shortPathWith,
+    fullPath, fullPathWith, shortPath, shortPathWith,
     isRelative, isAbsolute,
-    isValid, makeValid
+    isValid, makeValid,
+    
+    -- * Directory operations
+    getDirectoryList, ensureDirectory,
+    
+    -- * Temporary file operations
+    getTemporaryFile, getTemporaryFileNew, getTemporaryFileSeed
     )
     where
 
@@ -202,18 +220,18 @@ splitFiles = f
            (pre, [])   -> [pre]
            (pre, post) -> pre : f (tail post)
 
--- | Get a list of filepaths in the $PATH.
-getSearchPath :: IO [FilePath]
-getSearchPath = fmap splitFiles (getEnv "PATH")
+-- | /RENAMED/ - getSearchPath.
+--   Get a list of filepaths in the $PATH.
+getPath :: IO [FilePath]
+getPath = fmap splitFiles (getEnv "PATH")
 
 
 ---------------------------------------------------------------------
 -- Extension methods
 
--- | Split on the extension. 'addExtension' is the inverse.
+-- | Split on the extension.
 --
 -- > uncurry (++) (splitExtension x) == x
--- > uncurry addExtension (splitExtension x) == x
 -- > splitExtension "file.txt" == ("file",".txt")
 -- > splitExtension "file" == ("file","")
 -- > splitExtension "file/file.txt" == ("file/file",".txt")
@@ -229,23 +247,33 @@ splitExtension x = case d of
         (a,b) = splitFileName x
         (c,d) = break isExtSeparator $ reverse b
 
--- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
+-- | /RENAMED/ - @addExtension@.
+--   Join an extension and a filepath.
 --
--- > takeExtension x == snd (splitExtension x)
--- > takeExtension (addExtension x "ext") == ".ext"
--- > takeExtension (replaceExtension x "ext") == ".ext"
-takeExtension :: FilePath -> String
-takeExtension = snd . splitExtension
+-- > uncurry joinExtension (splitExtension x) == x
+joinExtension :: String -> String -> FilePath
+joinExtension = addExtension
 
--- | Set the extension of a file, overwriting one if already present.
+-- | /RENAMED/ - @takeExtension@.
+--   Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
 --
--- > replaceExtension "file.txt" ".bob" == "file.bob"
--- > replaceExtension "file.txt" "bob" == "file.bob"
--- > replaceExtension "file" ".bob" == "file.bob"
--- > replaceExtension "file.txt" "" == "file"
--- > replaceExtension "file.fred.bob" "txt" == "file.fred.txt"
-replaceExtension :: FilePath -> String -> FilePath
-replaceExtension x y = dropExtension x <.> y
+-- > getExtension x == snd (splitExtension x)
+-- > getExtension (addExtension x "ext") == ".ext"
+-- > getExtension (setExtension x "ext") == ".ext"
+getExtension :: FilePath -> String
+getExtension = snd . splitExtension
+
+-- | /RENAMED/ - @replaceExtension@.
+--   Set the extension of a file, overwriting one if already present.
+--
+-- > setExtension "file.txt" ".bob" == "file.bob"
+-- > setExtension "file.txt" "bob" == "file.bob"
+-- > setExtension "file" ".bob" == "file.bob"
+-- > setExtension "file.txt" "" == "file"
+-- > setExtension "file.fred.bob" "txt" == "file.fred.txt"
+setExtension :: FilePath -> String -> FilePath
+setExtension x y = joinExtension a y
+    where (a,b) = splitExtension x
 
 -- | Alias to 'addExtension', for people who like that sort of thing.
 (<.>) :: FilePath -> String -> FilePath
@@ -275,9 +303,9 @@ addExtension file xs@(x:_) = joinDrive a res
 
 -- | Does the given filename have an extension?
 --
--- > null (takeExtension x) == not (hasExtension x)
+-- > null (getExtension x) == not (hasExtension x)
 hasExtension :: FilePath -> Bool
-hasExtension = any isExtSeparator . takeFileName
+hasExtension = any isExtSeparator . getFileName
 
 
 -- | Split on all extensions
@@ -295,9 +323,10 @@ splitExtensions x = (a ++ c, d)
 dropExtensions :: FilePath -> FilePath
 dropExtensions = fst . splitExtensions
 
--- | Get all extensions
-takeExtensions :: FilePath -> String
-takeExtensions = snd . splitExtensions
+-- | /RENAMED/ - @takeExtensions.@
+--   Get all extensions
+getExtensions :: FilePath -> String
+getExtensions = snd . splitExtensions
 
 
 
@@ -307,8 +336,9 @@ takeExtensions = snd . splitExtensions
 -- | Is the given character a valid drive letter?
 -- only a-z and A-Z are letters, not isAlpha which is more unicodey
 isLetter :: Char -> Bool
-isLetter x = (x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z')
-
+isLetter x | x >= 'a' && x <= 'z' = True
+           | x >= 'A' && x <= 'Z' = True
+           | otherwise = False
 
 -- | Split a path into a drive and a path.
 --   On Unix, \/ is a Drive.
@@ -323,11 +353,12 @@ isLetter x = (x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z')
 -- > Windows: splitDrive "\\\\?\\d:\\file" == ("\\\\?\\d:\\","file")
 -- > Windows: splitDrive "/d" == ("/","d")
 -- > Posix:   splitDrive "/test" == ("/","test")
--- > Posix:   splitDrive "//test" == ("//","test")
 -- > Posix:   splitDrive "test/file" == ("","test/file")
 -- > Posix:   splitDrive "file" == ("","file")
 splitDrive :: FilePath -> (FilePath, FilePath)
-splitDrive x | isPosix = span (== '/') x
+splitDrive x | isPosix = case x of
+                             '/':xs -> ("/",xs)
+                             xs -> ("",xs)
 
 splitDrive x | isJust y = fromJust y
     where y = readDriveLetter x
@@ -361,8 +392,8 @@ readDriveUNC x = Nothing
 
 -- c:\
 readDriveLetter :: String -> Maybe (FilePath, FilePath)
+readDriveLetter [x,':'] | isLetter x = Just ([x,':'],"")
 readDriveLetter (x:':':y:xs) | isLetter x && isPathSeparator y = Just $ addSlash [x,':'] (y:xs)
-readDriveLetter (x:':':xs) | isLetter x = Just ([x,':'], xs)
 readDriveLetter x = Nothing
 
 -- \\sharename\
@@ -388,21 +419,19 @@ joinDrive a b | isPosix = a ++ b
               | null a = b
               | null b = a
               | isPathSeparator (last a) = a ++ b
-              | otherwise = case a of
-                                [a1,':'] | isLetter a1 -> a ++ b
-                                _ -> a ++ [pathSeparator] ++ b
+              | otherwise = a ++ [pathSeparator] ++ b
 
 -- | Set the drive, from the filepath.
 --
--- > replaceDrive x (takeDrive x) == x
-replaceDrive :: FilePath -> String -> FilePath
-replaceDrive x drv = joinDrive drv (dropDrive x)
+-- > setDrive x (getDrive x) == x
+setDrive :: FilePath -> String -> FilePath
+setDrive x drv = joinDrive drv (dropDrive x)
 
 -- | Get the drive from a filepath.
 --
--- > takeDrive x == fst (splitDrive x)
-takeDrive :: FilePath -> FilePath
-takeDrive = fst . splitDrive
+-- > getDrive x == fst (splitDrive x)
+getDrive :: FilePath -> FilePath
+getDrive = fst . splitDrive
 
 -- | Delete the drive, if it exists.
 --
@@ -412,23 +441,19 @@ dropDrive = snd . splitDrive
 
 -- | Does a path have a drive.
 --
--- > not (hasDrive x) == null (takeDrive x)
+-- > not (hasDrive x) == null (getDrive x)
 hasDrive :: FilePath -> Bool
-hasDrive = not . null . takeDrive
+hasDrive = not . null . getDrive
 
 
--- | Is an element a drive
-isDrive :: FilePath -> Bool
-isDrive = null . dropDrive
 
 
 ---------------------------------------------------------------------
 -- Operations on a filepath, as a list of directories
 
--- | Split a filename into directory and file. 'addFileName' is the inverse.
+-- | Split a filename into directory and file.
 --
 -- > uncurry (++) (splitFileName x) == x
--- > uncurry addFileName (splitFileName x) == x
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
 -- > splitFileName "file/" == ("file/", "")
 -- > splitFileName "bob" == ("", "bob")
@@ -441,52 +466,62 @@ splitFileName x = (c ++ reverse b, reverse a)
         (c,d) = splitDrive x
 
 
+-- | /RENAMED/ - @addFileName@.
+--   Join a directory and filename.
+--
+-- > uncurry joinFileName (splitFileName x) == x
+joinFileName :: FilePath -> String -> FilePath
+joinFileName x y = addFileName x y
+
+
 -- | Add a filename onto the end of a path.
 --
--- > addFileName (takeDirectory x) (takeFileName x) `equalFilePath` x
+-- > addFileName (getDirectory x) (getFileName x) `equalFilePath` x
 addFileName :: FilePath -> String -> FilePath
-addFileName x y = combineAlways x y
+addFileName x y = if null x then y
+                  else if null y then x
+                  else if isPathSeparator (last x) then x ++ y
+                  else x ++ [pathSeparator] ++ y
 
--- | Set the filename.
+-- | /RENAMED/ - @replaceFileName@. Set the filename.
 --
--- > replaceFileName x (takeFileName x) == x
-replaceFileName :: FilePath -> String -> FilePath
-replaceFileName x y = addFileName (dropFileName x) y
+-- > setFileName x (getFileName x) == x
+setFileName :: FilePath -> String -> FilePath
+setFileName x y = joinFileName (fst $ splitFileName x) y
 
 -- | Drop the filename.
 --
 -- > dropFileName x == fst (splitFileName x)
 dropFileName :: FilePath -> FilePath
-dropFileName = fst . splitFileName
+dropFileName x = fst (splitFileName x)
 
 
--- | Get the file name.
+-- | /RENAMED/ - @takeFileName@. Get the file name.
 --
--- > takeFileName "test/" == ""
--- > takeFileName x == snd (splitFileName x)
--- > takeFileName (replaceFileName x "fred") == "fred"
--- > takeFileName (addFileName x "fred") == "fred"
-takeFileName :: FilePath -> FilePath
-takeFileName = snd . splitFileName
+-- > getFileName "test/" == ""
+-- > getFileName x == snd (splitFileName x)
+-- > getFileName (setFileName x "fred") == "fred"
+-- > getFileName (addFileName x "fred") == "fred"
+getFileName :: FilePath -> FilePath
+getFileName x = snd $ splitFileName x
 
--- | Get the base name, without an extension or path.
+-- | /RENAMED/ - @takeBaseName@. 
+--   Get the base name, without an extension or path.
 --
--- > takeBaseName "file/test.txt" == "test"
--- > takeBaseName "dave.ext" == "dave"
-takeBaseName :: FilePath -> String
-takeBaseName = dropExtension . takeFileName
+-- > getBaseName "file/test.txt" == "test"
+-- > getBaseName "dave.ext" == "dave"
+getBaseName :: FilePath -> String
+getBaseName = dropExtension . getFileName
 
--- | Set the base name.
+-- | /RENAMED/ - @replaceBaseName@. Set the base name.
 --
--- > replaceBaseName "file/test.txt" "bob" == "file/bob.txt"
--- > replaceBaseName "fred" "bill" == "bill"
--- > replaceBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
--- > replaceBaseName x (takeBaseName x) == x
-replaceBaseName :: FilePath -> String -> FilePath
-replaceBaseName pth nam = addFileName a (addExtension nam ext)
+-- > setBaseName "file/test.txt" "bob" == "file/bob.txt"
+-- > setBaseName "fred" "bill" == "bill"
+setBaseName :: FilePath -> String -> FilePath
+setBaseName pth nam = joinFileName a (joinExtension nam d)
     where
         (a,b) = splitFileName pth
-        ext = takeExtension b
+        (c,d) = splitExtension b
 
 -- | Is an item either a directory or the last character a path separator?
 --   This does not query the file system.
@@ -497,50 +532,24 @@ isDirectory :: FilePath -> Bool
 isDirectory "" = False
 isDirectory x = isPathSeparator (last x)
 
--- | Is an item a file, does not query the file system.
+-- | /RENAMED/ - @takeDirectory@.
+--   Get the directory name, move up one level.
 --
--- > isDirectory x == not (isFile x)
-isFile :: FilePath -> Bool
-isFile = not . isDirectory
-
-
--- | Make something look like a directory
---
--- > isDirectory (asDirectory x)
--- > if isDirectory x then asDirectory x == x else True
--- > Posix:    asDirectory "test/rest" == "test/rest/"
-asDirectory :: FilePath -> FilePath
-asDirectory x = if isDirectory x then x else x ++ [pathSeparator]
-
-
--- | Make something look like a file
---
--- > asFile "file/test/" == "file/test"
--- > not (isDirectory (asFile x)) || isDrive x
--- > Posix:    asFile "/" == "/"
-asFile :: FilePath -> FilePath
-asFile x = if isDirectory x && not (isDrive x)
-           then reverse $ dropWhile isPathSeparator $ reverse x
-           else x
-
-
--- | Get the directory name, move up one level.
---
--- > Posix:    takeDirectory "/foo/bar/baz" == "/foo/bar"
--- > Posix:    takeDirectory "/foo/bar/baz/" == "/foo/bar/baz"
-takeDirectory :: FilePath -> FilePath
-takeDirectory x = if isDrive file then file
-                  else if null res && not (null file) then file
-                  else res
+-- > Posix:    getDirectory "/foo/bar/baz" == "/foo/bar"
+-- > Posix:    getDirectory "/foo/bar/baz/" == "/foo/bar/baz"
+getDirectory :: FilePath -> FilePath
+getDirectory x = a ++ if null res then file else res
     where
+        (a,b) = splitDrive x
         res = reverse $ dropWhile isPathSeparator $ reverse file
-        file = dropFileName x
+        file = dropFileName b
 
--- | Set the directory, keeping the filename the same.
+-- | /RENAMED/ - @replaceDirectory@.
+--   Set the directory, keeping the filename the same.
 --
--- > replaceDirectory x (takeDirectory x) `equalFilePath` x
-replaceDirectory :: FilePath -> String -> FilePath
-replaceDirectory x dir = addFileName dir (takeFileName x)
+-- > setDirectory x (getDirectory x) `equalFilePath` x
+setDirectory :: FilePath -> String -> FilePath
+setDirectory x dir = joinFileName dir (getFileName x)
 
 
 -- | Combine two paths, if the right path 'isAbsolute', then it returns the second.
@@ -557,10 +566,9 @@ combineAlways :: FilePath -> FilePath -> FilePath
 combineAlways a b | null a = b
                   | null b = a
                   | isPathSeparator (last a) = a ++ b
-                  | isDrive a = joinDrive a b
                   | otherwise = a ++ [pathSeparator] ++ b
 
--- | A nice alias for 'combine'.
+-- | A nice alias for 'combine'. E.g. @\"home\" '</>' \"bob\" -> \"home\/bob\"@
 --   on Unix or @\"home\\bob\"@ on Windows.
 (</>) :: FilePath -> FilePath -> FilePath
 (</>) = combine
@@ -589,7 +597,7 @@ splitPath x = [a | a /= ""] ++ f b
 --
 -- > splitDirectories "test/file" == ["test","file"]
 -- > splitDirectories "/test/file" == ["/","test","file"]
--- > joinPath (splitDirectories (makeValid x)) `equalFilePath` makeValid x
+-- > joinPath (splitDirectories x) `equalFilePath` x
 -- > splitDirectories "" == []
 splitDirectories :: FilePath -> [FilePath]
 splitDirectories x =
@@ -605,12 +613,9 @@ splitDirectories x =
 
 -- | Join path elements back together.
 --
--- > joinPath (splitPath (makeValid x)) == makeValid x
-
--- Note that this definition on c:\\c:\\, join then split will give c:\\
+-- > joinPath (splitPath x) == x
 joinPath :: [FilePath] -> FilePath
-joinPath x = foldr combine "" x
-
+joinPath x = foldr combineAlways "" x
 
 
 
@@ -619,10 +624,51 @@ joinPath x = foldr combine "" x
 ---------------------------------------------------------------------
 -- File name manipulators
 
--- | Equality of two 'FilePath's.
---   If you call @System.Directory.canonicalizePath@
---   first this has a much better chance of working.
---   Note that this doesn't follow symlinks or DOSNAM~1s. 
+-- | /GONE/ - see @System.Directory.canonicalizePath@.
+--   Find the canoncial path, if the file exists then the case will be correct
+--   on Windows, if the file is a directory it will have a trailing slash
+--   appended on all operating systems.
+canonicalPath :: FilePath -> IO FilePath
+canonicalPath x = do
+        x2 <- fixElements $ normalise x
+        x3 <- fixSlash x2
+        return x3
+    where
+        fixElements x | isPosix = return x
+        fixElements x = do
+                fixed <- mapM (uncurry fixElement) tests
+                return $ joinPath $ [head dirs | isAbsolute x] ++ fixed
+            where
+                tests = map (\x -> (joinPath $ init x, last x)) $ drop 2 $ inits dirs
+                dirs = ["."|isRelative x] ++ splitDirectories x
+            
+        
+        -- take a context, and an element, and return the new element
+        fixElement :: FilePath -> FilePath -> IO FilePath
+        fixElement context element = do
+            let item = context </> element
+            b1 <- doesDirectoryExist item
+            b2 <- doesFileExist item
+            if b1 || b2 then do
+                items <- getDirectoryContents context
+                let uelement = map toUpper element
+                    i = [x | x <- items, map toUpper x == uelement]
+                if null i then return element else return $ head i
+             else
+                return element
+        
+        fixSlash :: FilePath -> IO FilePath
+        fixSlash file = do
+            b <- doesDirectoryExist file
+            if b && not (isDirectory file) then
+                return $ file ++ [pathSeparator]
+             else
+                return file
+
+
+-- | Equality of two 'FilePaths'. If you call 'fullPath' first this has a much
+--   better chance of working. Note that this doesn't follow symlinks or
+--   DOSNAM~1s. 
 equalFilePath :: FilePath -> FilePath -> Bool
 equalFilePath a b = f a == f b
     where
@@ -633,6 +679,20 @@ equalFilePath a b = f a == f b
         dropTrailSlash x | isPathSeparator (last x) = init x
                          | otherwise = x
 
+-- | /GONE/ - see @System.Directory.canonicalizePath@.
+--   Expand out a filename to its full name, with the a directory factored in.
+--
+-- > Posix:   fullPathWith "/file/test/" "/bob/dave" == "/bob/dave"
+-- > Posix:   fullPathWith "/file/test/" "bob" == "/file/test/bob"
+-- > Posix:   fullPathWith "/file/test/" "../bob" == "/file/bob"
+fullPathWith :: FilePath -> FilePath -> FilePath
+fullPathWith cur x = normalise $ combine cur x
+
+-- | /GONE/ - see @System.Directory.canonicalizePath@.
+--   'fullPathWith' the current directory.
+fullPath :: FilePath -> IO FilePath
+fullPath x = do cur <- getCurrentDirectory
+                return $ fullPathWith cur x
 
 -- | Contract a filename, based on a relative path.
 --
@@ -642,7 +702,7 @@ equalFilePath a b = f a == f b
 -- > Posix:   shortPathWith "/file/test" "/file/test/fred/" == "fred/"
 -- > Posix:   shortPathWith "/fred/dave" "/fred/bill" == "../bill"
 shortPathWith :: FilePath -> FilePath -> FilePath
-shortPathWith cur x | isRelative x || isRelative cur || takeDrive x /= takeDrive cur = normalise x
+shortPathWith cur x | isRelative x || isRelative cur || getDrive x /= getDrive cur = normalise x
 shortPathWith cur x = joinPath $
                       replicate (length curdir - common) ".." ++
                       drop common orgpth
@@ -667,9 +727,11 @@ shortPath x = do cur <- getCurrentDirectory
 --
 -- * .\/ -> \"\"
 --
+-- * item\/..\/ -> \"\"
+--
 -- > Posix:   normalise "/file/\\test////" == "/file/\\test/"
 -- > Posix:   normalise "/file/./test" == "/file/test"
--- > Posix:   normalise "/test/file/../bob/fred/" == "/test/file/../bob/fred/"
+-- > Posix:   normalise "/test/file/../bob/fred/" == "/test/bob/fred/"
 -- > Posix:   normalise "../bob/fred/" == "../bob/fred/"
 -- > Posix:   normalise "./bob/fred/" == "bob/fred/"
 -- > Windows: normalise "c:\\file/bob\\" == "C:\\file\\bob\\"
@@ -691,6 +753,8 @@ normalise x = joinDrive (normaliseDrive drv) (f pth) ++ [pathSeparator | isPathS
         propSep [] = []
         
         dropDots acc (".":xs) = dropDots acc xs
+        dropDots (a:cc) ("..":xs) = dropDots cc xs
+        dropDots [] ("..":xs) = ".." : dropDots [] xs
         dropDots acc (x:xs) = dropDots (x:acc) xs
         dropDots acc [] = reverse acc
 
@@ -706,6 +770,8 @@ normaliseDrive x = if isJust $ readDriveLetter x2 then
         repSlash x = if isPathSeparator x then pathSeparator else x
 
 -- information for validity functions on Windows
+
+
 -- see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/fileio/fs/naming_a_file.asp
 badCharacters = ":*?><|"
 badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "CLOCK$"]
@@ -752,7 +818,7 @@ makeValid x = joinDrive drv $ validElements $ validChars pth
         validElements x = joinPath $ map g $ splitPath x
         g x = h (reverse b) ++ reverse a
             where (a,b) = span isPathSeparator $ reverse x
-        h x = if map toUpper a `elem` badElements then addExtension (a ++ "_") b else x
+        h x = if map toUpper a `elem` badElements then joinExtension (a ++ "_") b else x
             where (a,b) = splitExtensions x
         
 
@@ -763,7 +829,7 @@ makeValid x = joinDrive drv $ validElements $ validChars pth
 -- > Posix:   isRelative "test/path" == True
 -- > Posix:   isRelative "/test" == False
 isRelative :: FilePath -> Bool
-isRelative = null . takeDrive
+isRelative x = null $ getDrive x
 
 
 -- | @not . 'isRelative'@
@@ -771,3 +837,63 @@ isRelative = null . takeDrive
 -- > isAbsolute x == not (isRelative x)
 isAbsolute :: FilePath -> Bool
 isAbsolute = not . isRelative
+
+
+
+-- Search Methods
+
+-- | /GONE/ - I miss this :(.
+--   Get a list of all the directories within this directory.
+getDirectoryList :: FilePath -> IO [String]
+getDirectoryList path = do x <- getDirectoryContents path
+                           let xfull = filter (not . isFakeDirectory) x
+                           filterM (\a -> doesDirectoryExist $ combine path a) xfull
+
+-- | /GONE/  see @System.Directory.createDirectoryIfMissing@.
+--   Makes a directory and all its parents (mkdir -p). For example 
+--   ensureDirectory \".\/One\/Two\/Three\" would create the directory \"Two\" 
+--   and \"Three\" if \".\" and \"One\" already existed.
+ensureDirectory :: FilePath -> IO ()
+ensureDirectory path = when (not $ null pths) $ f (joinDrive drv (head pths)) (tail pths)
+    where
+        pths = splitPath pth
+        (drv,pth) = splitDrive path
+    
+        f pth todo = do
+            exist <- doesDirectoryExist pth
+            when (not exist) $ createDirectory pth
+            case todo of
+                (t:odo) -> f (pth </> t) odo
+                [] -> return ()
+
+
+-- | Is a directory a real directory, or an alias to a parent . or ..?
+isFakeDirectory :: FilePath -> Bool
+isFakeDirectory x = x == "." || x == ".."
+
+-- Temporary File Names
+
+-- | /GONE/ - see @System.IO.openTempFile@.
+--   Get a temporary file name.
+getTemporaryFile :: String -> IO FilePath
+getTemporaryFile ext = getTemporaryFileSeed 1 ext
+
+-- | /GONE/ - see @System.IO.openTempFile@.
+--   Get a temporary file name, using a specified number as a seed.
+getTemporaryFileSeed :: Int -> String -> IO FilePath
+getTemporaryFileSeed n ext = do
+    prog <- getProgName
+    tmpdir <- getTemporaryDirectory
+    return $ makeValid $ tmpdir </> (prog ++ show n) <.> ext
+    
+-- | /GONE/ - see @System.IO.openTempFile@.
+--   Get a temporary file name which does not exist.
+--   Beware of race conditions, the file may be created after this function
+--   returns. Nothing may be returned if a new item is not found in 100 tries.
+getTemporaryFileNew :: String -> IO (Maybe FilePath)
+getTemporaryFileNew ext = f [1..100]
+    where
+        f [] = return Nothing
+        f (x:xs) = do fil <- getTemporaryFileSeed x ext
+                      b <- doesFileExist fil
+                      if b then f xs else return $ Just fil

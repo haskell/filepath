@@ -1,14 +1,16 @@
 mkdir docs
 copy System\FilePath.hs docs\System.FilePath.hs
-copy System\FilePath\Compat.hs docs\System.FilePath.Compat.hs
+copy System\FilePath\Version_0_09.hs docs\System.FilePath.Version_0_09.hs
+copy System\FilePath\Version_0_10.hs docs\System.FilePath.Version_0_10.hs
 cpphs --noline System\FilePath\Windows.hs -D__HADDOCK__ > docs\System.FilePath.Windows.hs
 cpphs --noline System\FilePath\Posix.hs -D__HADDOCK__ > docs\System.FilePath.Posix.hs
 
-haddock -h docs\System.FilePath.hs docs\System.FilePath.Compat.hs docs\System.FilePath.Posix.hs docs\System.FilePath.Windows.hs --odir=docs --source-module=%%{MODULE}.html --source-entity=%%{MODULE}.html#%%{NAME}
+haddock -h docs\System.FilePath.hs docs\System.FilePath.Version_0_09.hs docs\System.FilePath.Version_0_10.hs docs\System.FilePath.Posix.hs docs\System.FilePath.Windows.hs --odir=docs --source-module=%%{MODULE}.html --source-entity=%%{MODULE}.html#%%{NAME}
 
 copy d:\bin\hscolour.css docs\hscolour.css
 hscolour -anchorCSS docs\System.FilePath.hs > docs\System.FilePath.html
-hscolour -anchorCSS docs\System.FilePath.Compat.hs > docs\System.FilePath.Compat.html
+hscolour -anchorCSS docs\System.FilePath.Version_0_09.hs > docs\System.FilePath.Version_0_09.html
+hscolour -anchorCSS docs\System.FilePath.Version_0_10.hs > docs\System.FilePath.Version_0_10.html
 hscolour -anchorCSS docs\System.FilePath.Windows.hs > docs\System.FilePath.Windows.html
 hscolour -anchorCSS docs\System.FilePath.Posix.hs > docs\System.FilePath.Posix.html
 
