@@ -132,7 +132,7 @@ isWindows = osName == "windows" && forceEffectView /= ForcePosix
 ---------------------------------------------------------------------
 -- The basic functions
 
--- | The character that seperates directories. In the case where more than
+-- | The character that separates directories. In the case where more than
 --   one character is possible, 'pathSeparator' is the 'ideal' one.
 --
 -- > Windows: pathSeparator == '\\'
