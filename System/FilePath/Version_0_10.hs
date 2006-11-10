@@ -133,7 +133,7 @@ isWindows = osName == "windows" && forceEffectView /= ForcePosix
 -- The basic functions
 
 -- | The character that seperates directories. In the case where more than
---   one character is possible, 'pathSeperator' is the 'ideal' one.
+--   one character is possible, 'pathSeparator' is the 'ideal' one.
 --
 -- > Windows: pathSeparator == '\\'
 -- > Posix:   pathSeparator ==  '/'
@@ -141,7 +141,7 @@ isWindows = osName == "windows" && forceEffectView /= ForcePosix
 pathSeparator :: Char
 pathSeparator = if isWindows then '\\' else '/'
 
--- | The list of all possible seperators.
+-- | The list of all possible separators.
 --
 -- > Windows: pathSeparators == ['\\', '/']
 -- > Posix:   pathSeparators == ['/']
@@ -149,7 +149,7 @@ pathSeparator = if isWindows then '\\' else '/'
 pathSeparators :: [Char]
 pathSeparators = if isWindows then "\\/" else "/"
 
--- | Rather than using @(== 'pathSeperator')@, use this. Test if something
+-- | Rather than using @(== 'pathSeparator')@, use this. Test if something
 --   is a path separator.
 --
 -- > isPathSeparator a == (a `elem` pathSeparators)
@@ -566,7 +566,7 @@ combineAlways a b | null a = b
 (</>) = combine
 
 
--- | Split a path by the directory seperator. 
+-- | Split a path by the directory separator. 
 --
 -- > concat (splitPath x) == x
 -- > splitPath "test//item/" == ["test//","item/"]
