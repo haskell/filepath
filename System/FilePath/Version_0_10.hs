@@ -634,8 +634,7 @@ joinPath x = foldr combine "" x
 ---------------------------------------------------------------------
 -- File name manipulators
 
--- | /RENAMED/ - @makeRelative@.
---   Equality of two 'FilePath's.
+-- | Equality of two 'FilePath's.
 --   If you call @System.Directory.canonicalizePath@
 --   first this has a much better chance of working.
 --   Note that this doesn't follow symlinks or DOSNAM~1s. 
@@ -650,7 +649,7 @@ equalFilePath a b = f a == f b
                          | otherwise = x
 
 
--- | /RENAMED/ - @makeRelativeToCurrentDirectory@.
+-- | /RENAMED/ - @makeRelative@.
 --   Contract a filename, based on a relative path.
 --
 -- > Posix:   shortPathWith "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
@@ -670,7 +669,8 @@ shortPathWith cur x = joinPath $
         curdir = splitDirectories $ dropDrive $ normalise $ cur
         (drv,pth) = splitDrive $ normalise x
 
--- | 'shortPathWith' the current directory.
+-- | /RENAMED/ - @makeRelativeToCurrentDirectory@.
+--   'shortPathWith' the current directory.
 shortPath :: FilePath -> IO FilePath
 shortPath x = do cur <- getCurrentDirectory
                  return $ shortPathWith cur x
