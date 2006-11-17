@@ -42,7 +42,7 @@ tests, and should give clear semantics for the functions.
 
 module System.FilePath.Version_0_11
     (
-    -- * The basic functions
+    -- * Separator predicates
     FilePath,
     pathSeparator, pathSeparators, isPathSeparator,
     fileSeparator, isFileSeparator,
