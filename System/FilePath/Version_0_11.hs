@@ -34,7 +34,7 @@ You want to compile a Haskell file, but put the hi file under \"interface\"
 
 You want to display a filename to the user, as neatly as possible
 
-@'shortPath' file >>= putStrLn@
+@'makeRelativeToCurrentDirectory' file >>= putStrLn@
 
 The examples in code format descibed by each function are used to generate
 tests, and should give clear semantics for the functions.
@@ -73,7 +73,7 @@ module System.FilePath.Version_0_11
     
     -- * File name manipulators
     normalise, equalFilePath,
-    shortPath, shortPathWith,
+    makeRelativeToCurrentDirectory, makeRelative,
     isRelative, isAbsolute,
     isValid, makeValid
     )
@@ -631,16 +631,16 @@ equalFilePath a b = f a == f b
 
 -- | Contract a filename, based on a relative path.
 --
--- > Posix:   shortPathWith "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
--- > Posix:   shortPathWith "/fred" "bob" == "bob"
--- > Posix:   shortPathWith "/file/test" "/file/test/fred" == "fred"
--- > Posix:   shortPathWith "/file/test" "/file/test/fred/" == "fred/"
--- > Posix:   shortPathWith "/fred/dave" "/fred/bill" == "../bill"
-shortPathWith :: FilePath -> FilePath -> FilePath
-shortPathWith cur x | isRelative x || isRelative cur || takeDrive x /= takeDrive cur = normalise x
-shortPathWith cur x = joinPath $
-                      replicate (length curdir - common) ".." ++
-                      drop common orgpth
+-- > Posix:   makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
+-- > Posix:   makeRelative "/fred" "bob" == "bob"
+-- > Posix:   makeRelative "/file/test" "/file/test/fred" == "fred"
+-- > Posix:   makeRelative "/file/test" "/file/test/fred/" == "fred/"
+-- > Posix:   makeRelative "/fred/dave" "/fred/bill" == "../bill"
+makeRelative :: FilePath -> FilePath -> FilePath
+makeRelative cur x | isRelative x || isRelative cur || takeDrive x /= takeDrive cur = normalise x
+makeRelative cur x = joinPath $
+                         replicate (length curdir - common) ".." ++
+                         drop common orgpth
     where
         common = length $ takeWhile id $ zipWith (==) orgdir curdir
         orgpth = splitPath pth
@@ -648,10 +648,11 @@ shortPathWith cur x = joinPath $
         curdir = splitDirectories $ dropDrive $ normalise $ cur
         (drv,pth) = splitDrive $ normalise x
 
--- | 'shortPathWith' the current directory.
-shortPath :: FilePath -> IO FilePath
-shortPath x = do cur <- getCurrentDirectory
-                 return $ shortPathWith cur x
+-- | 'makeRelative' the current directory.
+makeRelativeToCurrentDirectory :: FilePath -> IO FilePath
+makeRelativeToCurrentDirectory x = do
+    cur <- getCurrentDirectory
+    return $ makeRelative cur x
 
 
 -- | Normalise a file
