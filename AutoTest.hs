@@ -32,7 +32,7 @@ quickSafe prop = check quick prop
 
 quick :: Config
 quick = Config
-  { configMaxTest = 100
+  { configMaxTest = 500
   , configMaxFail = 1000
   , configSize    = (+ 3) . (`div` 2)
   , configEvery   = \n args -> let s = show n in s ++ [ '\b' | _ <- s ]
