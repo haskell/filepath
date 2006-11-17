@@ -8,6 +8,18 @@ Maintainer  :  http://www.cs.york.ac.uk/~ndm/
 Stability   :  in-progress
 Portability :  portable
 
+This is the current interface for System.FilePath, please import it as
+@System.FilePath.Version_0_10@ - do not use "System.FilePath" directly.
+
+The next version is currently under development, and I have used used 3 codes
+to indicate what will happen to each method (although they are still useable now):
+
+    * /GONE/ means the method is entirely removed - with where the best alternative is
+
+    * /RENAMED/ means the method got renamed
+
+    * Nothing means the method remains the same.
+
 A library for FilePath manipulations, designed to be cross platform.
 This library will select the correct type of FilePath's for the
 platform the code is running on at runtime. For more details see 
@@ -441,7 +453,8 @@ splitFileName x = (c ++ reverse b, reverse a)
         (c,d) = splitDrive x
 
 
--- | Add a filename onto the end of a path.
+-- | /GONE/ - use 'combine'.
+--   Add a filename onto the end of a path.
 --
 -- > addFileName (takeDirectory x) (takeFileName x) `equalFilePath` x
 addFileName :: FilePath -> String -> FilePath

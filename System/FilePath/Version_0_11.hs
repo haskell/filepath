@@ -64,7 +64,7 @@ module System.FilePath.Version_0_11
     
     -- * Operations on a filepath, as a list of directories
     splitFileName,
-    takeFileName, replaceFileName, dropFileName, addFileName,
+    takeFileName, replaceFileName, dropFileName,
     takeBaseName, replaceBaseName,
     takeDirectory, replaceDirectory,
     isDirectory, isFile, asDirectory, asFile,
@@ -440,12 +440,6 @@ splitFileName x = (c ++ reverse b, reverse a)
         (a,b) = break isPathSeparator $ reverse d
         (c,d) = splitDrive x
 
-
--- | Add a filename onto the end of a path.
---
--- > addFileName (takeDirectory x) (takeFileName x) `equalFilePath` x
-addFileName :: FilePath -> String -> FilePath
-addFileName x y = combineAlways x y
 
 -- | Set the filename.
 --
