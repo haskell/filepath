@@ -637,7 +637,7 @@ equalFilePath a b = f a == f b
 -- > Posix:   makeRelative "/file/test" "/file/test/fred/" == "fred/"
 -- > Posix:   makeRelative "/fred/dave" "/fred/bill" == "../bill"
 makeRelative :: FilePath -> FilePath -> FilePath
-makeRelative cur x | isRelative x || isRelative cur || takeDrive x /= takeDrive cur = normalise x
+makeRelative cur x | isRelative x || isRelative cur || not (takeDrive x `equalFilePath` takeDrive cur) = normalise x
 makeRelative cur x = joinPath $
                          replicate (length curdir - common) ".." ++
                          drop common orgpth
