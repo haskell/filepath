@@ -428,7 +428,7 @@ isDrive = null . dropDrive
 -- | Split a filename into directory and file. 'addFileName' is the inverse.
 --
 -- > uncurry (++) (splitFileName x) == x
--- > uncurry addFileName (splitFileName x) == x
+-- > uncurry combine (splitFileName x) == x
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
 -- > splitFileName "file/" == ("file/", "")
 -- > splitFileName "bob" == ("", "bob")
