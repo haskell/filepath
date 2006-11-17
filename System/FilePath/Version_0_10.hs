@@ -169,14 +169,16 @@ isPathSeparator :: Char -> Bool
 isPathSeparator = (`elem` pathSeparators)
 
 
--- | A list of possible file separators, between the $PATH variable
+-- | /RENAMED/ - @searchPathSeparator@.
+--   A list of possible file separators, between the $PATH variable
 --
 -- > Windows: fileSeparator == ';'
 -- > Posix:   fileSeparator == ':'
 fileSeparator :: Char
 fileSeparator = if isWindows then ';' else ':'
 
--- | Is the character a file separator?
+-- | /RENAMED/ - @isSearchPathSeparator@.
+--   Is the character a file separator?
 --
 -- > isFileSeparator a == (a == fileSeparator)
 isFileSeparator :: Char -> Bool
@@ -201,7 +203,8 @@ isExtSeparator = (== extSeparator)
 ---------------------------------------------------------------------
 -- Path methods (environment $PATH)
 
--- | Take a string, split it on the 'fileSeparators' character.
+-- | /RENAMED/ - @splitSearchPath@.
+--   Take a string, split it on the 'fileSeparators' character.
 --
 -- > Windows: splitFiles "File1;File2;File3" == ["File1","File2","File3"]
 -- > Posix:   splitFiles "File1:File2:File3" == ["File1","File2","File3"]

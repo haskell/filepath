@@ -45,11 +45,11 @@ module System.FilePath.Version_0_11
     -- * Separator predicates
     FilePath,
     pathSeparator, pathSeparators, isPathSeparator,
-    fileSeparator, isFileSeparator,
+    searchPathSeparator, isSearchPathSeparator,
     extSeparator, isExtSeparator,
     
     -- * Path methods (environment $PATH)
-    splitFiles, getSearchPath,
+    splitSearchPath, getSearchPath,
     
     -- * Extension methods
     splitExtension,
@@ -159,16 +159,16 @@ isPathSeparator = (`elem` pathSeparators)
 
 -- | A list of possible file separators, between the $PATH variable
 --
--- > Windows: fileSeparator == ';'
--- > Posix:   fileSeparator == ':'
-fileSeparator :: Char
-fileSeparator = if isWindows then ';' else ':'
+-- > Windows: searchPathSeparator == ';'
+-- > Posix:   searchPathSeparator == ':'
+searchPathSeparator :: Char
+searchPathSeparator = if isWindows then ';' else ':'
 
 -- | Is the character a file separator?
 --
--- > isFileSeparator a == (a == fileSeparator)
-isFileSeparator :: Char -> Bool
-isFileSeparator = (== fileSeparator)
+-- > isSearchPathSeparator a == (a == searchPathSeparator)
+isSearchPathSeparator :: Char -> Bool
+isSearchPathSeparator = (== searchPathSeparator)
 
 
 -- | File extension character
@@ -189,14 +189,14 @@ isExtSeparator = (== extSeparator)
 ---------------------------------------------------------------------
 -- Path methods (environment $PATH)
 
--- | Take a string, split it on the 'fileSeparator' character.
+-- | Take a string, split it on the 'searchPathSeparator' character.
 --
--- > Windows: splitFiles "File1;File2;File3" == ["File1","File2","File3"]
--- > Posix:   splitFiles "File1:File2:File3" == ["File1","File2","File3"]
-splitFiles :: String -> [FilePath]
-splitFiles = f
+-- > Windows: splitSearchPath "File1;File2;File3" == ["File1","File2","File3"]
+-- > Posix:   splitSearchPath "File1:File2:File3" == ["File1","File2","File3"]
+splitSearchPath :: String -> [FilePath]
+splitSearchPath = f
     where
-    f xs = case break isFileSeparator xs of
+    f xs = case break isSearchPathSeparator xs of
            ([],  [])   -> []
            ([],  post) -> f (tail post)
            (pre, [])   -> [pre]
@@ -204,7 +204,7 @@ splitFiles = f
 
 -- | Get a list of filepaths in the $PATH.
 getSearchPath :: IO [FilePath]
-getSearchPath = fmap splitFiles (getEnv "PATH")
+getSearchPath = fmap splitSearchPath (getEnv "PATH")
 
 
 ---------------------------------------------------------------------
