@@ -545,16 +545,11 @@ replaceDirectory x dir = combine dir (takeFileName x)
 -- > Posix:   combine "home" "bob" == "home/bob"
 -- > Windows: combine "home" "bob" == "home\\bob"
 combine :: FilePath -> FilePath -> FilePath
-combine a b | isAbsolute b = b
-            | otherwise = combineAlways a b
-
--- | Combine two paths, assuming rhs is NOT absolute.
-combineAlways :: FilePath -> FilePath -> FilePath
-combineAlways a b | null a = b
-                  | null b = a
-                  | isPathSeparator (last a) = a ++ b
-                  | isDrive a = joinDrive a b
-                  | otherwise = a ++ [pathSeparator] ++ b
+combine a b | isAbsolute b || null a = b
+            | null b = a
+            | isPathSeparator (last a) = a ++ b
+            | isDrive a = joinDrive a b
+            | otherwise = a ++ [pathSeparator] ++ b
 
 -- | A nice alias for 'combine'.
 (</>) :: FilePath -> FilePath -> FilePath
