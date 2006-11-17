@@ -425,7 +425,7 @@ isDrive = null . dropDrive
 ---------------------------------------------------------------------
 -- Operations on a filepath, as a list of directories
 
--- | Split a filename into directory and file. 'addFileName' is the inverse.
+-- | Split a filename into directory and file. 'combine' is the inverse.
 --
 -- > uncurry (++) (splitFileName x) == x
 -- > uncurry combine (splitFileName x) == x
@@ -484,7 +484,7 @@ takeBaseName = dropExtension . takeFileName
 -- > replaceBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
 -- > replaceBaseName x (takeBaseName x) == x
 replaceBaseName :: FilePath -> String -> FilePath
-replaceBaseName pth nam = addFileName a (addExtension nam ext)
+replaceBaseName pth nam = combine a (addExtension nam ext)
     where
         (a,b) = splitFileName pth
         ext = takeExtension b
@@ -541,7 +541,7 @@ takeDirectory x = if isDrive file then file
 --
 -- > replaceDirectory x (takeDirectory x) `equalFilePath` x
 replaceDirectory :: FilePath -> String -> FilePath
-replaceDirectory x dir = addFileName dir (takeFileName x)
+replaceDirectory x dir = combine dir (takeFileName x)
 
 
 -- | Combine two paths, if the second path 'isAbsolute', then it returns the second.
