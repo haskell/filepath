@@ -133,7 +133,7 @@ isWindows = osName == "windows" && forceEffectView /= ForcePosix
 -- The basic functions
 
 -- | The character that separates directories. In the case where more than
---   one character is possible, 'pathSeparator' is the 'ideal' one.
+--   one character is possible, 'pathSeparator' is the \'ideal\' one.
 --
 -- > Windows: pathSeparator == '\\'
 -- > Posix:   pathSeparator ==  '/'
@@ -189,7 +189,7 @@ isExtSeparator = (== extSeparator)
 ---------------------------------------------------------------------
 -- Path methods (environment $PATH)
 
--- | Take a string, split it on the 'fileSeparators' character.
+-- | Take a string, split it on the 'fileSeparator' character.
 --
 -- > Windows: splitFiles "File1;File2;File3" == ["File1","File2","File3"]
 -- > Posix:   splitFiles "File1:File2:File3" == ["File1","File2","File3"]
