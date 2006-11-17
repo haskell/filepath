@@ -546,6 +546,7 @@ replaceDirectory x dir = addFileName dir (takeFileName x)
 
 -- | Combine two paths, if the second path 'isAbsolute', then it returns the second.
 --
+-- > combine (takeDirectory x) (takeFileName x) `equalFilePath` x
 -- > Posix:   combine "/" "test" == "/test"
 -- > Posix:   combine "home" "bob" == "home/bob"
 -- > Windows: combine "home" "bob" == "home\\bob"
