@@ -451,7 +451,7 @@ addFileName x y = combineAlways x y
 --
 -- > replaceFileName x (takeFileName x) == x
 replaceFileName :: FilePath -> String -> FilePath
-replaceFileName x y = addFileName (dropFileName x) y
+replaceFileName x y = dropFileName x `combine` y
 
 -- | Drop the filename.
 --
