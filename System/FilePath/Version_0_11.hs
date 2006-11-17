@@ -466,6 +466,7 @@ dropFileName = fst . splitFileName
 -- > takeFileName x == snd (splitFileName x)
 -- > takeFileName (replaceFileName x "fred") == "fred"
 -- > takeFileName (addFileName x "fred") == "fred"
+-- > isRelative (takeFileName x)
 takeFileName :: FilePath -> FilePath
 takeFileName = snd . splitFileName
 
