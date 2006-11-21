@@ -523,6 +523,9 @@ asFile x = if isDirectory x && not (isDrive x)
 --
 -- > Posix:    takeDirectory "/foo/bar/baz" == "/foo/bar"
 -- > Posix:    takeDirectory "/foo/bar/baz/" == "/foo/bar/baz"
+-- > Windows:  takeDirectory "foo\\bar" == "foo"
+-- > Windows:  takeDirectory "foo\\bar\\\\" == "foo\\bar"
+-- > Windows:  takeDirectory "C:\\" == "C:\\"
 takeDirectory :: FilePath -> FilePath
 takeDirectory x = if isDrive file then file
                   else if null res && not (null file) then file
