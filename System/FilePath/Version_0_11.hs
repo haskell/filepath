@@ -473,6 +473,7 @@ takeFileName = snd . splitFileName
 -- > takeBaseName "" == ""
 -- > takeBaseName "test" == "test"
 -- > takeBaseName (asDirectory x) == ""
+-- > takeBaseName "file/file.tar.gz" == "file.tar"
 takeBaseName :: FilePath -> String
 takeBaseName = dropExtension . takeFileName
 
