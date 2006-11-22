@@ -157,7 +157,7 @@ isPathSeparator :: Char -> Bool
 isPathSeparator = (`elem` pathSeparators)
 
 
--- | A list of possible file separators, between the $PATH variable
+-- | The character that is used to separate the entries in the $PATH environment variable.
 --
 -- > Windows: searchPathSeparator == ';'
 -- > Posix:   searchPathSeparator == ':'
