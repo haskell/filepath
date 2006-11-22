@@ -470,6 +470,9 @@ takeFileName = snd . splitFileName
 --
 -- > takeBaseName "file/test.txt" == "test"
 -- > takeBaseName "dave.ext" == "dave"
+-- > takeBaseName "" == ""
+-- > takeBaseName "test" == "test"
+-- > takeBaseName (asDirectory x) == ""
 takeBaseName :: FilePath -> String
 takeBaseName = dropExtension . takeFileName
 
