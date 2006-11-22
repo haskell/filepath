@@ -263,6 +263,8 @@ dropExtension = fst . splitExtension
 -- > addExtension "file.txt" "bib" == "file.txt.bib"
 -- > addExtension "file." ".bib" == "file..bib"
 -- > addExtension "file" ".bib" == "file.bib"
+-- > addExtension "/" "x" == "/.x"
+-- > takeBaseName (addExtension (asDirectory x) "ext") == ".ext"
 -- > Windows: addExtension "\\\\share" ".txt" == "\\\\share\\.txt"
 addExtension :: FilePath -> String -> FilePath
 addExtension file "" = file
