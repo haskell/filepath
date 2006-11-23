@@ -6,6 +6,8 @@
     This module is a version of "System.FilePath" which uses Windows separators,
     even when run under Posix. For most purposes "System.FilePath" is a better
     choice.
+    
+    The interface is identical to "System.FilePath".
 -}
 
 #endif
