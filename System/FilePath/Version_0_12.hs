@@ -65,14 +65,18 @@ module System.FilePath.Version_0_12
     takeDrive, replaceDrive, hasDrive, dropDrive, isDrive,
     END_DRIVE_SECTION -}
     
-    -- * Operations on a filepath, as a list of directories
+    -- * Operations on a FilePath, as a list of directories
     splitFileName,
     takeFileName, replaceFileName, dropFileName,
     takeBaseName, replaceBaseName,
     takeDirectory, replaceDirectory,
-    isDirectory, isFile, asDirectory, asFile,
     combine, (</>),
     splitPath, joinPath, splitDirectories,
+
+    -- * Low level FilePath operators
+    hasTrailingPathSeparator,
+    addTrailingPathSeparator,
+    dropTrailingPathSeparator,
     
     -- * File name manipulators
     normalise, equalFilePath,
@@ -267,7 +271,7 @@ dropExtension = fst . splitExtension
 -- > addExtension "file." ".bib" == "file..bib"
 -- > addExtension "file" ".bib" == "file.bib"
 -- > addExtension "/" "x" == "/.x"
--- > takeBaseName (addExtension (asDirectory x) "ext") == ".ext"
+-- > takeBaseName (addExtension (addTrailingPathSeparator x) "ext") == ".ext"
 -- > Windows: addExtension "\\\\share" ".txt" == "\\\\share\\.txt"
 addExtension :: FilePath -> String -> FilePath
 addExtension file "" = file
@@ -475,7 +479,7 @@ takeFileName = snd . splitFileName
 -- > takeBaseName "dave.ext" == "dave"
 -- > takeBaseName "" == ""
 -- > takeBaseName "test" == "test"
--- > takeBaseName (asDirectory x) == ""
+-- > takeBaseName (addTrailingPathSeparator x) == ""
 -- > takeBaseName "file/file.tar.gz" == "file.tar"
 takeBaseName :: FilePath -> String
 takeBaseName = dropExtension . takeFileName
@@ -493,39 +497,33 @@ replaceBaseName pth nam = combine a (addExtension nam ext)
         ext = takeExtension b
 
 -- | Is an item either a directory or the last character a path separator?
---   This does not query the file system.
 --
--- > isDirectory "test" == False
--- > isDirectory "test/" == True
-isDirectory :: FilePath -> Bool
-isDirectory "" = False
-isDirectory x = isPathSeparator (last x)
+-- > hasTrailingPathSeparator "test" == False
+-- > hasTrailingPathSeparator "test/" == True
+hasTrailingPathSeparator :: FilePath -> Bool
+hasTrailingPathSeparator "" = False
+hasTrailingPathSeparator x = isPathSeparator (last x)
 
--- | Is an item a file, does not query the file system.
+
+-- | Add a trailing file path separator if one is not already present.
 --
--- > isDirectory x == not (isFile x)
-isFile :: FilePath -> Bool
-isFile = not . isDirectory
+-- > hasTrailingPathSeparator (addTrailingPathSeparator x)
+-- > if hasTrailingPathSeparator x then addTrailingPathSeparator x == x else True
+-- > Posix:    addTrailingPathSeparator "test/rest" == "test/rest/"
+addTrailingPathSeparator :: FilePath -> FilePath
+addTrailingPathSeparator x = if hasTrailingPathSeparator x then x else x ++ [pathSeparator]
 
 
--- | Make something look like a directory
+-- | Remove any trailing path separators
 --
--- > isDirectory (asDirectory x)
--- > if isDirectory x then asDirectory x == x else True
--- > Posix:    asDirectory "test/rest" == "test/rest/"
-asDirectory :: FilePath -> FilePath
-asDirectory x = if isDirectory x then x else x ++ [pathSeparator]
-
-
--- | Make something look like a file
---
--- > asFile "file/test/" == "file/test"
--- > not (isDirectory (asFile x)) || isDrive x
--- > Posix:    asFile "/" == "/"
-asFile :: FilePath -> FilePath
-asFile x = if isDirectory x && not (isDrive x)
-           then reverse $ dropWhile isPathSeparator $ reverse x
-           else x
+-- > dropTrailingPathSeparator "file/test/" == "file/test"
+-- > not (hasTrailingPathSeparator (dropTrailingPathSeparator x)) || isDrive x
+-- > Posix:    dropTrailingPathSeparator "/" == "/"
+dropTrailingPathSeparator :: FilePath -> FilePath
+dropTrailingPathSeparator x =
+    if hasTrailingPathSeparator x && not (isDrive x)
+    then reverse $ dropWhile isPathSeparator $ reverse x
+    else x
 
 
 -- | Get the directory name, move up one level.
