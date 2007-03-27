@@ -599,8 +599,8 @@ joinPath x = foldr combine "" x
 equalFilePath :: FilePath -> FilePath -> Bool
 equalFilePath a b = f a == f b
     where
-        f x | isPosix   = dropTrailSlash $ normalise x
-            | isWindows = dropTrailSlash $ map toLower $ normalise x
+        f x | isWindows = dropTrailSlash $ map toLower $ normalise x
+            | otherwise = dropTrailSlash $ normalise x
 
         dropTrailSlash "" = ""
         dropTrailSlash x | isPathSeparator (last x) = init x
