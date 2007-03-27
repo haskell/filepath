@@ -10,7 +10,7 @@ Portability :  portable
 
 A library for FilePath manipulations, designed to be cross platform.
 This library will select the correct type of FilePath's for the
-platform the code is running on at runtime. For more details see 
+platform the code is running on at runtime. For more details see
 <http://www.cs.york.ac.uk/~ndm/projects/libraries.php>
 
 DO NOT USE THIS CODE, IT IS STILL UNDER DEVELOPMENT - please use
@@ -50,21 +50,21 @@ module System.FilePath.Version_0_12
     pathSeparator, pathSeparators, isPathSeparator,
     searchPathSeparator, isSearchPathSeparator,
     extSeparator, isExtSeparator,
-    
+
     -- * Path methods (environment $PATH)
     splitSearchPath, getSearchPath,
-    
+
     -- * Extension methods
     splitExtension,
     takeExtension, replaceExtension, dropExtension, addExtension, hasExtension, (<.>),
     splitExtensions, dropExtensions, takeExtensions,
-    
+
     {- DRIVE_SECTION
     -- * Drive methods
     splitDrive, joinDrive,
     takeDrive, replaceDrive, hasDrive, dropDrive, isDrive,
     END_DRIVE_SECTION -}
-    
+
     -- * Operations on a FilePath, as a list of directories
     splitFileName,
     takeFileName, replaceFileName, dropFileName,
@@ -77,7 +77,7 @@ module System.FilePath.Version_0_12
     hasTrailingPathSeparator,
     addTrailingPathSeparator,
     dropTrailingPathSeparator,
-    
+
     -- * File name manipulators
     normalise, equalFilePath,
     makeRelativeToCurrentDirectory, makeRelative,
@@ -264,7 +264,7 @@ replaceExtension x y = dropExtension x <.> y
 dropExtension :: FilePath -> FilePath
 dropExtension = fst . splitExtension
 
--- | Add an extension, even if there is already one there. 
+-- | Add an extension, even if there is already one there.
 --   E.g. @addExtension \"foo.txt\" \"bat\" -> \"foo.txt.bat\"@.
 --
 -- > addExtension "file.txt" "bib" == "file.txt.bib"
@@ -276,10 +276,10 @@ dropExtension = fst . splitExtension
 addExtension :: FilePath -> String -> FilePath
 addExtension file "" = file
 addExtension file xs@(x:_) = joinDrive a res
-    where 
+    where
         res = if isExtSeparator x then b ++ xs
               else b ++ [extSeparator] ++ xs
-                
+
         (a,b) = splitDrive file
 
 -- | Does the given filename have an extension?
@@ -386,7 +386,7 @@ readDriveShare x = Nothing
 readDriveShareName :: String -> (FilePath, FilePath)
 readDriveShareName name = addSlash a b
     where (a,b) = break isPathSeparator name
-    
+
 
 
 -- | Join a drive and the rest of the path.
@@ -566,7 +566,7 @@ combine a b | isAbsolute b || null a = b
 (</>) = combine
 
 
--- | Split a path by the directory separator. 
+-- | Split a path by the directory separator.
 --
 -- > concat (splitPath x) == x
 -- > splitPath "test//item/" == ["test//","item/"]
@@ -578,7 +578,7 @@ splitPath :: FilePath -> [FilePath]
 splitPath x = [a | a /= ""] ++ f b
     where
         (a,b) = splitDrive x
-        
+
         f "" = []
         f x = (a++c) : f d
             where
@@ -597,7 +597,7 @@ splitDirectories x =
         else f xs
     where
         xs = splitPath x
-        
+
         f xs = map g xs
         g x = if null res then x else res
             where res = takeWhile (not . isPathSeparator) x
@@ -622,13 +622,13 @@ joinPath x = foldr combine "" x
 -- | Equality of two 'FilePath's.
 --   If you call @System.Directory.canonicalizePath@
 --   first this has a much better chance of working.
---   Note that this doesn't follow symlinks or DOSNAM~1s. 
+--   Note that this doesn't follow symlinks or DOSNAM~1s.
 equalFilePath :: FilePath -> FilePath -> Bool
 equalFilePath a b = f a == f b
     where
         f x | isPosix   = dropTrailSlash $ normalise x
             | isWindows = dropTrailSlash $ map toLower $ normalise x
-        
+
         dropTrailSlash "" = ""
         dropTrailSlash x | isPathSeparator (last x) = init x
                          | otherwise = x
@@ -681,16 +681,16 @@ normalise "" = ""
 normalise x = joinDrive (normaliseDrive drv) (f pth) ++ [pathSeparator | isPathSeparator $ last x]
     where
         (drv,pth) = splitDrive x
-    
+
         f = joinPath . dropDots [] . splitDirectories . propSep
-        
+
         g x = if isPathSeparator x then pathSeparator else x
-    
+
         propSep (a:b:xs) | isPathSeparator a && isPathSeparator b = propSep (a:xs)
         propSep (a:xs) | isPathSeparator a = pathSeparator : propSep xs
         propSep (x:xs) = x : propSep xs
         propSep [] = []
-        
+
         dropDots acc (".":xs) = dropDots acc xs
         dropDots acc (x:xs) = dropDots (x:acc) xs
         dropDots acc [] = reverse acc
@@ -703,7 +703,7 @@ normaliseDrive x = if isJust $ readDriveLetter x2 then
                        x
     where
         x2 = map repSlash x
-        
+
         repSlash x = if isPathSeparator x then pathSeparator else x
 
 -- information for validity functions on Windows
@@ -728,7 +728,7 @@ isValid x = not (any (`elem` badCharacters) x2) && not (any f $ splitDirectories
     where
         x2 = dropDrive x
         f x = map toUpper (dropExtensions x) `elem` badElements
-    
+
 
 -- | Take a FilePath and make it valid; does not change already valid FilePaths.
 --
@@ -745,7 +745,7 @@ makeValid x | isPosix = x
 makeValid x = joinDrive drv $ validElements $ validChars pth
     where
         (drv,pth) = splitDrive x
-        
+
         validChars x = map f x
         f x | x `elem` badCharacters = '_'
             | otherwise = x
@@ -755,7 +755,7 @@ makeValid x = joinDrive drv $ validElements $ validChars pth
             where (a,b) = span isPathSeparator $ reverse x
         h x = if map toUpper a `elem` badElements then addExtension (a ++ "_") b else x
             where (a,b) = splitExtensions x
-        
+
 
 -- | Is a path relative, or is it fixed to the root?
 --
