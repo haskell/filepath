@@ -238,7 +238,7 @@ dropExtension = fst . splitExtension
 -- > addExtension "file." ".bib" == "file..bib"
 -- > addExtension "file" ".bib" == "file.bib"
 -- > addExtension "/" "x" == "/.x"
--- > takeBaseName (addExtension (addTrailingPathSeparator x) "ext") == ".ext"
+-- > takeFileName (addExtension (addTrailingPathSeparator x) "ext") == ".ext"
 -- > Windows: addExtension "\\\\share" ".txt" == "\\\\share\\.txt"
 addExtension :: FilePath -> String -> FilePath
 addExtension file "" = file
@@ -404,7 +404,7 @@ isDrive = null . dropDrive
 -- | Split a filename into directory and file. 'combine' is the inverse.
 --
 -- > uncurry (++) (splitFileName x) == x
--- > uncurry combine (splitFileName x) == x
+-- > uncurry combine (splitFileName (makeValid x)) == (makeValid x)
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
 -- > splitFileName "file/" == ("file/", "")
 -- > splitFileName "bob" == ("", "bob")
@@ -419,7 +419,7 @@ splitFileName x = (c ++ reverse b, reverse a)
 
 -- | Set the filename.
 --
--- > replaceFileName x (takeFileName x) == x
+-- > replaceFileName (makeValid x) (takeFileName (makeValid x)) == makeValid x
 replaceFileName :: FilePath -> String -> FilePath
 replaceFileName x y = dropFileName x `combine` y
 
@@ -436,7 +436,7 @@ dropFileName = fst . splitFileName
 -- > takeFileName x == snd (splitFileName x)
 -- > takeFileName (replaceFileName x "fred") == "fred"
 -- > takeFileName (combine x "fred") == "fred"
--- > isRelative (takeFileName x)
+-- > isRelative (takeFileName (makeValid x))
 takeFileName :: FilePath -> FilePath
 takeFileName = snd . splitFileName
 
@@ -458,7 +458,7 @@ takeBaseName = dropExtension . takeFileName
 -- > replaceBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
 -- > replaceBaseName x (takeBaseName x) == x
 replaceBaseName :: FilePath -> String -> FilePath
-replaceBaseName pth nam = combine a (addExtension nam ext)
+replaceBaseName pth nam = combineAlways a (addExtension nam ext)
     where
         (a,b) = splitFileName pth
         ext = takeExtension b
@@ -512,21 +512,27 @@ takeDirectory x = if isDrive file then file
 --
 -- > replaceDirectory x (takeDirectory x) `equalFilePath` x
 replaceDirectory :: FilePath -> String -> FilePath
-replaceDirectory x dir = combine dir (takeFileName x)
+replaceDirectory x dir = combineAlways dir (takeFileName x)
 
 
 -- | Combine two paths, if the second path 'isAbsolute', then it returns the second.
 --
--- > combine (takeDirectory x) (takeFileName x) `equalFilePath` x
+-- > combine (takeDirectory (makeValid x)) (takeFileName (makeValid x)) `equalFilePath` makeValid x
 -- > Posix:   combine "/" "test" == "/test"
 -- > Posix:   combine "home" "bob" == "home/bob"
 -- > Windows: combine "home" "bob" == "home\\bob"
 combine :: FilePath -> FilePath -> FilePath
-combine a b | isAbsolute b || null a = b
-            | null b = a
-            | isPathSeparator (last a) = a ++ b
-            | isDrive a = joinDrive a b
-            | otherwise = a ++ [pathSeparator] ++ b
+combine a b | isAbsolute b = b
+            | otherwise = combineAlways a b
+
+-- | Combine two paths, assuming rhs is NOT absolute.
+combineAlways :: FilePath -> FilePath -> FilePath
+combineAlways a b | null a = b
+                  | null b = a
+                  | isPathSeparator (last a) = a ++ b
+                  | isDrive a = joinDrive a b
+                  | otherwise = a ++ [pathSeparator] ++ b
+
 
 -- | A nice alias for 'combine'.
 (</>) :: FilePath -> FilePath -> FilePath
