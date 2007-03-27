@@ -1,31 +1,16 @@
-{-# OPTIONS_GHC -cpp #-}
+#define MODULE_NAME     Windows
+#define IS_WINDOWS      True
 
-#ifdef __HADDOCK__
-
-{- |
-    This module is a version of "System.FilePath" which uses Windows separators,
-    even when run under Posix. For most purposes "System.FilePath" is a better
-    choice.
-    
-    The interface is identical to "System.FilePath".
--}
-
-#endif
-
-module System.FilePath.Windows
-
-#ifdef __HADDOCK__
-    where
-#else
-
-#define forceEffect ForceWindows
-#define module --
-#ifdef TESTING
-# define DRIVE_SECTION -}
-# define END_DRIVE_SECTION {-
-#endif
-
-#include "Version_0_10.hs"
-
-#endif
-
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  System.FilePath.Windows
+-- Copyright   :  (c) Neil Mitchell 2005-2007
+-- License     :  BSD-style (see the file libraries/base/LICENSE)
+--
+-- Maintainer  :  libraries@haskell.org
+-- Stability   :  stable
+-- Portability :  portable
+--
+-- A library for FilePath manipulations, using Windows style paths on
+-- all platforms. Importing "System.FilePath" is usually better.
+#include "Internal.hs"

@@ -1,49 +1,36 @@
+--
+-- Some short examples:
+--
+-- You are given a C file, you want to figure out the corresponding object (.o) file:
+--
+-- @'replaceExtension' file \"o\"@
+--
+-- Haskell module Main imports Test, you have the file named main:
+--
+-- @['replaceFileName' path_to_main \"Test\" '<.>' ext | ext <- [\"hs\",\"lhs\"] ]@
+--
+-- You want to download a file from the web and save it to disk:
+--
+-- @do let file = 'makeValid' url
+--    System.IO.createDirectoryIfMissing True ('takeDirectory' file)@
+--
+-- You want to compile a Haskell file, but put the hi file under \"interface\"
+--
+-- @'takeDirectory' file '</>' \"interface\" '</>' ('takeFileName' file \`replaceExtension\` \"hi\"@)
+--
+-- You want to display a filename to the user, as neatly as possible
+--
+-- @'makeRelativeToCurrentDirectory' file >>= putStrLn@
+--
+-- The examples in code format descibed by each function are used to generate
+-- tests, and should give clear semantics for the functions.
+-----------------------------------------------------------------------------
 
-{- |
-Module      :  System.FilePath.Version_0_12
-Copyright   :  (c) Neil Mitchell 2005-2006
-License     :  BSD3
+-- expects CPP definitions for:
+--     MODULE_NAME = Posix | Windows
+--     IS_WINDOWS  = False | True
 
-Maintainer  :  http://www.cs.york.ac.uk/~ndm/
-Stability   :  in-progress
-Portability :  portable
-
-A library for FilePath manipulations, designed to be cross platform.
-This library will select the correct type of FilePath's for the
-platform the code is running on at runtime. For more details see
-<http://www.cs.york.ac.uk/~ndm/projects/libraries.php>
-
-DO NOT USE THIS CODE, IT IS STILL UNDER DEVELOPMENT - please use
-"System.FilePath.Version_0_11".
-
-Some short examples:
-
-You are given a C file, you want to figure out the corresponding object (.o) file:
-
-@'replaceExtension' file \"o\"@
-
-Haskell module Main imports Test, you have the file named main:
-
-@['replaceFileName' path_to_main \"Test\" '<.>' ext | ext <- [\"hs\",\"lhs\"] ]@
-
-You want to download a file from the web and save it to disk:
-
-@do let file = 'makeValid' url
-   System.IO.createDirectoryIfMissing True ('takeDirectory' file)@
-
-You want to compile a Haskell file, but put the hi file under \"interface\"
-
-@'takeDirectory' file '</>' \"interface\" '</>' ('takeFileName' file \`replaceExtension\` \"hi\"@)
-
-You want to display a filename to the user, as neatly as possible
-
-@'makeRelativeToCurrentDirectory' file >>= putStrLn@
-
-The examples in code format descibed by each function are used to generate
-tests, and should give clear semantics for the functions.
--}
-
-module System.FilePath.Version_0_12
+module System.FilePath.MODULE_NAME
     (
     -- * Separator predicates
     FilePath,
@@ -59,6 +46,7 @@ module System.FilePath.Version_0_12
     takeExtension, replaceExtension, dropExtension, addExtension, hasExtension, (<.>),
     splitExtensions, dropExtensions, takeExtensions,
 
+    -- Note: leave this section to enable some of the tests to work
     {- DRIVE_SECTION
     -- * Drive methods
     splitDrive, joinDrive,
@@ -91,8 +79,6 @@ import Data.Char(toLower, toUpper)
 import Data.List(isPrefixOf, inits)
 import Control.Monad(when, filterM)
 
-import System.Info(os, compilerName)
-
 import System.Environment(getEnv, getProgName)
 import System.Directory(getCurrentDirectory, doesFileExist, doesDirectoryExist,
                         getTemporaryDirectory, getDirectoryContents, createDirectory)
@@ -108,32 +94,13 @@ infixr 5  </>
 ---------------------------------------------------------------------
 -- Platform Abstraction Methods (private)
 
-data Force = ForcePosix
-           | ForceNone
-           | ForceWindows
-           deriving Eq
-
-forceEffectView = let forceEffect = ForceNone
-                  in forceEffect
-
-
--- | What is the name of the OS? The real name, Hugs and GHC get this wrong...
-osName :: String
-osName = if compilerName == "yhc" || os /= "mingw32"
-         then os
-         else "windows"
-
-
 -- | Is the operating system Unix or Linux like
 isPosix :: Bool
-isPosix = not isWindows && forceEffectView /= ForceWindows
+isPosix = not isWindows
 
 -- | Is the operating system Windows like
 isWindows :: Bool
-isWindows = osName == "windows" && forceEffectView /= ForcePosix
-
-
-
+isWindows = IS_WINDOWS
 
 
 ---------------------------------------------------------------------
