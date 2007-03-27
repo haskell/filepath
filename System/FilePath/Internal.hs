@@ -47,11 +47,11 @@ module System.FilePath.MODULE_NAME
     splitExtensions, dropExtensions, takeExtensions,
 
     -- Note: leave this section to enable some of the tests to work
-    {- DRIVE_SECTION
+#ifdef TESTING
     -- * Drive methods
     splitDrive, joinDrive,
     takeDrive, replaceDrive, hasDrive, dropDrive, isDrive,
-    END_DRIVE_SECTION -}
+#endif
 
     -- * Operations on a FilePath, as a list of directories
     splitFileName,
