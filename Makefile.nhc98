@@ -5,10 +5,6 @@ EXTRA_HBC_FLAGS = -H16M -A1M
 
 SRCS	= \
 	System/FilePath/Posix.hs \
-	System/FilePath/Version_0_09.hs \
-	System/FilePath/Version_0_10.hs \
-	System/FilePath/Version_0_11.hs \
-	System/FilePath/Version_0_12.hs \
 	System/FilePath/Windows.hs \
 	System/FilePath.hs
 
