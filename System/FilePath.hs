@@ -17,12 +17,12 @@ functions.
 -}
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-#define FILEPATH_OS Windows
+module System.FilePath(module System.FilePath.Windows) where
+import System.FilePath.Windows
 #else
-#define FILEPATH_OS Posix
+module System.FilePath(module System.FilePath.Posix) where
+import System.FilePath.Posix
 #endif
 
 
-module System.FilePath(module System.FilePath.FILEPATH_OS) where
 
-import System.FilePath.FILEPATH_OS
