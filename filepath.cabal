@@ -1,4 +1,4 @@
-Name:           FilePath
+Name:           filepath
 Version:        1.0
 License:        BSD3
 Author:         Neil Mitchell
@@ -10,4 +10,5 @@ Exposed-modules:
         System.FilePath
         System.FilePath.Posix
         System.FilePath.Windows
+Extra-Source-Files: System/FilePath/Internal.hs
 Extensions: CPP
