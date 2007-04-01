@@ -580,7 +580,7 @@ splitDirectories x =
 --
 -- > joinPath (splitPath (makeValid x)) == makeValid x
 
--- Note that this definition on c:\\c:\\, join then split will give c:\\
+-- Note that this definition on c:\\c:\\, join then split will give c:\\.
 joinPath :: [FilePath] -> FilePath
 joinPath x = foldr combine "" x
 
