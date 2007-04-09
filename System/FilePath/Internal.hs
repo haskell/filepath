@@ -74,14 +74,11 @@ module System.FilePath.MODULE_NAME
     )
     where
 
-import Data.Maybe(isJust, fromMaybe, fromJust)
+import Data.Maybe(isJust, fromJust)
 import Data.Char(toLower, toUpper)
-import Data.List(isPrefixOf, inits)
-import Control.Monad(when, filterM)
 
-import System.Environment(getEnv, getProgName)
-import System.Directory(getCurrentDirectory, doesFileExist, doesDirectoryExist,
-                        getTemporaryDirectory, getDirectoryContents, createDirectory)
+import System.Environment(getEnv)
+import System.Directory(getCurrentDirectory)
 
 
 infixr 7  <.>
