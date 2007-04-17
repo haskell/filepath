@@ -606,15 +606,16 @@ equalFilePath a b = f a == f b
 
 -- | Contract a filename, based on a relative path.
 --
--- > takeDrive x == x || makeRelative x (x `combine` y) == y
+-- > Windows: makeRelative x (x `combine` y) == y || takeDrive x == x
+-- > Posix:   makeRelative x (x `combine` y) == y
 -- > (isRelative x && makeRelative y x == x) || y `combine` makeRelative y x == x
 -- > Windows: makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
--- > Posix: makeRelative "/Home" "/home/bob" == "/home/bob"
--- > Posix: makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
--- > Posix: makeRelative "/fred" "bob" == "bob"
--- > Posix: makeRelative "/file/test" "/file/test/fred" == "fred"
--- > Posix: makeRelative "/file/test" "/file/test/fred/" == "fred/"
--- > Posix: makeRelative "some/path" "some/path/a/b/c" == "a/b/c"
+-- > Posix:   makeRelative "/Home" "/home/bob" == "/home/bob"
+-- > Posix:   makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
+-- > Posix:   makeRelative "/fred" "bob" == "bob"
+-- > Posix:   makeRelative "/file/test" "/file/test/fred" == "fred"
+-- > Posix:   makeRelative "/file/test" "/file/test/fred/" == "fred/"
+-- > Posix:   makeRelative "some/path" "some/path/a/b/c" == "a/b/c"
 makeRelative :: FilePath -> FilePath -> FilePath
 makeRelative x y | not (takeDrive x `equalFilePath` takeDrive y) = y
 makeRelative x orig = f (dropDrive x) (dropDrive orig)
