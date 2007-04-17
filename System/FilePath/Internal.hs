@@ -606,22 +606,27 @@ equalFilePath a b = f a == f b
 
 -- | Contract a filename, based on a relative path.
 --
--- > Posix:   makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
--- > Posix:   makeRelative "/fred" "bob" == "bob"
--- > Posix:   makeRelative "/file/test" "/file/test/fred" == "fred"
--- > Posix:   makeRelative "/file/test" "/file/test/fred/" == "fred/"
--- > Posix:   makeRelative "/fred/dave" "/fred/bill" == "../bill"
+-- > takeDrive x == x || makeRelative x (x `combine` y) == y
+-- > isRelative x || y `combine` makeRelative y x == x
+-- > Windows: makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
+-- > Posix: makeRelative "/Home" "/home/bob" == "/home/bob"
+-- > Posix: makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
+-- > Posix: makeRelative "/fred" "bob" == "bob"
+-- > Posix: makeRelative "/file/test" "/file/test/fred" == "fred"
+-- > Posix: makeRelative "/file/test" "/file/test/fred/" == "fred/"
+-- > Posix: makeRelative "some/path" "some/path/a/b/c" == "a/b/c"
 makeRelative :: FilePath -> FilePath -> FilePath
-makeRelative cur x | isRelative x || isRelative cur || not (takeDrive x `equalFilePath` takeDrive cur) = normalise x
-makeRelative cur x = joinPath $
-                         replicate (length curdir - common) ".." ++
-                         drop common orgpth
+makeRelative x y | not (takeDrive x `equalFilePath` takeDrive y) = y
+makeRelative x orig = f (dropDrive x) (dropDrive orig)
     where
-        common = length $ takeWhile id $ zipWith (==) orgdir curdir
-        orgpth = splitPath pth
-        orgdir = splitDirectories pth
-        curdir = splitDirectories $ dropDrive $ normalise $ cur
-        (drv,pth) = splitDrive $ normalise x
+        f "" y = dropWhile isPathSeparator y
+        f x y = let (x1,x2) = g x
+                    (y1,y2) = g y
+                in if equalFilePath x1 y1 then f x2 y2 else orig
+
+        g x = (dropWhile isPathSeparator a, dropWhile isPathSeparator b)
+            where (a,b) = break isPathSeparator $ dropWhile isPathSeparator x
+
 
 -- | 'makeRelative' the current directory.
 makeRelativeToCurrentDirectory :: FilePath -> IO FilePath
