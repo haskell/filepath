@@ -607,7 +607,7 @@ equalFilePath a b = f a == f b
 -- | Contract a filename, based on a relative path.
 --
 -- > takeDrive x == x || makeRelative x (x `combine` y) == y
--- > isRelative x || y `combine` makeRelative y x == x
+-- > (isRelative x && makeRelative y x == x) || y `combine` makeRelative y x == x
 -- > Windows: makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
 -- > Posix: makeRelative "/Home" "/home/bob" == "/home/bob"
 -- > Posix: makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
