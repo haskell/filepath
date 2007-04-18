@@ -222,7 +222,7 @@ replaceExtension x y = dropExtension x <.> y
 (<.>) :: FilePath -> String -> FilePath
 (<.>) = addExtension
 
--- | Remove last extension, and the "." preceding it.
+-- | Remove last extension, and the \".\" preceding it.
 --
 -- > dropExtension x == fst (splitExtension x)
 dropExtension :: FilePath -> FilePath
