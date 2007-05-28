@@ -662,8 +662,6 @@ normalise path = joinDrive (normaliseDrive drv) (f pth)
 
         f = joinPath . dropDots [] . splitDirectories . propSep
 
-        g x = if isPathSeparator x then pathSeparator else x
-
         propSep (a:b:xs)
          | isPathSeparator a && isPathSeparator b = propSep (a:xs)
         propSep (a:xs)
