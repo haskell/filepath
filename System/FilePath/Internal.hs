@@ -330,20 +330,20 @@ readDriveUNC (s1:s2:'?':s3:xs) | all isPathSeparator [s1,s2,s3] =
         _ -> case readDriveLetter xs of
                  Just (a,b) -> Just (s1:s2:'?':s3:a,b)
                  Nothing -> Nothing
-readDriveUNC x = Nothing
+readDriveUNC _ = Nothing
 
 -- c:\
 readDriveLetter :: String -> Maybe (FilePath, FilePath)
 readDriveLetter (x:':':y:xs) | isLetter x && isPathSeparator y = Just $ addSlash [x,':'] (y:xs)
 readDriveLetter (x:':':xs) | isLetter x = Just ([x,':'], xs)
-readDriveLetter x = Nothing
+readDriveLetter _ = Nothing
 
 -- \\sharename\
 readDriveShare :: String -> Maybe (FilePath, FilePath)
 readDriveShare (s1:s2:xs) | isPathSeparator s1 && isPathSeparator s2 =
         Just (s1:s2:a,b)
     where (a,b) = readDriveShareName xs
-readDriveShare x = Nothing
+readDriveShare _ = Nothing
 
 -- assume you have already seen \\
 -- share\bob -> "share","\","bob"
@@ -545,14 +545,14 @@ combineAlways a b | null a = b
 -- > Windows: splitPath "c:\\test\\path" == ["c:\\","test\\","path"]
 -- > Posix:   splitPath "/file/test" == ["/","file/","test"]
 splitPath :: FilePath -> [FilePath]
-splitPath x = [a | a /= ""] ++ f b
+splitPath x = [drive | drive /= ""] ++ f path
     where
-        (a,b) = splitDrive x
+        (drive,path) = splitDrive x
 
         f "" = []
-        f x = (a++c) : f d
+        f y = (a++c) : f d
             where
-                (a,b) = break isPathSeparator x
+                (a,b) = break isPathSeparator y
                 (c,d) = break (not . isPathSeparator) b
 
 -- | Just as 'splitPath', but don't add the trailing slashes to each element.
@@ -562,11 +562,11 @@ splitPath x = [a | a /= ""] ++ f b
 -- > joinPath (splitDirectories (makeValid x)) `equalFilePath` makeValid x
 -- > splitDirectories "" == []
 splitDirectories :: FilePath -> [FilePath]
-splitDirectories x =
-        if hasDrive x then head xs : f (tail xs)
-        else f xs
+splitDirectories path =
+        if hasDrive path then head pathComponents : f (tail pathComponents)
+        else f pathComponents
     where
-        xs = splitPath x
+        pathComponents = splitPath path
 
         f xs = map g xs
         g x = if null res then x else res
@@ -617,13 +617,14 @@ equalFilePath a b = f a == f b
 -- > Posix:   makeRelative "/file/test" "/file/test/fred/" == "fred/"
 -- > Posix:   makeRelative "some/path" "some/path/a/b/c" == "a/b/c"
 makeRelative :: FilePath -> FilePath -> FilePath
-makeRelative x y | not (takeDrive x `equalFilePath` takeDrive y) = y
-makeRelative x orig = f (dropDrive x) (dropDrive orig)
+makeRelative root path
+ | not (takeDrive root `equalFilePath` takeDrive path) = path
+ | otherwise = f (dropDrive root) (dropDrive path)
     where
         f "" y = dropWhile isPathSeparator y
         f x y = let (x1,x2) = g x
                     (y1,y2) = g y
-                in if equalFilePath x1 y1 then f x2 y2 else orig
+                in if equalFilePath x1 y1 then f x2 y2 else path
 
         g x = (dropWhile isPathSeparator a, dropWhile isPathSeparator b)
             where (a,b) = break isPathSeparator $ dropWhile isPathSeparator x
@@ -654,16 +655,19 @@ makeRelativeToCurrentDirectory x = do
 -- > Windows: normalise "c:/file" == "C:\\file"
 normalise :: FilePath -> FilePath
 normalise "" = ""
-normalise x = joinDrive (normaliseDrive drv) (f pth) ++ [pathSeparator | isPathSeparator $ last x]
+normalise path = joinDrive (normaliseDrive drv) (f pth)
+              ++ [pathSeparator | isPathSeparator $ last path]
     where
-        (drv,pth) = splitDrive x
+        (drv,pth) = splitDrive path
 
         f = joinPath . dropDots [] . splitDirectories . propSep
 
         g x = if isPathSeparator x then pathSeparator else x
 
-        propSep (a:b:xs) | isPathSeparator a && isPathSeparator b = propSep (a:xs)
-        propSep (a:xs) | isPathSeparator a = pathSeparator : propSep xs
+        propSep (a:b:xs)
+         | isPathSeparator a && isPathSeparator b = propSep (a:xs)
+        propSep (a:xs)
+         | isPathSeparator a = pathSeparator : propSep xs
         propSep (x:xs) = x : propSep xs
         propSep [] = []
 
@@ -672,19 +676,20 @@ normalise x = joinDrive (normaliseDrive drv) (f pth) ++ [pathSeparator | isPathS
         dropDots acc [] = reverse acc
 
 normaliseDrive :: FilePath -> FilePath
-normaliseDrive x | isPosix = x
-normaliseDrive x = if isJust $ readDriveLetter x2 then
-                       map toUpper x2
-                   else
-                       x
+normaliseDrive drive | isPosix = drive
+normaliseDrive drive = if isJust $ readDriveLetter x2
+                       then map toUpper x2
+                       else drive
     where
-        x2 = map repSlash x
+        x2 = map repSlash drive
 
         repSlash x = if isPathSeparator x then pathSeparator else x
 
 -- information for validity functions on Windows
 -- see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/fileio/fs/naming_a_file.asp
+badCharacters :: [Char]
 badCharacters = ":*?><|"
+badElements :: [FilePath]
 badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "CLOCK$"]
 
 
@@ -699,10 +704,10 @@ badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5
 -- > Windows: isValid "c:\\test\\prn.txt" == False
 -- > Windows: isValid "c:\\nul\\file" == False
 isValid :: FilePath -> Bool
-isValid x | isPosix = True
-isValid x = not (any (`elem` badCharacters) x2) && not (any f $ splitDirectories x2)
+isValid _ | isPosix = True
+isValid path = not (any (`elem` badCharacters) x2) && not (any f $ splitDirectories x2)
     where
-        x2 = dropDrive x
+        x2 = dropDrive path
         f x = map toUpper (dropExtensions x) `elem` badElements
 
 
@@ -717,10 +722,10 @@ isValid x = not (any (`elem` badCharacters) x2) && not (any f $ splitDirectories
 -- > Windows: makeValid "c:\\test/prn.txt" == "c:\\test/prn_.txt"
 -- > Windows: makeValid "c:\\nul\\file" == "c:\\nul_\\file"
 makeValid :: FilePath -> FilePath
-makeValid x | isPosix = x
-makeValid x = joinDrive drv $ validElements $ validChars pth
+makeValid path | isPosix = path
+makeValid path = joinDrive drv $ validElements $ validChars pth
     where
-        (drv,pth) = splitDrive x
+        (drv,pth) = splitDrive path
 
         validChars x = map f x
         f x | x `elem` badCharacters = '_'
