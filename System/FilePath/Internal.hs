@@ -333,21 +333,21 @@ readDriveUNC (s1:s2:'?':s3:xs) | all isPathSeparator [s1,s2,s3] =
                  Nothing -> Nothing
 readDriveUNC _ = Nothing
 
--- c:\
+{- c:\ -}
 readDriveLetter :: String -> Maybe (FilePath, FilePath)
 readDriveLetter (x:':':y:xs) | isLetter x && isPathSeparator y = Just $ addSlash [x,':'] (y:xs)
 readDriveLetter (x:':':xs) | isLetter x = Just ([x,':'], xs)
 readDriveLetter _ = Nothing
 
--- \\sharename\
+{- \\sharename\ -}
 readDriveShare :: String -> Maybe (FilePath, FilePath)
 readDriveShare (s1:s2:xs) | isPathSeparator s1 && isPathSeparator s2 =
         Just (s1:s2:a,b)
     where (a,b) = readDriveShareName xs
 readDriveShare _ = Nothing
 
--- assume you have already seen \\
--- share\bob -> "share","\","bob"
+{- assume you have already seen \\ -}
+{- share\bob -> "share","\","bob" -}
 readDriveShareName :: String -> (FilePath, FilePath)
 readDriveShareName name = addSlash a b
     where (a,b) = break isPathSeparator name
