@@ -315,6 +315,7 @@ splitDrive (x:xs) | isPathSeparator x = addSlash [x] xs
 
 splitDrive x = ("",x)
 
+addSlash :: FilePath -> FilePath -> (FilePath, FilePath)
 addSlash a xs = (a++c,d)
     where (c,d) = span isPathSeparator xs
 
