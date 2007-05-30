@@ -50,7 +50,7 @@ module System.FilePath.MODULE_NAME
 #ifdef TESTING
     -- * Drive methods
     splitDrive, joinDrive,
-    takeDrive, replaceDrive, hasDrive, dropDrive, isDrive,
+    takeDrive, hasDrive, dropDrive, isDrive,
 #endif
 
     -- * Operations on a FilePath, as a list of directories
@@ -365,12 +365,6 @@ joinDrive a b | isPosix = a ++ b
               | otherwise = case a of
                                 [a1,':'] | isLetter a1 -> a ++ b
                                 _ -> a ++ [pathSeparator] ++ b
-
--- | Set the drive, from the filepath.
---
--- > replaceDrive x (takeDrive x) == x
-replaceDrive :: FilePath -> String -> FilePath
-replaceDrive x drv = joinDrive drv (dropDrive x)
 
 -- | Get the drive from a filepath.
 --
