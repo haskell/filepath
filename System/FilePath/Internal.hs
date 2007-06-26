@@ -571,6 +571,7 @@ splitDirectories path =
 -- | Join path elements back together.
 --
 -- > joinPath (splitPath (makeValid x)) == makeValid x
+-- > joinPath [] == ""
 -- > Posix: joinPath ["test","file","path"] == "test/file/path"
 
 -- Note that this definition on c:\\c:\\, join then split will give c:\\.
