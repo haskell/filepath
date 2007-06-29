@@ -607,6 +607,7 @@ equalFilePath a b = f a == f b
 -- > Posix:   makeRelative x (x `combine` y) == y
 -- > (isRelative x && makeRelative y x == x) || y `combine` makeRelative y x == x
 -- > Windows: makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
+-- > Windows: makeRelative "C:\\Home" "D:\\Home\\Bob" == "D:\\Home\\Bob"
 -- > Posix:   makeRelative "/Home" "/home/bob" == "/home/bob"
 -- > Posix:   makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
 -- > Posix:   makeRelative "/fred" "bob" == "bob"
