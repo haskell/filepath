@@ -18,10 +18,6 @@
 --
 -- @'takeDirectory' file '</>' \"interface\" '</>' ('takeFileName' file \`replaceExtension\` \"hi\"@)
 --
--- You want to display a filename to the user, as neatly as possible
---
--- @'makeRelativeToCurrentDirectory' file >>= putStrLn@
---
 -- The examples in code format descibed by each function are used to generate
 -- tests, and should give clear semantics for the functions.
 -----------------------------------------------------------------------------
@@ -68,7 +64,7 @@ module System.FilePath.MODULE_NAME
 
     -- * File name manipulators
     normalise, equalFilePath,
-    makeRelativeToCurrentDirectory, makeRelative,
+    makeRelative,
     isRelative, isAbsolute,
     isValid, makeValid
     )
@@ -78,7 +74,6 @@ import Data.Maybe(isJust, fromJust)
 import Data.Char(toLower, toUpper)
 
 import System.Environment(getEnv)
-import System.Directory(getCurrentDirectory)
 
 
 infixr 7  <.>
@@ -626,13 +621,6 @@ makeRelative root path
 
         g x = (dropWhile isPathSeparator a, dropWhile isPathSeparator b)
             where (a,b) = break isPathSeparator $ dropWhile isPathSeparator x
-
-
--- | 'makeRelative' the current directory.
-makeRelativeToCurrentDirectory :: FilePath -> IO FilePath
-makeRelativeToCurrentDirectory x = do
-    cur <- getCurrentDirectory
-    return $ makeRelative cur x
 
 
 -- | Normalise a file
