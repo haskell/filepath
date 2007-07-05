@@ -62,14 +62,3 @@ what is just a pure String. For example, "/path/file.ext" is a FilePath. Is
 With that being accepted, it should be trivial to write
 System.FilePath.ByteString which has the same interface as System.FilePath
 yet operates on ByteString's.
-
-
-Users of System.FilePath
-------------------------
-
-Yhc: http://haskell.org/haskellwiki/Yhc
-hquickfile: http://www.inversoft.de/hquickfile/hquickfile-0.0.tar.gz
-another: whose name I have forgotten
-
-If you use System.FilePath, please email me and I can include you in this
-list.
