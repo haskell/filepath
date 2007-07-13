@@ -18,7 +18,19 @@ goto end
 
 
 :hpc
-echo Hpc compilation here
+mkdir hpc 2> nul
+mkdir hpc\System 2> nul
+mkdir hpc\System\FilePath 2> nul
+type AutoTest.hs > hpc\AutoTest.hs
+type FilePath_Test.hs > hpc\FilePath_Test.hs
+cpphs --noline -DTESTING ..\System\FilePath\Posix.hs > hpc\System\FilePath\Posix.hs
+cpphs --noline -DTESTING ..\System\FilePath\Windows.hs > hpc\System\FilePath\Windows.hs
+pushd hpc
+ghc FilePath_Test.hs -o test --make -fhpc
+test
+hpcmarkup test.tix
+hpcreport test.tix
+popd
 goto end
 
 
