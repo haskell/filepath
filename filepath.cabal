@@ -4,6 +4,7 @@ License:        BSD3
 Author:         Neil Mitchell
 Homepage:       http://www-users.cs.york.ac.uk/~ndm/filepath/
 Category:       System
+build-type:     Simple
 Build-Depends:  base
 Synopsis:       Library for manipulating FilePath's in a cross platform way.
 Exposed-modules:
