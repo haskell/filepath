@@ -1,6 +1,7 @@
 Name:           filepath
 Version:        1.1
 License:        BSD3
+license-file:   LICENSE
 Author:         Neil Mitchell
 Homepage:       http://www-users.cs.york.ac.uk/~ndm/filepath/
 Category:       System
