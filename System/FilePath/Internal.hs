@@ -595,6 +595,9 @@ equalFilePath a b = f a == f b
 
 -- | Contract a filename, based on a relative path.
 --
+--   There is no corresponding @makeAbsolute@ function, instead use
+--   @System.Directory.canonicalizePath@ which has the same effect.
+--
 -- > Windows: makeRelative x (x `combine` y) == y || takeDrive x == x
 -- > Posix:   makeRelative x (x `combine` y) == y
 -- > (isRelative x && makeRelative y x == x) || y `combine` makeRelative y x == x
