@@ -55,7 +55,7 @@ fpops = ["</>","<.>"]
 grabTest :: String -> Test
 grabTest x = if null free then Expr x else Test free x
     where
-        free = nub [x | x <- lexs, length x == 1, all isAlpha x]
+        free = sort $ nub [x | x <- lexs, length x == 1, all isAlpha x]
         lexs = splitLex x
 
 
