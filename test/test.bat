@@ -28,8 +28,8 @@ cpphs --noline -DTESTING ..\System\FilePath\Windows.hs > hpc\System\FilePath\Win
 pushd hpc
 ghc FilePath_Test.hs -o test --make -fhpc
 test
-hpc markup test.tix
-hpc report test.tix
+hpc markup test.tix --exclude=AutoTest --exclude=Main
+hpc report test.tix --exclude=AutoTest --exclude=Main
 popd
 goto end
 
