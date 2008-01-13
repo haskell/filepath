@@ -466,7 +466,7 @@ hasTrailingPathSeparator x = isPathSeparator (last x)
 -- | Add a trailing file path separator if one is not already present.
 --
 -- > hasTrailingPathSeparator (addTrailingPathSeparator x)
--- > if hasTrailingPathSeparator x then addTrailingPathSeparator x == x else True
+-- > hasTrailingPathSeparator x ==> addTrailingPathSeparator x == x
 -- > Posix:    addTrailingPathSeparator "test/rest" == "test/rest/"
 addTrailingPathSeparator :: FilePath -> FilePath
 addTrailingPathSeparator x = if hasTrailingPathSeparator x then x else x ++ [pathSeparator]
@@ -590,8 +590,8 @@ joinPath x = foldr combine "" x
 --   first this has a much better chance of working.
 --   Note that this doesn't follow symlinks or DOSNAM~1s.
 --
--- >          if x == y then equalFilePath x y else True
--- >          if normalise x == normalise y then equalFilePath x y else True
+-- >          x == y ==> equalFilePath x y
+-- >          normalise x == normalise y ==> equalFilePath x y
 -- > Posix:   equalFilePath "foo" "foo/"
 -- > Posix:   not (equalFilePath "foo" "/foo")
 -- > Posix:   not (equalFilePath "foo" "FOO")
@@ -722,7 +722,7 @@ isValid path =
 -- | Take a FilePath and make it valid; does not change already valid FilePaths.
 --
 -- > isValid (makeValid x)
--- > if isValid x then makeValid x == x else True
+-- > isValid x ==> makeValid x == x
 -- > makeValid "" == "_"
 -- > Windows: makeValid "c:\\test:of_test" == "c:\\test_of_test"
 -- > Windows: makeValid "test*" == "test_"

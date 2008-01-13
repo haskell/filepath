@@ -1,11 +1,14 @@
 
 module AutoTest(module AutoTest, module Test.QuickCheck) where
 
-import Test.QuickCheck hiding (check)
+import Test.QuickCheck hiding (check,(==>))
 import Data.Char
 import System.Random
 import Data.List
 import Control.Monad
+
+infixr 0 ==>
+a ==> b = not a || b
 
 
 constTest :: Bool -> IO ()
