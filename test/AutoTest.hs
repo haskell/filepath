@@ -1,5 +1,9 @@
 
-module AutoTest(module AutoTest, module Test.QuickCheck) where
+module AutoTest(
+    module AutoTest,
+    module Test.QuickCheck,
+    module Data.List
+    ) where
 
 import Test.QuickCheck hiding (check,(==>))
 import Data.Char

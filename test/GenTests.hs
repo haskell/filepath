@@ -47,7 +47,8 @@ addPrefix pre str | str `elem` fpops || (all isAlpha str && length str > 1 && no
                   | otherwise = str
 
 
-prelude = ["elem","uncurry","snd","fst","not","null","if","then","else","True","False","concat"]
+prelude = ["elem","uncurry","snd","fst","not","null","if","then","else"
+          ,"True","False","concat","isPrefixOf","isSuffixOf"]
 fpops = ["</>","<.>"]
 
 
