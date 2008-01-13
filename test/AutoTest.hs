@@ -2,9 +2,10 @@
 module AutoTest(module AutoTest, module Test.QuickCheck) where
 
 import Test.QuickCheck hiding (check)
-import Char
+import Data.Char
 import System.Random
-import List
+import Data.List
+import Control.Monad
 
 
 constTest :: Bool -> IO ()
@@ -17,11 +18,11 @@ data QFilePath = QFilePath FilePath
                  deriving Show
 
 instance Arbitrary QFilePath where
-    arbitrary = vector 25 >>= return . QFilePath
+    arbitrary = liftM QFilePath arbitrary
 
 
 instance Arbitrary Char where
-    arbitrary = oneof $ map return "?|./:\\abcd 123;_"
+    arbitrary = elements "?|./:\\abcd 123;_"
 
 
 
