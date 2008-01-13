@@ -589,14 +589,20 @@ joinPath x = foldr combine "" x
 --   If you call @System.Directory.canonicalizePath@
 --   first this has a much better chance of working.
 --   Note that this doesn't follow symlinks or DOSNAM~1s.
+--
+-- >          if x == y then equalFilePath x y else True
+-- >          if normalise x == normalise y then equalFilePath x y else True
+-- > Posix:   equalFilePath "foo" "foo/"
+-- > Posix:   not (equalFilePath "foo" "/foo")
+-- > Posix:   not (equalFilePath "foo" "FOO")
+-- > Windows: equalFilePath "foo" "FOO"
 equalFilePath :: FilePath -> FilePath -> Bool
 equalFilePath a b = f a == f b
     where
         f x | isWindows = dropTrailSlash $ map toLower $ normalise x
             | otherwise = dropTrailSlash $ normalise x
 
-        dropTrailSlash "" = ""
-        dropTrailSlash x | isPathSeparator (last x) = init x
+        dropTrailSlash x | length x >= 2 && isPathSeparator (last x) = init x
                          | otherwise = x
 
 
