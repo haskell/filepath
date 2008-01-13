@@ -160,16 +160,22 @@ isExtSeparator = (== extSeparator)
 
 -- | Take a string, split it on the 'searchPathSeparator' character.
 --
--- > Windows: splitSearchPath "File1;File2;File3" == ["File1","File2","File3"]
--- > Posix:   splitSearchPath "File1:File2:File3" == ["File1","File2","File3"]
+--   Follows the recommendations in
+--   <http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap08.html>
+--
+-- > Posix:   splitSearchPath "File1:File2:File3"  == ["File1","File2","File3"]
+-- > Posix:   splitSearchPath "File1::File2:File3" == ["File1",".","File2","File3"]
+-- > Windows: splitSearchPath "File1;File2;File3"  == ["File1","File2","File3"]
+-- > Windows: splitSearchPath "File1;;File2;File3" == ["File1","File2","File3"]
 splitSearchPath :: String -> [FilePath]
 splitSearchPath = f
     where
     f xs = case break isSearchPathSeparator xs of
-           ([],  []    )   -> []
-           ([],  _:post) -> f post
-           (pre, []    )   -> [pre]
-           (pre, _:post) -> pre : f post
+           (pre, []    ) -> g pre
+           (pre, _:post) -> g pre ++ f post
+
+    g "" = ["." | isPosix]
+    g x = [x]
 
 
 -- | Get a list of filepaths in the $PATH.
