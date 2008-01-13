@@ -19,10 +19,12 @@ data QFilePath = QFilePath FilePath
 
 instance Arbitrary QFilePath where
     arbitrary = liftM QFilePath arbitrary
+    coarbitrary = undefined
 
 
 instance Arbitrary Char where
     arbitrary = elements "?|./:\\abcd 123;_"
+    coarbitrary = undefined
 
 
 
