@@ -64,6 +64,11 @@ module System.FilePath.MODULE_NAME
     makeRelative,
     isRelative, isAbsolute,
     isValid, makeValid
+
+#ifdef TESTING
+    , isRelativeDrive
+#endif
+
     )
     where
 
@@ -522,7 +527,7 @@ replaceDirectory x dir = combineAlways dir (takeFileName x)
 -- > Posix:   combine "home" "bob" == "home/bob"
 -- > Windows: combine "home" "bob" == "home\\bob"
 combine :: FilePath -> FilePath -> FilePath
-combine a b | isAbsolute b = b
+combine a b | hasDrive b = b
             | otherwise = combineAlways a b
 
 -- | Combine two paths, assuming rhs is NOT absolute.
@@ -748,10 +753,23 @@ makeValid path = joinDrive drv $ validElements $ validChars pth
 --
 -- > Windows: isRelative "path\\test" == True
 -- > Windows: isRelative "c:\\test" == False
+-- > Windows: isRelative "c:test" == True
+-- > Windows: isRelative "c:" == True
+-- > Windows: isRelative "\\\\foo" == False
 -- > Posix:   isRelative "test/path" == True
 -- > Posix:   isRelative "/test" == False
 isRelative :: FilePath -> Bool
-isRelative = null . takeDrive
+isRelative = isRelativeDrive . takeDrive
+
+
+-- > Windows: isRelativeDrive "c:\\" == False
+-- > Windows: isRelativeDrive "c:/" == False
+-- > Windows: isRelativeDrive "c:" == True
+-- > Windows: isRelativeDrive "\\\\foo" == False
+-- > Windows: isRelativeDrive "" == True
+isRelativeDrive :: String -> Bool
+isRelativeDrive x = null x ||
+    maybe False (not . isPathSeparator . last . fst) (readDriveLetter x)
 
 
 -- | @not . 'isRelative'@
