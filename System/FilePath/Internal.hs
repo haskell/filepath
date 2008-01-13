@@ -611,11 +611,13 @@ equalFilePath a b = f a == f b
 --   There is no corresponding @makeAbsolute@ function, instead use
 --   @System.Directory.canonicalizePath@ which has the same effect.
 --
--- > Windows: makeRelative x (x `combine` y) == y || takeDrive x == x
--- > Posix:   makeRelative x (x `combine` y) == y
--- > (isRelative x && makeRelative y x == x) || y `combine` makeRelative y x == x
+-- >          x == y || (isRelative x && makeRelative y x == x) || y `combine` makeRelative y x == x
+-- >          makeRelative x x == "."
+-- > Windows: null y || makeRelative x (x `combine` y) == y || takeDrive x == x 
+-- > Posix:   null y || makeRelative x (x `combine` y) == y
 -- > Windows: makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
 -- > Windows: makeRelative "C:\\Home" "D:\\Home\\Bob" == "D:\\Home\\Bob"
+-- > Windows: makeRelative "C:\\Home" "C:Home\\Bob" == "C:Home\\Bob"
 -- > Posix:   makeRelative "/Home" "/home/bob" == "/home/bob"
 -- > Posix:   makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
 -- > Posix:   makeRelative "/fred" "bob" == "bob"
@@ -624,7 +626,8 @@ equalFilePath a b = f a == f b
 -- > Posix:   makeRelative "some/path" "some/path/a/b/c" == "a/b/c"
 makeRelative :: FilePath -> FilePath -> FilePath
 makeRelative root path
- | not (takeDrive root `equalFilePath` takeDrive path) = path
+ | equalFilePath root path = "."
+ | map toLower (takeDrive root) /= map toLower (takeDrive path) = path
  | otherwise = f (dropDrive root) (dropDrive path)
     where
         f "" y = dropWhile isPathSeparator y
