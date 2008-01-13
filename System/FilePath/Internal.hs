@@ -202,8 +202,8 @@ splitExtension x = case d of
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
 --
 -- > takeExtension x == snd (splitExtension x)
--- > if isValid x then takeExtension (addExtension x "ext") == ".ext" else True
--- > if isValid x then takeExtension (replaceExtension x "ext") == ".ext" else True
+-- > Valid x => takeExtension (addExtension x "ext") == ".ext"
+-- > Valid x => takeExtension (replaceExtension x "ext") == ".ext"
 takeExtension :: FilePath -> String
 takeExtension = snd . splitExtension
 
@@ -234,7 +234,7 @@ dropExtension = fst . splitExtension
 -- > addExtension "file." ".bib" == "file..bib"
 -- > addExtension "file" ".bib" == "file.bib"
 -- > addExtension "/" "x" == "/.x"
--- > if isValid x then takeFileName (addExtension (addTrailingPathSeparator x) "ext") == ".ext" else True
+-- > Valid x => takeFileName (addExtension (addTrailingPathSeparator x) "ext") == ".ext"
 -- > Windows: addExtension "\\\\share" ".txt" == "\\\\share\\.txt"
 addExtension :: FilePath -> String -> FilePath
 addExtension file "" = file
@@ -395,7 +395,7 @@ isDrive = null . dropDrive
 -- | Split a filename into directory and file. 'combine' is the inverse.
 --
 -- > uncurry (++) (splitFileName x) == x
--- > uncurry combine (splitFileName (makeValid x)) == (makeValid x)
+-- > Valid x => uncurry combine (splitFileName x) == x
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
 -- > splitFileName "file/" == ("file/", "")
 -- > splitFileName "bob" == ("", "bob")
@@ -410,7 +410,7 @@ splitFileName x = (c ++ reverse b, reverse a)
 
 -- | Set the filename.
 --
--- > replaceFileName (makeValid x) (takeFileName (makeValid x)) == makeValid x
+-- > Valid x => replaceFileName x (takeFileName x) == x
 replaceFileName :: FilePath -> String -> FilePath
 replaceFileName x y = dropFileName x </> y
 
@@ -425,9 +425,9 @@ dropFileName = fst . splitFileName
 --
 -- > takeFileName "test/" == ""
 -- > takeFileName x == snd (splitFileName x)
--- > if isValid x then takeFileName (replaceFileName x "fred") == "fred" else True
--- > if isValid x then takeFileName (x </> "fred") == "fred" else True
--- > isRelative (takeFileName (makeValid x))
+-- > Valid x => takeFileName (replaceFileName x "fred") == "fred"
+-- > Valid x => takeFileName (x </> "fred") == "fred"
+-- > Valid x => isRelative (takeFileName x)
 takeFileName :: FilePath -> FilePath
 takeFileName = snd . splitFileName
 
@@ -508,7 +508,7 @@ replaceDirectory x dir = combineAlways dir (takeFileName x)
 
 -- | Combine two paths, if the second path 'isAbsolute', then it returns the second.
 --
--- > combine (takeDirectory (makeValid x)) (takeFileName (makeValid x)) `equalFilePath` makeValid x
+-- > Valid x => combine (takeDirectory x) (takeFileName x) `equalFilePath` x
 -- > Posix:   combine "/" "test" == "/test"
 -- > Posix:   combine "home" "bob" == "home/bob"
 -- > Windows: combine "home" "bob" == "home\\bob"
@@ -553,7 +553,7 @@ splitPath x = [drive | drive /= ""] ++ f path
 --
 -- > splitDirectories "test/file" == ["test","file"]
 -- > splitDirectories "/test/file" == ["/","test","file"]
--- > joinPath (splitDirectories (makeValid x)) `equalFilePath` makeValid x
+-- > Valid x => joinPath (splitDirectories x) `equalFilePath` x
 -- > splitDirectories "" == []
 splitDirectories :: FilePath -> [FilePath]
 splitDirectories path =
@@ -569,7 +569,7 @@ splitDirectories path =
 
 -- | Join path elements back together.
 --
--- > joinPath (splitPath (makeValid x)) == makeValid x
+-- > Valid x => joinPath (splitPath x) == x
 -- > joinPath [] == ""
 -- > Posix: joinPath ["test","file","path"] == "test/file/path"
 

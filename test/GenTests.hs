@@ -36,7 +36,7 @@ getTest (line,xs) | "-- > " `isPrefixOf` xs = f $ drop 5 xs
         g p (Expr x) = (line,Expr (h p x))
         g p (Test a x) = (line,Test a (h p x))
         
-        h p x = joinLex $ map (addPrefix p) $ splitLex x
+        h p x = joinLex $ map (addPrefix p) $ makeValid $ splitLex x
 
 getTest _ = []
 
@@ -64,6 +64,11 @@ splitLex x = case lex x of
                 [("","")] -> []
                 [(x,y)] -> x : splitLex y
                 y -> error $ "GenTests.splitLex, " ++ show x ++ " -> " ++ show y
+
+-- Valid a => z   ===>  (\a -> z) (makeValid a)
+makeValid :: [String] -> [String]
+makeValid ("Valid":a:"=>":z) = "(\\":a:"->":z ++ ")":"(":"makeValid":a:")":[]
+makeValid x = x
 
 
 joinLex :: [String] -> String
