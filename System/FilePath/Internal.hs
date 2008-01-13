@@ -202,8 +202,8 @@ splitExtension x = case d of
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
 --
 -- > takeExtension x == snd (splitExtension x)
--- > takeExtension (addExtension x "ext") == ".ext"
--- > takeExtension (replaceExtension x "ext") == ".ext"
+-- > if isValid x then takeExtension (addExtension x "ext") == ".ext" else True
+-- > if isValid x then takeExtension (replaceExtension x "ext") == ".ext" else True
 takeExtension :: FilePath -> String
 takeExtension = snd . splitExtension
 
@@ -234,7 +234,7 @@ dropExtension = fst . splitExtension
 -- > addExtension "file." ".bib" == "file..bib"
 -- > addExtension "file" ".bib" == "file.bib"
 -- > addExtension "/" "x" == "/.x"
--- > takeFileName (addExtension (addTrailingPathSeparator x) "ext") == ".ext"
+-- > if isValid x then takeFileName (addExtension (addTrailingPathSeparator x) "ext") == ".ext" else True
 -- > Windows: addExtension "\\\\share" ".txt" == "\\\\share\\.txt"
 addExtension :: FilePath -> String -> FilePath
 addExtension file "" = file
@@ -425,8 +425,8 @@ dropFileName = fst . splitFileName
 --
 -- > takeFileName "test/" == ""
 -- > takeFileName x == snd (splitFileName x)
--- > takeFileName (replaceFileName x "fred") == "fred"
--- > takeFileName (combine x "fred") == "fred"
+-- > if isValid x then takeFileName (replaceFileName x "fred") == "fred" else True
+-- > if isValid x then takeFileName (combine x "fred") == "fred" else True
 -- > isRelative (takeFileName (makeValid x))
 takeFileName :: FilePath -> FilePath
 takeFileName = snd . splitFileName
