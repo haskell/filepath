@@ -42,12 +42,13 @@ getTest _ = []
 
 
 addPrefix :: String -> String -> String
-addPrefix pre str | all isAlpha str && length str > 1 && not (str `elem` prelude)
+addPrefix pre str | str `elem` fpops || (all isAlpha str && length str > 1 && not (str `elem` prelude))
                       = pre ++ "." ++ str
                   | otherwise = str
 
 
 prelude = ["elem","uncurry","snd","fst","not","null","if","then","else","True","False","concat"]
+fpops = ["</>","<.>"]
 
 
 grabTest :: String -> Test
