@@ -412,7 +412,7 @@ splitFileName x = (c ++ reverse b, reverse a)
 --
 -- > replaceFileName (makeValid x) (takeFileName (makeValid x)) == makeValid x
 replaceFileName :: FilePath -> String -> FilePath
-replaceFileName x y = dropFileName x `combine` y
+replaceFileName x y = dropFileName x </> y
 
 -- | Drop the filename.
 --
@@ -426,7 +426,7 @@ dropFileName = fst . splitFileName
 -- > takeFileName "test/" == ""
 -- > takeFileName x == snd (splitFileName x)
 -- > if isValid x then takeFileName (replaceFileName x "fred") == "fred" else True
--- > if isValid x then takeFileName (combine x "fred") == "fred" else True
+-- > if isValid x then takeFileName (x </> "fred") == "fred" else True
 -- > isRelative (takeFileName (makeValid x))
 takeFileName :: FilePath -> FilePath
 takeFileName = snd . splitFileName
@@ -449,7 +449,7 @@ takeBaseName = dropExtension . takeFileName
 -- > replaceBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
 -- > replaceBaseName x (takeBaseName x) == x
 replaceBaseName :: FilePath -> String -> FilePath
-replaceBaseName pth nam = combineAlways a (addExtension nam ext)
+replaceBaseName pth nam = combineAlways a (nam <.> ext)
     where
         (a,b) = splitFileName pth
         ext = takeExtension b
@@ -611,10 +611,10 @@ equalFilePath a b = f a == f b
 --   There is no corresponding @makeAbsolute@ function, instead use
 --   @System.Directory.canonicalizePath@ which has the same effect.
 --
--- >          x == y || (isRelative x && makeRelative y x == x) || y `combine` makeRelative y x == x
+-- >          x == y || (isRelative x && makeRelative y x == x) || y </> makeRelative y x == x
 -- >          makeRelative x x == "."
--- > Windows: null y || makeRelative x (x `combine` y) == y || takeDrive x == x 
--- > Posix:   null y || makeRelative x (x `combine` y) == y
+-- > Windows: null y || makeRelative x (x </> y) == y || takeDrive x == x 
+-- > Posix:   null y || makeRelative x (x </> y) == y
 -- > Windows: makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
 -- > Windows: makeRelative "C:\\Home" "D:\\Home\\Bob" == "D:\\Home\\Bob"
 -- > Windows: makeRelative "C:\\Home" "C:Home\\Bob" == "C:Home\\Bob"
@@ -745,7 +745,7 @@ makeValid path = joinDrive drv $ validElements $ validChars pth
         validElements x = joinPath $ map g $ splitPath x
         g x = h (reverse b) ++ reverse a
             where (a,b) = span isPathSeparator $ reverse x
-        h x = if map toUpper a `elem` badElements then addExtension (a ++ "_") b else x
+        h x = if map toUpper a `elem` badElements then a ++ "_" <.> b else x
             where (a,b) = splitExtensions x
 
 
