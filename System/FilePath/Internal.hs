@@ -166,10 +166,10 @@ splitSearchPath :: String -> [FilePath]
 splitSearchPath = f
     where
     f xs = case break isSearchPathSeparator xs of
-           ([],  [])   -> []
-           ([],  post) -> f (tail post)
-           (pre, [])   -> [pre]
-           (pre, post) -> pre : f (tail post)
+           ([],  []    )   -> []
+           ([],  _:post) -> f post
+           (pre, []    )   -> [pre]
+           (pre, _:post) -> pre : f post
 
 
 -- | Get a list of filepaths in the $PATH.
