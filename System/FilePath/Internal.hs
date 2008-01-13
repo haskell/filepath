@@ -681,6 +681,7 @@ badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5
 
 -- | Is a FilePath valid, i.e. could you create a file like it?
 --
+-- >          isValid "" == False
 -- > Posix:   isValid "/random_ path:*" == True
 -- > Posix:   isValid x == True
 -- > Windows: isValid "c:\\test" == True
@@ -690,6 +691,7 @@ badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5
 -- > Windows: isValid "c:\\test\\prn.txt" == False
 -- > Windows: isValid "c:\\nul\\file" == False
 isValid :: FilePath -> Bool
+isValid "" = False
 isValid _ | isPosix = True
 isValid path = not (any (`elem` badCharacters) x2) && not (any f $ splitDirectories x2)
     where
@@ -701,6 +703,7 @@ isValid path = not (any (`elem` badCharacters) x2) && not (any f $ splitDirector
 --
 -- > isValid (makeValid x)
 -- > if isValid x then makeValid x == x else True
+-- > makeValid "" == "_"
 -- > Windows: makeValid "c:\\test:of_test" == "c:\\test_of_test"
 -- > Windows: makeValid "test*" == "test_"
 -- > Windows: makeValid "c:\\test\\nul" == "c:\\test\\nul_"
@@ -708,6 +711,7 @@ isValid path = not (any (`elem` badCharacters) x2) && not (any f $ splitDirector
 -- > Windows: makeValid "c:\\test/prn.txt" == "c:\\test/prn_.txt"
 -- > Windows: makeValid "c:\\nul\\file" == "c:\\nul_\\file"
 makeValid :: FilePath -> FilePath
+makeValid "" = "_"
 makeValid path | isPosix = path
 makeValid path = joinDrive drv $ validElements $ validChars pth
     where
