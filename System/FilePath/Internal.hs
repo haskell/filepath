@@ -640,6 +640,8 @@ makeRelative root path
 -- > Windows: normalise "c:\\" == "C:\\"
 -- > Windows: normalise "\\\\server\\test" == "\\\\server\\test"
 -- > Windows: normalise "c:/file" == "C:\\file"
+-- >          normalise "." == "."
+-- > Posix:   normalise "./" == "./"
 normalise :: FilePath -> FilePath
 normalise path = joinDrive (normaliseDrive drv) (f pth)
               ++ [pathSeparator | not (null pth) && isPathSeparator (last pth)]
@@ -655,7 +657,7 @@ normalise path = joinDrive (normaliseDrive drv) (f pth)
         propSep (x:xs) = x : propSep xs
         propSep [] = []
 
-        dropDots acc (".":xs) = dropDots acc xs
+        dropDots acc (".":xs) | not $ null xs = dropDots acc xs
         dropDots acc (x:xs) = dropDots (x:acc) xs
         dropDots acc [] = reverse acc
 
