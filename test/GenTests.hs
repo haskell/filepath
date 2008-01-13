@@ -10,6 +10,9 @@ data Test = Expr String
           | Test [String] String
           deriving Show
 
+isExpr (Expr{}) = True
+isExpr _ = False
+
 
 main = do src <- readFile "../System/FilePath/Internal.hs"
           let tests = concatMap getTest $ zip [1..] (lines src)
@@ -82,8 +85,10 @@ rejoinTests xs = unlines $
 
 
 genTests :: [(Int, Test)] -> String
-genTests xs = rejoinTests $ concatMap f $ zip [1..] xs
+genTests xs = rejoinTests $ concatMap f $ zip [1..] (one++many)
     where
+        (one,many) = partition (isExpr . snd) xs
+
         f (tno,(lno,test)) =
             [" putStrLn \"Test " ++ show tno ++ ", from line " ++ show lno ++ "\""
             ," " ++ genTest test]
