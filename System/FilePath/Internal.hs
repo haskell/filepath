@@ -35,7 +35,7 @@ module System.FilePath.MODULE_NAME
     extSeparator, isExtSeparator,
 
     -- * Path methods (environment $PATH)
-    splitSearchPath, splitSearchPathSystem, getSearchPath,
+    splitSearchPath, getSearchPath,
 
     -- * Extension methods
     splitExtension,
@@ -160,7 +160,6 @@ isExtSeparator = (== extSeparator)
 
 -- | Take a string, split it on the 'searchPathSeparator' character.
 --
--- >          splitSearchPathSystem [] x == splitSearchPath x
 -- > Windows: splitSearchPath "File1;File2;File3" == ["File1","File2","File3"]
 -- > Posix:   splitSearchPath "File1:File2:File3" == ["File1","File2","File3"]
 splitSearchPath :: String -> [FilePath]
@@ -171,19 +170,6 @@ splitSearchPath = f
            ([],  post) -> f (tail post)
            (pre, [])   -> [pre]
            (pre, post) -> pre : f (tail post)
-
-
--- | Takes an addition lists of paths, and a string. Splits the string on
---   the 'searchPathSeparator' charcter. If the final character is
---   'searchPathSeparator', then it appends the additional list of paths.
---
--- > Windows: splitSearchPathSystem ["a","b"] "File1;File2;File3" == ["File1","File2","File3"]
--- > Windows: splitSearchPathSystem ["a","b"] "File1;File2;File3;" == ["File1","File2","File3","a","b"]
--- > Windows: splitSearchPathSystem ["a"] "" == []
--- > Windows: splitSearchPathSystem ["a"] ";" == ["a"]
-splitSearchPathSystem :: [FilePath] -> String -> [FilePath]
-splitSearchPathSystem extra x = if [searchPathSeparator] `isSuffixOf` x then res ++ extra else res
-    where res = splitSearchPath x
 
 
 -- | Get a list of filepaths in the $PATH.
