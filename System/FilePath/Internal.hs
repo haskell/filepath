@@ -366,6 +366,7 @@ readDriveShareName name = addSlash a b
 -- > Windows: joinDrive "C:" "foo" == "C:foo"
 -- > Windows: joinDrive "C:\\" "bar" == "C:\\bar"
 -- > Windows: joinDrive "\\\\share" "foo" == "\\\\share\\foo"
+-- > Windows: joinDrive "/:" "foo" == "/:\\foo"
 joinDrive :: FilePath -> FilePath -> FilePath
 joinDrive a b | isPosix = a ++ b
               | null a = b
@@ -788,11 +789,12 @@ isRelative :: FilePath -> Bool
 isRelative = isRelativeDrive . takeDrive
 
 
+-- > isRelativeDrive "" == True
 -- > Windows: isRelativeDrive "c:\\" == False
 -- > Windows: isRelativeDrive "c:/" == False
 -- > Windows: isRelativeDrive "c:" == True
 -- > Windows: isRelativeDrive "\\\\foo" == False
--- > Windows: isRelativeDrive "" == True
+-- > Posix:   isRelativeDrive "/" == False
 isRelativeDrive :: String -> Bool
 isRelativeDrive x = null x ||
     maybe False (not . isPathSeparator . last . fst) (readDriveLetter x)
