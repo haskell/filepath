@@ -528,7 +528,7 @@ replaceDirectory x dir = combineAlways dir (takeFileName x)
 -- > Windows: combine "home" "bob" == "home\\bob"
 -- > Windows: combine "home" "/bob" == "/bob"
 combine :: FilePath -> FilePath -> FilePath
-combine a b | hasDrive b = b
+combine a b | hasDrive b || (not (null b) && isPathSeparator (head b)) = b
             | otherwise = combineAlways a b
 
 -- | Combine two paths, assuming rhs is NOT absolute.
@@ -626,13 +626,14 @@ equalFilePath a b = f a == f b
 --   There is no corresponding @makeAbsolute@ function, instead use
 --   @System.Directory.canonicalizePath@ which has the same effect.
 --
--- >          x == y || (isRelative x && makeRelative y x == x) || y </> makeRelative y x == x
+-- >          Valid y => equalFilePath x y || (isRelative x && makeRelative y x == x) || equalFilePath (y </> makeRelative y x) x
 -- >          makeRelative x x == "."
--- > Windows: null y || makeRelative x (x </> y) == y || takeDrive x == x 
--- > Posix:   null y || makeRelative x (x </> y) == y
+-- >          null y || equalFilePath (makeRelative x (x </> y)) y || null (takeFileName x)
 -- > Windows: makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
+-- > Windows: makeRelative "C:\\Home" "c:/home/bob" == "bob"
 -- > Windows: makeRelative "C:\\Home" "D:\\Home\\Bob" == "D:\\Home\\Bob"
 -- > Windows: makeRelative "C:\\Home" "C:Home\\Bob" == "C:Home\\Bob"
+-- > Windows: makeRelative "/Home" "/home/bob" == "bob"
 -- > Posix:   makeRelative "/Home" "/home/bob" == "/home/bob"
 -- > Posix:   makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
 -- > Posix:   makeRelative "/fred" "bob" == "bob"
@@ -642,8 +643,8 @@ equalFilePath a b = f a == f b
 makeRelative :: FilePath -> FilePath -> FilePath
 makeRelative root path
  | equalFilePath root path = "."
- | map toLower (takeDrive root) /= map toLower (takeDrive path) = path
- | otherwise = f (dropDrive root) (dropDrive path)
+ | map same (takeAbs root) /= map same (takeAbs path) = path
+ | otherwise = f (dropAbs root) (dropAbs path)
     where
         f "" y = dropWhile isPathSeparator y
         f x y = let (x1,x2) = g x
@@ -653,6 +654,15 @@ makeRelative root path
         g x = (dropWhile isPathSeparator a, dropWhile isPathSeparator b)
             where (a,b) = break isPathSeparator $ dropWhile isPathSeparator x
 
+        -- on windows, need to drop '/' which is kind of absolute, but not a drive
+        dropAbs (x:xs) | isWindows && isPathSeparator x = xs
+        dropAbs x = dropDrive x
+
+        takeAbs (x:xs) | isWindows && isPathSeparator x = [x]
+        takeAbs x = takeDrive x
+
+        same x | isPathSeparator x = pathSeparator
+               | otherwise = toLower x
 
 -- | Normalise a file
 --
