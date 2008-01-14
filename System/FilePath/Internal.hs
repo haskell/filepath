@@ -274,6 +274,8 @@ dropExtensions :: FilePath -> FilePath
 dropExtensions = fst . splitExtensions
 
 -- | Get all extensions
+--
+-- > takeExtensions "file.tar.gz" == ".tar.gz"
 takeExtensions :: FilePath -> String
 takeExtensions = snd . splitExtensions
 
@@ -298,6 +300,7 @@ isLetter x = (x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z')
 -- > Windows: splitDrive "\\\\shared\\test" == ("\\\\shared\\","test")
 -- > Windows: splitDrive "\\\\shared" == ("\\\\shared","")
 -- > Windows: splitDrive "\\\\?\\UNC\\shared\\file" == ("\\\\?\\UNC\\shared\\","file")
+-- > Windows: splitDrive "\\\\?\\UNCshared\\file" == ("\\\\?\\","UNCshared\\file")
 -- > Windows: splitDrive "\\\\?\\d:\\file" == ("\\\\?\\d:\\","file")
 -- > Windows: splitDrive "/d" == ("/","d")
 -- > Posix:   splitDrive "/test" == ("/","test")
@@ -361,7 +364,10 @@ readDriveShareName name = addSlash a b
 
 -- | Join a drive and the rest of the path.
 --
--- > uncurry joinDrive (splitDrive x) == x
+-- >          uncurry joinDrive (splitDrive x) == x
+-- > Windows: joinDrive "C:" "foo" == "C:foo"
+-- > Windows: joinDrive "C:\\" "bar" == "C:\\bar"
+-- > Windows: joinDrive "\\\\share" "foo" == "\\\\share\\foo"
 joinDrive :: FilePath -> FilePath -> FilePath
 joinDrive a b | isPosix = a ++ b
               | null a = b
@@ -430,6 +436,7 @@ dropFileName = fst . splitFileName
 -- | Get the file name.
 --
 -- > takeFileName "test/" == ""
+-- > takeFileName x `isSuffixOf` x
 -- > takeFileName x == snd (splitFileName x)
 -- > Valid x => takeFileName (replaceFileName x "fred") == "fred"
 -- > Valid x => takeFileName (x </> "fred") == "fred"
@@ -492,8 +499,11 @@ dropTrailingPathSeparator x =
 
 -- | Get the directory name, move up one level.
 --
--- > Posix:    takeDirectory "/foo/bar/baz" == "/foo/bar"
--- > Posix:    takeDirectory "/foo/bar/baz/" == "/foo/bar/baz"
+-- >           takeDirectory x `isPrefixOf` x
+-- >           takeDirectory "foo" == ""
+-- >           takeDirectory "/foo/bar/baz" == "/foo/bar"
+-- >           takeDirectory "/foo/bar/baz/" == "/foo/bar/baz"
+-- >           takeDirectory "foo/bar/baz" == "foo/bar"
 -- > Windows:  takeDirectory "foo\\bar" == "foo"
 -- > Windows:  takeDirectory "foo\\bar\\\\" == "foo\\bar"
 -- > Windows:  takeDirectory "C:\\" == "C:\\"
@@ -518,6 +528,7 @@ replaceDirectory x dir = combineAlways dir (takeFileName x)
 -- > Posix:   combine "/" "test" == "/test"
 -- > Posix:   combine "home" "bob" == "home/bob"
 -- > Windows: combine "home" "bob" == "home\\bob"
+-- > Windows: combine "home" "/bob" == "/bob"
 combine :: FilePath -> FilePath -> FilePath
 combine a b | hasDrive b = b
             | otherwise = combineAlways a b
@@ -762,6 +773,7 @@ makeValid path = joinDrive drv $ validElements $ validChars pth
 -- > Windows: isRelative "c:test" == True
 -- > Windows: isRelative "c:" == True
 -- > Windows: isRelative "\\\\foo" == False
+-- > Windows: isRelative "/foo" == True
 -- > Posix:   isRelative "test/path" == True
 -- > Posix:   isRelative "/test" == False
 isRelative :: FilePath -> Bool
