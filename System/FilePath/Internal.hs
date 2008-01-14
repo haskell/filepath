@@ -644,7 +644,7 @@ equalFilePath a b = f a == f b
 makeRelative :: FilePath -> FilePath -> FilePath
 makeRelative root path
  | equalFilePath root path = "."
- | map same (takeAbs root) /= map same (takeAbs path) = path
+ | takeAbs root /= takeAbs path = path
  | otherwise = f (dropAbs root) (dropAbs path)
     where
         f "" y = dropWhile isPathSeparator y
@@ -656,14 +656,11 @@ makeRelative root path
             where (a,b) = break isPathSeparator $ dropWhile isPathSeparator x
 
         -- on windows, need to drop '/' which is kind of absolute, but not a drive
-        dropAbs (x:xs) | isWindows && isPathSeparator x = xs
+        dropAbs (x:xs) | isPathSeparator x = xs
         dropAbs x = dropDrive x
 
-        takeAbs (x:xs) | isWindows && isPathSeparator x = [x]
-        takeAbs x = takeDrive x
-
-        same x | isPathSeparator x = pathSeparator
-               | otherwise = toLower x
+        takeAbs (x:xs) | isPathSeparator x = [pathSeparator]
+        takeAbs x = map (\x -> if isPathSeparator x then pathSeparator else toLower x) $ takeDrive x
 
 -- | Normalise a file
 --
