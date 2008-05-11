@@ -13,4 +13,10 @@
 --
 -- A library for FilePath manipulations, using Windows style paths on
 -- all platforms. Importing "System.FilePath" is usually better.
+
+-- Unfortunately, this #include breaks when haddocking with Cabal
+#ifdef __HADDOCK__
+module System.FilePath.Windows where
+#else
 #include "Internal.hs"
+#endif
