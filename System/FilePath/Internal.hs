@@ -73,7 +73,6 @@ module System.FilePath.MODULE_NAME
     where
 
 import Data.Char(toLower, toUpper)
-import Data.List(isSuffixOf)
 import Data.Maybe(isJust, fromJust)
 
 import System.Environment(getEnv)
@@ -659,8 +658,8 @@ makeRelative root path
         dropAbs (x:xs) | isPathSeparator x = xs
         dropAbs x = dropDrive x
 
-        takeAbs (x:xs) | isPathSeparator x = [pathSeparator]
-        takeAbs x = map (\x -> if isPathSeparator x then pathSeparator else toLower x) $ takeDrive x
+        takeAbs (x:_) | isPathSeparator x = [pathSeparator]
+        takeAbs x = map (\y -> if isPathSeparator y then pathSeparator else toLower y) $ takeDrive x
 
 -- | Normalise a file
 --
