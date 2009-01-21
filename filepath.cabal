@@ -3,14 +3,22 @@ Version:        1.1.0.1
 License:        BSD3
 license-file:   LICENSE
 Author:         Neil Mitchell
+bug-reports: http://hackage.haskell.org/trac/ghc/newticket?component=libraries%20%28other%29
 Homepage:       http://www-users.cs.york.ac.uk/~ndm/filepath/
 Category:       System
 build-type:     Simple
-Build-Depends:  base
 Synopsis:       Library for manipulating FilePath's in a cross platform way.
-Exposed-modules:
+
+Library
+    Exposed-modules:
         System.FilePath
         System.FilePath.Posix
         System.FilePath.Windows
-Extra-Source-Files: System/FilePath/Internal.hs
-Extensions: CPP
+    Extra-Source-Files: System/FilePath/Internal.hs
+    Extensions: CPP
+    Build-Depends:  base
+
+source-repository head
+    type:     darcs
+    location: http://darcs.haskell.org/packages/filepath/
+
