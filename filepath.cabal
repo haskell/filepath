@@ -8,6 +8,7 @@ Homepage:       http://www-users.cs.york.ac.uk/~ndm/filepath/
 Category:       System
 build-type:     Simple
 Synopsis:       Library for manipulating FilePath's in a cross platform way.
+cabal-version:  >=1.6
 
 Library
     Exposed-modules:
