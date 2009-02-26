@@ -9,13 +9,13 @@ Category:       System
 build-type:     Simple
 Synopsis:       Library for manipulating FilePath's in a cross platform way.
 cabal-version:  >=1.6
+Extra-Source-Files: System/FilePath/Internal.hs
 
 Library
     Exposed-modules:
         System.FilePath
         System.FilePath.Posix
         System.FilePath.Windows
-    Extra-Source-Files: System/FilePath/Internal.hs
     Extensions: CPP
     Build-Depends:  base
 
