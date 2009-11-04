@@ -74,6 +74,7 @@ module System.FilePath.MODULE_NAME
 
 import Data.Char(toLower, toUpper)
 import Data.Maybe(isJust, fromJust)
+import Data.List(isPrefixOf)
 
 import System.Environment(getEnv)
 
