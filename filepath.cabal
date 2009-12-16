@@ -7,7 +7,7 @@ bug-reports: http://hackage.haskell.org/trac/ghc/newticket?component=libraries%2
 Homepage:       http://www-users.cs.york.ac.uk/~ndm/filepath/
 Category:       System
 build-type:     Simple
-Synopsis:       Library for manipulating FilePath's in a cross platform way.
+Synopsis:       Library for manipulating FilePaths in a cross platform way.
 cabal-version:  >=1.6
 Extra-Source-Files: System/FilePath/Internal.hs
 
