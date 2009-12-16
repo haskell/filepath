@@ -17,7 +17,7 @@ Library
         System.FilePath.Posix
         System.FilePath.Windows
     Extensions: CPP
-    Build-Depends:  base >= 3 && < 5
+    Build-Depends:  base >= 2 && < 5
 
 source-repository head
     type:     darcs
