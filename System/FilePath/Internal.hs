@@ -515,6 +515,7 @@ takeDirectory x = if isDrive file then file
     where
         res = reverse $ dropWhile isPathSeparator $ reverse file
         file = dropFileName x
+        _ = isPrefixOf x -- warning suppression
 
 -- | Set the directory, keeping the filename the same.
 --
