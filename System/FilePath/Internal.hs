@@ -202,7 +202,7 @@ splitExtension x = case d of
                        "" -> (x,"")
                        (y:ys) -> (a ++ reverse ys, y : reverse c)
     where
-        (a,b) = splitFileName x
+        (a,b) = splitFileName_ x
         (c,d) = break isExtSeparator $ reverse b
 
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
@@ -260,11 +260,13 @@ hasExtension = any isExtSeparator . takeFileName
 
 -- | Split on all extensions
 --
+-- > uncurry (++) (splitExtensions x) == x
+-- > uncurry addExtension (splitExtensions x) == x
 -- > splitExtensions "file.tar.gz" == ("file",".tar.gz")
 splitExtensions :: FilePath -> (FilePath, String)
 splitExtensions x = (a ++ c, d)
     where
-        (a,b) = splitFileName x
+        (a,b) = splitFileName_ x
         (c,d) = break isExtSeparator b
 
 -- | Drop all extensions
@@ -405,25 +407,35 @@ isDrive = null . dropDrive
 
 -- | Split a filename into directory and file. 'combine' is the inverse.
 --
--- > uncurry (++) (splitFileName x) == x
--- > Valid x => uncurry combine (splitFileName x) == x
+-- > Valid x => uncurry (</>) (splitFileName x) == x || fst (splitFileName x) == "./"
+-- > Valid x => isValid (fst (splitFileName x))
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
 -- > splitFileName "file/" == ("file/", "")
--- > splitFileName "bob" == ("", "bob")
+-- > splitFileName "bob" == ("./", "bob")
 -- > Posix:   splitFileName "/" == ("/","")
 -- > Windows: splitFileName "c:" == ("c:","")
 splitFileName :: FilePath -> (String, String)
-splitFileName x = (c ++ reverse b, reverse a)
+splitFileName x = (if null dir then "./" else dir, name)
+    where
+        (dir, name) = splitFileName_ x
+
+-- version of splitFileName where, if the FilePath has no directory
+-- component, the returned directory is "" rather than "./".  This
+-- is used in cases where we are going to combine the returned
+-- directory to make a valid FilePath, and having a "./" appear would
+-- look strange and upset simple equality properties.  See
+-- e.g. replaceFileName.
+splitFileName_ :: FilePath -> (String, String)
+splitFileName_ x = (c ++ reverse b, reverse a)
     where
         (a,b) = break isPathSeparator $ reverse d
         (c,d) = splitDrive x
-
 
 -- | Set the filename.
 --
 -- > Valid x => replaceFileName x (takeFileName x) == x
 replaceFileName :: FilePath -> String -> FilePath
-replaceFileName x y = dropFileName x </> y
+replaceFileName x y = a </> y where (a,_) = splitFileName_ x
 
 -- | Drop the filename.
 --
@@ -459,11 +471,11 @@ takeBaseName = dropExtension . takeFileName
 -- > replaceBaseName "file/test.txt" "bob" == "file/bob.txt"
 -- > replaceBaseName "fred" "bill" == "bill"
 -- > replaceBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
--- > replaceBaseName x (takeBaseName x) == x
+-- > Valid x => replaceBaseName x (takeBaseName x) == x
 replaceBaseName :: FilePath -> String -> FilePath
 replaceBaseName pth nam = combineAlways a (nam <.> ext)
     where
-        (a,b) = splitFileName pth
+        (a,b) = splitFileName_ pth
         ext = takeExtension b
 
 -- | Is an item either a directory or the last character a path separator?
@@ -487,7 +499,7 @@ addTrailingPathSeparator x = if hasTrailingPathSeparator x then x else x ++ [pat
 -- | Remove any trailing path separators
 --
 -- > dropTrailingPathSeparator "file/test/" == "file/test"
--- > not (hasTrailingPathSeparator (dropTrailingPathSeparator x)) || isDrive x
+-- > Posix:    not (hasTrailingPathSeparator (dropTrailingPathSeparator x)) || isDrive x
 -- > Posix:    dropTrailingPathSeparator "/" == "/"
 -- > Windows:  dropTrailingPathSeparator "\\" == "\\"
 dropTrailingPathSeparator :: FilePath -> FilePath
@@ -500,8 +512,8 @@ dropTrailingPathSeparator x =
 
 -- | Get the directory name, move up one level.
 --
--- >           takeDirectory x `isPrefixOf` x
--- >           takeDirectory "foo" == ""
+-- >           takeDirectory x `isPrefixOf` x || takeDirectory x == "."
+-- >           takeDirectory "foo" == "."
 -- >           takeDirectory "/foo/bar/baz" == "/foo/bar"
 -- >           takeDirectory "/foo/bar/baz/" == "/foo/bar/baz"
 -- >           takeDirectory "foo/bar/baz" == "foo/bar"
@@ -519,7 +531,7 @@ takeDirectory x = if isDrive file then file
 
 -- | Set the directory, keeping the filename the same.
 --
--- > replaceDirectory x (takeDirectory x) `equalFilePath` x
+-- > Valid x => replaceDirectory x (takeDirectory x) `equalFilePath` x
 replaceDirectory :: FilePath -> String -> FilePath
 replaceDirectory x dir = combineAlways dir (takeFileName x)
 
