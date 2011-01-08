@@ -708,7 +708,7 @@ normalise path = joinDrive (normaliseDrive drv) (f pth)
             || not (null xs) && last xs == '.' && lastSep (init xs)
         lastSep xs = not (null xs) && isPathSeparator (last xs)
 
-        f = joinPath . dropDots [] . splitDirectories . propSep
+        f = joinPath . dropDots . splitDirectories . propSep
 
         propSep (a:b:xs)
          | isPathSeparator a && isPathSeparator b = propSep (a:xs)
@@ -717,8 +717,8 @@ normalise path = joinDrive (normaliseDrive drv) (f pth)
         propSep (x:xs) = x : propSep xs
         propSep [] = []
 
-        dropDots acc xs | all (==".") xs = ["."]
-        dropDots acc xs = dropDots' acc xs
+        dropDots xs | all (== ".") xs = ["."]
+        dropDots xs = dropDots' [] xs
 
         dropDots' acc (".":xs) = dropDots' acc xs
         dropDots' acc (x:xs) = dropDots' (x:acc) xs
