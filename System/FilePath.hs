@@ -1,4 +1,7 @@
 {-# LANGUAGE CPP #-}
+#if __GLASGOW_HASKELL__ >= 701
+{-# LANGUAGE Safe #-}
+#endif
 {- |
 Module      :  System.FilePath
 Copyright   :  (c) Neil Mitchell 2005-2007
@@ -23,6 +26,4 @@ import System.FilePath.Windows
 module System.FilePath(module System.FilePath.Posix) where
 import System.FilePath.Posix
 #endif
-
-
 

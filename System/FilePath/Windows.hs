@@ -1,4 +1,7 @@
 {-# LANGUAGE CPP #-}
+#if __GLASGOW_HASKELL__ >= 701
+{-# LANGUAGE Safe #-}
+#endif
 #define MODULE_NAME     Windows
 #define IS_WINDOWS      True
 
