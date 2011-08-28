@@ -701,12 +701,16 @@ makeRelative root path
 -- >          normalise "." == "."
 -- > Posix:   normalise "./" == "./"
 -- > Posix:   normalise "./." == "./"
+-- > Posix:   normalise "/" == "/"
 -- > Posix:   normalise "bob/fred/." == "bob/fred/"
 normalise :: FilePath -> FilePath
-normalise path = joinDrive (normaliseDrive drv) (f pth)
+normalise path = joinDrive' (normaliseDrive drv) (f pth)
               ++ [pathSeparator | isDirPath pth]
     where
         (drv,pth) = splitDrive path
+
+        joinDrive' "" "" = "."
+        joinDrive' d p = joinDrive d p
 
         isDirPath xs = lastSep xs
             || not (null xs) && last xs == '.' && lastSep (init xs)
@@ -721,12 +725,7 @@ normalise path = joinDrive (normaliseDrive drv) (f pth)
         propSep (x:xs) = x : propSep xs
         propSep [] = []
 
-        dropDots xs | all (== ".") xs = ["."]
-        dropDots xs = dropDots' [] xs
-
-        dropDots' acc (".":xs) = dropDots' acc xs
-        dropDots' acc (x:xs) = dropDots' (x:acc) xs
-        dropDots' acc [] = reverse acc
+        dropDots = filter ("." /=)
 
 normaliseDrive :: FilePath -> FilePath
 normaliseDrive drive | isPosix = drive
@@ -814,12 +813,14 @@ isRelative :: FilePath -> Bool
 isRelative = isRelativeDrive . takeDrive
 
 
--- > isRelativeDrive "" == True
--- > Windows: isRelativeDrive "c:\\" == False
--- > Windows: isRelativeDrive "c:/" == False
--- > Windows: isRelativeDrive "c:" == True
--- > Windows: isRelativeDrive "\\\\foo" == False
--- > Posix:   isRelativeDrive "/" == False
+-- Disable these tests for now, as we want to be able to run the
+-- testsuite without doing a special TESTING compilation
+-- -- > isRelativeDrive "" == True
+-- -- > Windows: isRelativeDrive "c:\\" == False
+-- -- > Windows: isRelativeDrive "c:/" == False
+-- -- > Windows: isRelativeDrive "c:" == True
+-- -- > Windows: isRelativeDrive "\\\\foo" == False
+-- -- > Posix:   isRelativeDrive "/" == False
 isRelativeDrive :: String -> Bool
 isRelativeDrive x = null x ||
     maybe False (not . isPathSeparator . last . fst) (readDriveLetter x)
