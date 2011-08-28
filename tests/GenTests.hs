@@ -1,9 +1,9 @@
 
 module Main where
 
-import System
-import List
-import Char
+import Data.Char
+import Data.List
+import System.IO
 
 
 data Test = Expr String

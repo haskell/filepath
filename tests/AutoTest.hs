@@ -5,7 +5,7 @@ module AutoTest(
     module Data.List
     ) where
 
-import Test.QuickCheck hiding (check,(==>))
+import Test.QuickCheck hiding ((==>))
 import Data.Char
 import System.Random
 import Data.List
@@ -26,20 +26,22 @@ data QFilePath = QFilePath FilePath
 
 instance Arbitrary QFilePath where
     arbitrary = liftM QFilePath arbitrary
-    coarbitrary = undefined
 
 
-instance Arbitrary Char where
-    arbitrary = elements "?|./:\\abcd 123;_"
-    coarbitrary = undefined
+-- QuickCheck 2.4.1.1 has its own Arbitrary Char instance, so commented out for now
+-- instance Arbitrary Char where
+--     arbitrary = elements "?|./:\\abcd 123;_"
 
 
-
--- below is mainly stolen from Test.QuickCheck, modified to crash out on failure
 
 quickSafe :: Testable a => a -> IO ()
-quickSafe prop = check quick prop
+quickSafe prop = quickCheckWith (stdArgs { chatty = False }) prop
+    -- checkit quick prop
 
+-- below is mainly stolen from Test.QuickCheck, modified to crash out on failure
+-- Doesn't compile with QuickCheck 2.4.1.1, so we just use the quickCheck function for now
+
+{-
 quick :: Config
 quick = Config
   { configMaxTest = 500
@@ -47,10 +49,9 @@ quick = Config
   , configSize    = (+ 3) . (`div` 2)
   , configEvery   = \n args -> let s = show n in s ++ [ '\b' | _ <- s ]
   }
-         
 
-check :: Testable a => Config -> a -> IO ()
-check config a =
+checkit :: Testable a => Config -> a -> IO ()
+checkit config a =
   do rnd <- newStdGen
      tests config (evaluate a) rnd 0 0 []
 
@@ -101,3 +102,5 @@ done mesg ntest stamps =
                        ++ concat (intersperse ", " xs)
 
   percentage n m        = show ((100 * n) `div` m) ++ "%"
+-}
+
