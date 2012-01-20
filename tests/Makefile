@@ -11,8 +11,8 @@ ghc-filepath-tests:
 	$(RM) -f GenTests.hi GenTests.o GenTests
 	$(RM) -f AutoTest.hi AutoTest.o
 	$(RM) -f FilePath_Test.hi FilePath_Test.o FilePath_Test
-	$(TEST_HC) -v0 --make GenTests
+	'$(TEST_HC)' -v0 --make GenTests
 	./GenTests
-	$(TEST_HC) -v0 --make FilePath_Test
+	'$(TEST_HC)' -v0 --make FilePath_Test
 	./FilePath_Test
 
