@@ -22,5 +22,5 @@ Library
 
 source-repository head
     type:     git
-    location: http://darcs.haskell.org/packages/filepath.git/
+    location: http://git.haskell.org/packages/filepath.git
 
