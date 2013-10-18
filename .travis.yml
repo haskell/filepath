@@ -24,5 +24,7 @@ install:
 
 script:
  - cd tests/ && PATH=/opt/ghc/$GHCVER/bin:$PATH runghc ./GenTests.hs
+ - ls -l tests/
+ - PATH=/opt/ghc/$GHCVER/bin:$PATH cabal-1.18 configure --enable-tests -v2
  - cabal-1.18 build
  - cabal-1.18 test
