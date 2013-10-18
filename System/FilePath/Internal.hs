@@ -1,7 +1,22 @@
-{-# LANGUAGE CPP #-}
-#ifdef __GLASGOW_HASKELL__
+#if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
 #endif
+
+-- This template expects CPP definitions for:
+--     MODULE_NAME = Posix | Windows
+--     IS_WINDOWS  = False | True
+
+-- |
+-- Module      :  System.FilePath.MODULE_NAME
+-- Copyright   :  (c) Neil Mitchell 2005-2007
+-- License     :  BSD3
+--
+-- Maintainer  :  libraries@haskell.org
+-- Stability   :  stable
+-- Portability :  portable
+--
+-- A library for FilePath manipulations, using MODULE_NAME style paths on
+-- all platforms. Importing "System.FilePath" is usually better.
 --
 -- Some short examples:
 --
@@ -25,10 +40,6 @@
 -- The examples in code format descibed by each function are used to generate
 -- tests, and should give clear semantics for the functions.
 -----------------------------------------------------------------------------
-
--- expects CPP definitions for:
---     MODULE_NAME = Posix | Windows
---     IS_WINDOWS  = False | True
 
 module System.FilePath.MODULE_NAME
     (
