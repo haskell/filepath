@@ -32,6 +32,24 @@ Library
     Build-Depends:
         base >= 4 && < 4.8
 
+    ghc-options: -Wall
+
+-- When run directly from the Git repo, you need to
+-- generate the tests/FilePath_Tests.hs file via
+--
+--  cd tests/ && runghc ./GenTests.hs
+Test-Suite filepath-tests
+    type: exitcode-stdio-1.0
+    default-language: Haskell98
+    main-is: FilePath_Test.hs
+    hs-source-dirs: tests
+    other-modules: AutoTest
+    build-depends:
+        filepath,
+        base,
+        QuickCheck == 2.6.*,
+        random     == 1.0.*
+
 source-repository head
     type:     git
     location: http://git.haskell.org/packages/filepath.git
