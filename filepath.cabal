@@ -23,6 +23,7 @@ description:
 Extra-Source-Files:
     System/FilePath/Internal.hs
     README.md
+    changelog
 
 Library
     default-language: Haskell98
