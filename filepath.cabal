@@ -23,7 +23,7 @@ description:
 Extra-Source-Files:
     System/FilePath/Internal.hs
     README.md
-    changelog
+    changelog.md
 
 Library
     default-language: Haskell98
