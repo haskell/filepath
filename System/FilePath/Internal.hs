@@ -87,7 +87,7 @@ module System.FilePath.MODULE_NAME
     )
     where
 
-import Data.Char(toLower, toUpper)
+import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.Maybe(isJust, fromJust)
 import Data.List(isPrefixOf)
 
@@ -304,7 +304,7 @@ takeExtensions = snd . splitExtensions
 -- | Is the given character a valid drive letter?
 -- only a-z and A-Z are letters, not isAlpha which is more unicodey
 isLetter :: Char -> Bool
-isLetter x = (x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z')
+isLetter x = isAsciiLower x || isAsciiUpper x
 
 
 -- | Split a path into a drive and a path.
@@ -536,9 +536,7 @@ dropTrailingPathSeparator x =
 -- > Windows:  takeDirectory "foo\\bar\\\\" == "foo\\bar"
 -- > Windows:  takeDirectory "C:\\" == "C:\\"
 takeDirectory :: FilePath -> FilePath
-takeDirectory x = if isDrive file then file
-                  else if null res && not (null file) then file
-                  else res
+takeDirectory x = if isDrive file || (null res && not (null file)) then file else res
     where
         res = reverse $ dropWhile isPathSeparator $ reverse file
         file = dropFileName x
@@ -593,7 +591,7 @@ splitPath x = [drive | drive /= ""] ++ f path
         f y = (a++c) : f d
             where
                 (a,b) = break isPathSeparator y
-                (c,d) = break (not . isPathSeparator) b
+                (c,d) = span  isPathSeparator b
 
 -- | Just as 'splitPath', but don't add the trailing slashes to each element.
 --
@@ -608,7 +606,7 @@ splitDirectories path =
     where
         pathComponents = splitPath path
 
-        f xs = map g xs
+        f = map g
         g x = if null res then x else res
             where res = takeWhile (not . isPathSeparator) x
 
@@ -621,7 +619,7 @@ splitDirectories path =
 
 -- Note that this definition on c:\\c:\\, join then split will give c:\\.
 joinPath :: [FilePath] -> FilePath
-joinPath x = foldr combine "" x
+joinPath = foldr combine ""
 
 
 
@@ -799,7 +797,7 @@ makeValid path = joinDrive drv $ validElements $ validChars pth
     where
         (drv,pth) = splitDrive path
 
-        validChars x = map f x
+        validChars = map f
         f x | x `elem` badCharacters = '_'
             | otherwise = x
 
