@@ -1,0 +1,13 @@
+.hpc*/
+*.o
+*.hi
+*.comp.std*
+*.run.std*
+*.eventlog
+*.genscript
+*.exe
+
+# specific files
+/FilePath_Test
+/FilePath_Test.hs
+/GenTests

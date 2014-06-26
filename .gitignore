@@ -1,7 +1,3 @@
 GNUmakefile
 dist-install/
 ghc.mk
-tests/FilePath_Test.hs
-tests/GenTests
-tests/GenTests.hi
-tests/GenTests.o
