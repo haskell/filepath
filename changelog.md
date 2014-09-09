@@ -1,5 +1,9 @@
 # Changelog for [`filepath` package](http://hackage.haskell.org/package/filepath)
 
+## 1.3.0.3  *TBA*
+
+  * Bundled with GHC 7.10.1
+
 ## 1.3.0.2  *Mar 2014*
 
   * Bundled with GHC 7.8.1
