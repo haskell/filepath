@@ -552,10 +552,10 @@ dropTrailingPathSeparator x =
 -- > Windows:  takeDirectory "foo\\bar\\\\" == "foo\\bar"
 -- > Windows:  takeDirectory "C:\\" == "C:\\"
 takeDirectory :: FilePath -> FilePath
-takeDirectory x = if isDrive file || (null res && not (null file)) then file else res
+takeDirectory x = if isDrive dir || (null res && not (null dir)) then dir else res
     where
-        res = reverse $ dropWhile isPathSeparator $ reverse file
-        file = dropFileName x
+        res = reverse $ dropWhile isPathSeparator $ reverse dir
+        dir = dropFileName x
         _ = isPrefixOf x -- warning suppression
 
 -- | Set the directory, keeping the filename the same.
