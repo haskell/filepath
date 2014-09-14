@@ -79,11 +79,6 @@ module System.FilePath.MODULE_NAME
     makeRelative,
     isRelative, isAbsolute,
     isValid, makeValid
-
-#ifdef TESTING
-    , isRelativeDrive
-#endif
-
     )
     where
 
@@ -813,23 +808,18 @@ makeValid path = joinDrive drv $ validElements $ validChars pth
 -- > Windows: isRelative "path\\test" == True
 -- > Windows: isRelative "c:\\test" == False
 -- > Windows: isRelative "c:test" == True
+-- > Windows: isRelative "c:\\" == False
+-- > Windows: isRelative "c:/" == False
 -- > Windows: isRelative "c:" == True
 -- > Windows: isRelative "\\\\foo" == False
 -- > Windows: isRelative "/foo" == True
 -- > Posix:   isRelative "test/path" == True
 -- > Posix:   isRelative "/test" == False
+-- > Posix:   isRelative "/" == False
 isRelative :: FilePath -> Bool
 isRelative = isRelativeDrive . takeDrive
 
 
--- Disable these tests for now, as we want to be able to run the
--- testsuite without doing a special TESTING compilation
--- -- > isRelativeDrive "" == True
--- -- > Windows: isRelativeDrive "c:\\" == False
--- -- > Windows: isRelativeDrive "c:/" == False
--- -- > Windows: isRelativeDrive "c:" == True
--- -- > Windows: isRelativeDrive "\\\\foo" == False
--- -- > Posix:   isRelativeDrive "/" == False
 isRelativeDrive :: String -> Bool
 isRelativeDrive x = null x ||
     maybe False (not . isPathSeparator . last . fst) (readDriveLetter x)
