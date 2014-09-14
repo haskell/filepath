@@ -4,6 +4,9 @@
 
   * Bundled with GHC 7.10.1
 
+  * Bug fix: on Windows, `dropTrailingPathSeparator "/"` now returns `"/"`
+    unchanged, instead of the normalised `"\\"`.
+
 ## 1.3.0.2  *Mar 2014*
 
   * Bundled with GHC 7.8.1

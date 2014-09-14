@@ -528,14 +528,14 @@ addTrailingPathSeparator x = if hasTrailingPathSeparator x then x else x ++ [pat
 -- | Remove any trailing path separators
 --
 -- > dropTrailingPathSeparator "file/test/" == "file/test"
--- > Posix:    dropTrailingPathSeparator "/" == "/"
+-- >           dropTrailingPathSeparator "/" == "/"
 -- > Windows:  dropTrailingPathSeparator "\\" == "\\"
 -- > Posix:    not (hasTrailingPathSeparator (dropTrailingPathSeparator x)) || isDrive x
 dropTrailingPathSeparator :: FilePath -> FilePath
 dropTrailingPathSeparator x =
     if hasTrailingPathSeparator x && not (isDrive x)
     then let x' = reverse $ dropWhile isPathSeparator $ reverse x
-         in if null x' then [pathSeparator] else x'
+         in if null x' then [last x] else x'
     else x
 
 
