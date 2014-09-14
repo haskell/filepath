@@ -824,6 +824,7 @@ isValid path =
 -- > isValid (makeValid x)
 -- > isValid x ==> makeValid x == x
 -- > makeValid "" == "_"
+-- > Windows: makeValid "c:\\already\\/valid" == "c:\\already\\/valid"
 -- > Windows: makeValid "c:\\test:of_test" == "c:\\test_of_test"
 -- > Windows: makeValid "test*" == "test_"
 -- > Windows: makeValid "c:\\test\\nul" == "c:\\test\\nul_"
@@ -843,8 +844,8 @@ makeValid path = joinDrive drv $ validElements $ validChars pth
             | otherwise = x
 
         validElements x = joinPath $ map g $ splitPath x
-        g x = h (reverse b) ++ reverse a
-            where (a,b) = span isPathSeparator $ reverse x
+        g x = h a ++ b
+            where (a,b) = break isPathSeparator x
         h x = if map toUpper a `elem` badElements then a ++ "_" <.> b else x
             where (a,b) = splitExtensions x
 
