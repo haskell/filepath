@@ -683,7 +683,7 @@ equalFilePath a b = f a == f b
         f x | isWindows = dropTrailSlash $ map toLower $ normalise x
             | otherwise = dropTrailSlash $ normalise x
 
-        dropTrailSlash x | length x >= 2 && isPathSeparator (last x) = init x
+        dropTrailSlash x | length x >= 2 && hasTrailingPathSeparator x = init x
                          | otherwise = x
 
 
@@ -758,9 +758,8 @@ normalise path = joinDrive' (normaliseDrive drv) (f pth)
         joinDrive' "" "" = "."
         joinDrive' d p = joinDrive d p
 
-        isDirPath xs = lastSep xs
-            || not (null xs) && last xs == '.' && lastSep (init xs)
-        lastSep xs = not (null xs) && isPathSeparator (last xs)
+        isDirPath xs = hasTrailingPathSeparator xs
+            || not (null xs) && last xs == '.' && hasTrailingPathSeparator (init xs)
 
         f = joinPath . dropDots . splitDirectories . propSep
 
@@ -876,7 +875,7 @@ isRelative = isRelativeDrive . takeDrive
 -- current directory on the drive with the specified letter."
 isRelativeDrive :: String -> Bool
 isRelativeDrive x = null x ||
-    maybe False (not . isPathSeparator . last . fst) (readDriveLetter x)
+    maybe False (not . hasTrailingPathSeparator . fst) (readDriveLetter x)
 
 
 -- | @not . 'isRelative'@
