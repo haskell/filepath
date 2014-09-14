@@ -511,6 +511,11 @@ hasTrailingPathSeparator "" = False
 hasTrailingPathSeparator x = isPathSeparator (last x)
 
 
+hasLeadingPathSeparator :: FilePath -> Bool
+hasLeadingPathSeparator "" = False
+hasLeadingPathSeparator x = isPathSeparator (head x)
+
+
 -- | Add a trailing file path separator if one is not already present.
 --
 -- > hasTrailingPathSeparator (addTrailingPathSeparator x)
@@ -560,7 +565,8 @@ replaceDirectory :: FilePath -> String -> FilePath
 replaceDirectory x dir = combineAlways dir (takeFileName x)
 
 
--- | Combine two paths, if the second path 'isAbsolute', then it returns the second.
+-- | Combine two paths, if the second path starts with a path separator or a
+-- drive letter, then it returns the second.
 --
 -- > Valid x => combine (takeDirectory x) (takeFileName x) `equalFilePath` x
 --
@@ -593,7 +599,7 @@ replaceDirectory x dir = combineAlways dir (takeFileName x)
 -- > Windows: combine "D:\\foo" "C:bar" == "C:bar"
 -- > Windows: combine "C:\\foo" "C:bar" == "C:bar"
 combine :: FilePath -> FilePath -> FilePath
-combine a b | hasDrive b || (not (null b) && isPathSeparator (head b)) = b
+combine a b | hasLeadingPathSeparator b || hasDrive b = b
             | otherwise = combineAlways a b
 
 -- | Combine two paths, assuming rhs is NOT absolute.
