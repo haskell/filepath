@@ -1,5 +1,4 @@
 env:
- - GHCVER=6.12.3
  - GHCVER=7.0.1
  - GHCVER=7.0.4
  - GHCVER=7.2.2
@@ -20,13 +19,8 @@ before_install:
 
 install:
  - cabal update
- - if [ "$GHCVER" = "6.12.3" ]; then
-      cabal install --only-dependencies;
-      cabal install 'QuickCheck==2.6.*';
-   else
-      cabal install --only-dependencies --enable-tests;
-   fi
-
+ - cabal install --only-dependencies --enable-tests;
+   
 script:
  - cd tests/ && runghc ./GenTests.hs && cd ..
  - cabal configure --enable-tests -v2
