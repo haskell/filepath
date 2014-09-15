@@ -1,4 +1,4 @@
-System.FilePath  [![Build Status](https://travis-ci.org/ghc/packages-filepath.png?branch=master)](https://travis-ci.org/ghc/packages-filepath)
+System.FilePath  [![Build Status](https://travis-ci.org/haskell/filepath.svg)](https://travis-ci.org/haskell/filepath)
 ===============
 
 I have written a `System.FilePath` module in part based on the one in
