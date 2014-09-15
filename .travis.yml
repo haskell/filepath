@@ -1,36 +1,48 @@
 env:
  - GHCVER=6.12.3
  - GHCVER=7.0.1
- - GHCVER=7.0.2
- - GHCVER=7.0.3
  - GHCVER=7.0.4
- - GHCVER=7.2.1
  - GHCVER=7.2.2
- - GHCVER=7.4.1
  - GHCVER=7.4.2
- - GHCVER=7.6.1
- - GHCVER=7.6.2
  - GHCVER=7.6.3
+ - GHCVER=7.8.3
+ - GHCVER=head
+
+matrix:
+  allow_failures:
+   - env: GHCVER=head
 
 before_install:
- - sudo add-apt-repository -y ppa:hvr/ghc
- - sudo apt-get update
- - sudo apt-get install cabal-install-1.18 ghc-$GHCVER
- - export PATH=/opt/ghc/$GHCVER/bin:$PATH
+ - travis_retry sudo add-apt-repository -y ppa:hvr/ghc
+ - travis_retry sudo apt-get update
+ - travis_retry sudo apt-get install cabal-install-1.18 ghc-$GHCVER
+ - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/1.18/bin:$PATH
 
 install:
- - cabal-1.18 update
+ - cabal update
  - if [ "$GHCVER" = "6.12.3" ]; then
-      cabal-1.18 install --only-dependencies;
-      cabal-1.18 install 'QuickCheck==2.6.*';
+      cabal install --only-dependencies;
+      cabal install 'QuickCheck==2.6.*';
    else
-      cabal-1.18 install --only-dependencies --enable-tests;
+      cabal install --only-dependencies --enable-tests;
    fi
 
 script:
  - cd tests/ && runghc ./GenTests.hs && cd ..
- - cabal-1.18 configure --enable-tests -v2
- - cabal-1.18 build
- - cabal-1.18 test
- - cabal-1.18 check
- - cabal-1.18 sdist
+ - cabal configure --enable-tests -v2
+ - cabal build
+ - cabal test
+ - cabal check
+ - cabal sdist
+
+# The following scriptlet checks that the resulting source distribution can be built & installed
+ - function install_from_tarball {
+   export SRC_TGZ=$(cabal info . | awk '{print $2 ".tar.gz";exit}') ;
+   if [ -f "dist/$SRC_TGZ" ]; then
+      cabal install "dist/$SRC_TGZ";
+   else
+      echo "expected 'dist/$SRC_TGZ' not found";
+      exit 1;
+   fi
+   }
+ - install_from_tarball
