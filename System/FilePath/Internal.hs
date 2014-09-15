@@ -422,8 +422,9 @@ hasDrive = not . null . takeDrive
 -- > Posix:   isDrive "/foo" == False
 -- > Windows: isDrive "C:\\" == True
 -- > Windows: isDrive "C:\\foo" == False
+-- >          isDrive "" == False
 isDrive :: FilePath -> Bool
-isDrive = null . dropDrive
+isDrive x = not (null x) && null (dropDrive x)
 
 
 ---------------------------------------------------------------------
