@@ -90,9 +90,16 @@ module System.FilePath.MODULE_NAME
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.Maybe(isJust, fromJust)
 import Data.List(isPrefixOf)
+#if MIN_VERSION_base(4,5,0)
+import Data.List(dropWhileEnd)
+#endif
 
 import System.Environment(getEnv)
 
+#if !MIN_VERSION_base(4,5,0)
+dropWhileEnd :: (a -> Bool) -> [a] -> [a]
+dropWhileEnd p = foldr (\x xs -> if p x && null xs then [] else x : xs) []
+#endif
 
 infixr 7  <.>
 infixr 5  </>
@@ -520,7 +527,7 @@ addTrailingPathSeparator x = if hasTrailingPathSeparator x then x else x ++ [pat
 dropTrailingPathSeparator :: FilePath -> FilePath
 dropTrailingPathSeparator x =
     if hasTrailingPathSeparator x && not (isDrive x)
-    then let x' = reverse $ dropWhile isPathSeparator $ reverse x
+    then let x' = dropWhileEnd isPathSeparator x
          in if null x' then [pathSeparator] else x'
     else x
 
@@ -538,7 +545,7 @@ dropTrailingPathSeparator x =
 takeDirectory :: FilePath -> FilePath
 takeDirectory x = if isDrive file || (null res && not (null file)) then file else res
     where
-        res = reverse $ dropWhile isPathSeparator $ reverse file
+        res = dropWhileEnd isPathSeparator file
         file = dropFileName x
         _ = isPrefixOf x -- warning suppression
 
