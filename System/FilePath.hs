@@ -19,10 +19,11 @@ same interface. See either for examples and a list of the available
 functions.
 -}
 
-module System.FilePath(module X) where
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-import System.FilePath.Windows as X
+module System.FilePath(module System.FilePath.Windows) where
+import System.FilePath.Windows
 #else
-import System.FilePath.Posix as X
+module System.FilePath(module System.FilePath.Posix) where
+import System.FilePath.Posix
 #endif
