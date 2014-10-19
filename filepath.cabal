@@ -7,7 +7,7 @@ author:         Neil Mitchell <ndmitchell@gmail.com>
 maintainer:     Neil Mitchell <ndmitchell@gmail.com>
 copyright:      Neil Mitchell 2005-2014
 bug-reports:    https://github.com/haskell/filepath/issues
-homepage:       http://www-users.cs.york.ac.uk/~ndm/filepath/
+homepage:       https://github.com/haskell/filepath#readme
 category:       System
 build-type:     Simple
 synopsis:       Library for manipulating FilePaths in a cross platform way.
