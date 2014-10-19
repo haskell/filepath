@@ -14,12 +14,15 @@ synopsis:       Library for manipulating FilePaths in a cross platform way.
 cabal-version:  >=1.10
 tested-with:    GHC==7.6.3, GHC==7.6.2, GHC==7.6.1, GHC==7.4.2, GHC==7.4.1, GHC==7.2.2, GHC==7.2.1, GHC==7.0.4, GHC==7.0.3, GHC==7.0.2, GHC==7.0.1, GHC==6.12.3
 description:
-    A library for 'FilePath' manipulations, using Posix or Windows filepaths
-    depending on the platform.
+    This package provides functionality for manipulating @FilePath@ values, and is shipped with both <https://www.haskell.org/ghc/ GHC> and the <https://www.haskell.org/platform/ Haskell Platform>. It provides three modules:
     .
-    Both "System.FilePath.Posix" and "System.FilePath.Windows" provide
-    the same interface. See either for examples and a list of the
-    available functions.
+    * "System.FilePath.Posix" manipulates POSIX\/Linux style @FilePath@ values (with @\/@ as the path separator).
+    .
+    * "System.FilePath.Windows" manipulates Windows style @FilePath@ values (with either @\\@ or @\/@ as the path separator, and deals with drives).
+    .
+    * "System.FilePath" is an alias for the module appropriate to your platform.
+    .
+    All three modules provide the same API, and the same documentation (calling out differences in the different variants).
 
 extra-source-files:
     System/FilePath/Internal.hs
