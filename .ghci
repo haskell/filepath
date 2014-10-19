@@ -1,0 +1,6 @@
+:set -fwarn-unused-binds -fwarn-unused-imports
+:set -isrc -itest
+:load System.FilePath System.FilePath.Windows System.FilePath.Posix
+import qualified System.FilePath.Windows as Windows
+import qualified System.FilePath.Posix as Posix
+
