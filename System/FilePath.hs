@@ -4,10 +4,10 @@
 #endif
 {- |
 Module      :  System.FilePath
-Copyright   :  (c) Neil Mitchell 2005-2007
+Copyright   :  (c) Neil Mitchell 2005-2014
 License     :  BSD3
 
-Maintainer  :  libraries@haskell.org
+Maintainer  :  ndmitchell@gmail.com
 Stability   :  stable
 Portability :  portable
 
