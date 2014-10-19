@@ -1,15 +1,15 @@
-Name:           filepath
-Version:        1.3.0.3
+name:           filepath
+version:        1.3.0.3
 -- NOTE: Don't forget to update ./changelog.md
-License:        BSD3
+license:        BSD3
 license-file:   LICENSE
-Author:         Neil Mitchell
-Maintainer:     libraries@haskell.org
+author:         Neil Mitchell
+maintainer:     libraries@haskell.org
 bug-reports:    https://github.com/haskell/filepath/issues
-Homepage:       http://www-users.cs.york.ac.uk/~ndm/filepath/
-Category:       System
+homepage:       http://www-users.cs.york.ac.uk/~ndm/filepath/
+category:       System
 build-type:     Simple
-Synopsis:       Library for manipulating FilePaths in a cross platform way.
+synopsis:       Library for manipulating FilePaths in a cross platform way.
 cabal-version:  >=1.10
 tested-with:    GHC==7.6.3, GHC==7.6.2, GHC==7.6.1, GHC==7.4.2, GHC==7.4.1, GHC==7.2.2, GHC==7.2.1, GHC==7.0.4, GHC==7.0.3, GHC==7.0.2, GHC==7.0.1, GHC==6.12.3
 description:
@@ -20,24 +20,24 @@ description:
     the same interface. See either for examples and a list of the
     available functions.
 
-Extra-Source-Files:
+extra-source-files:
     System/FilePath/Internal.hs
     README.md
     changelog.md
 
-Library
+library
     default-language: Haskell98
     other-extensions:
         CPP
-    if impl(GHC>=7.2)
+    if impl(GHC >= 7.2)
         other-extensions: Safe
 
-    Exposed-modules:
+    exposed-modules:
         System.FilePath
         System.FilePath.Posix
         System.FilePath.Windows
 
-    Build-Depends:
+    build-depends:
         base >= 4 && < 4.9
 
     ghc-options: -Wall
@@ -46,7 +46,7 @@ Library
 -- generate the tests/FilePath_Tests.hs file via
 --
 --  cd tests/ && runghc ./GenTests.hs
-Test-Suite filepath-tests
+test-suite filepath-tests
     type: exitcode-stdio-1.0
     default-language: Haskell98
     main-is: FilePath_Test.hs
