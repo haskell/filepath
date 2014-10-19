@@ -30,10 +30,8 @@
 --
 -- You want to download a file from the web and save it to disk:
 --
---@
---do let file = 'makeValid' url
---   System.IO.createDirectoryIfMissing True ('takeDirectory' file)
---@
+-- @do let file = 'makeValid' url
+--   System.IO.createDirectoryIfMissing True ('takeDirectory' file)@
 --
 -- You want to compile a Haskell file, but put the hi file under \"interface\"
 --
