@@ -6,3 +6,5 @@ import qualified System.FilePath.Posix as Posix
 
 :def docs_ const $ return $ unlines [":!cabal haddock"]
 :def docs const $ return $ unlines [":docs_",":!start dist\\doc\\html\\filepath\\System-FilePath.html"]
+
+:def test const $ return $ unlines [":!cd tests && runhaskell GenTests.hs",":!cd tests && runhaskell FilePath_Test.hs"]
