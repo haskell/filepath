@@ -4,3 +4,5 @@
 import qualified System.FilePath.Windows as Windows
 import qualified System.FilePath.Posix as Posix
 
+:def docs_ const $ return $ unlines [":!cabal haddock"]
+:def docs const $ return $ unlines [":docs_",":!start dist\\doc\\html\\filepath\\System-FilePath.html"]
