@@ -35,7 +35,11 @@ instance Arbitrary QChar where
 
 
 quickSafe :: Testable a => a -> IO ()
-quickSafe prop = quickCheckWith (stdArgs { chatty = False }) prop
+quickSafe prop = do
+    res <- quickCheckWithResult (stdArgs { chatty = False }) prop
+    case res of
+        Success{} -> return ()
+        _ -> error $ show res
     -- checkit quick prop
 
 -- below is mainly stolen from Test.QuickCheck, modified to crash out on failure
