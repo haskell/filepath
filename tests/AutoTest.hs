@@ -21,16 +21,16 @@ constTest False = error "Failed on constTest"
 
 
 
-data QFilePath = QFilePath FilePath
+newtype QFilePath = QFilePath FilePath
                  deriving Show
 
 instance Arbitrary QFilePath where
-    arbitrary = liftM QFilePath arbitrary
+    arbitrary = fmap (QFilePath . map fromQChar) arbitrary
 
+newtype QChar = QChar {fromQChar :: Char}
 
--- QuickCheck 2.4.1.1 has its own Arbitrary Char instance, so commented out for now
--- instance Arbitrary Char where
---     arbitrary = elements "?|./:\\abcd 123;_"
+instance Arbitrary QChar where
+    arbitrary = fmap QChar $ elements "?|./:\\abcd 123;_"
 
 
 
