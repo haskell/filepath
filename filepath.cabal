@@ -3,8 +3,9 @@ version:        1.3.0.3
 -- NOTE: Don't forget to update ./changelog.md
 license:        BSD3
 license-file:   LICENSE
-author:         Neil Mitchell
-maintainer:     libraries@haskell.org
+author:         Neil Mitchell <ndmitchell@gmail.com>
+maintainer:     Neil Mitchell <ndmitchell@gmail.com>
+copyright:      Neil Mitchell 2005-2014
 bug-reports:    https://github.com/haskell/filepath/issues
 homepage:       http://www-users.cs.york.ac.uk/~ndm/filepath/
 category:       System
