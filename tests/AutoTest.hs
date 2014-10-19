@@ -22,7 +22,7 @@ constTest False = error "Failed on constTest"
 
 
 newtype QFilePath = QFilePath FilePath
-                 deriving Show
+                    deriving Show
 
 instance Arbitrary QFilePath where
     arbitrary = fmap (QFilePath . map fromQChar) arbitrary
