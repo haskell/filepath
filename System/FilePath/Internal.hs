@@ -88,7 +88,6 @@ module System.FilePath.MODULE_NAME
 
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.Maybe(isJust, fromJust)
-import Data.List(isPrefixOf)
 
 import System.Environment(getEnv)
 
@@ -552,11 +551,7 @@ dropTrailingPathSeparator x =
 -- > Windows:  takeDirectory "foo\\bar\\\\" == "foo\\bar"
 -- > Windows:  takeDirectory "C:\\" == "C:\\"
 takeDirectory :: FilePath -> FilePath
-takeDirectory x = if isDrive dir || null res then dir else res
-    where
-        res = reverse $ dropWhile isPathSeparator $ reverse dir
-        dir = dropFileName x
-        _ = isPrefixOf x -- warning suppression
+takeDirectory = dropTrailingPathSeparator . dropFileName
 
 -- | Set the directory, keeping the filename the same.
 --
