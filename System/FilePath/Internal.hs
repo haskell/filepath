@@ -383,12 +383,11 @@ readDriveShareName name = addSlash a b
 -- > Windows: joinDrive "\\\\share" "foo" == "\\\\share\\foo"
 -- > Windows: joinDrive "/:" "foo" == "/:\\foo"
 joinDrive :: FilePath -> FilePath -> FilePath
-joinDrive a b | isPosix = a ++ b
-              | null a = b
+joinDrive a b | null a = b
               | null b = a
               | hasTrailingPathSeparator a = a ++ b
               | otherwise = case a of
-                                [a1,':'] | isLetter a1 -> a ++ b
+                                [a1,':'] | isWindows && isLetter a1 -> a ++ b
                                 _ -> a ++ [pathSeparator] ++ b
 
 -- | Get the drive from a filepath.

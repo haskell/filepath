@@ -4,6 +4,9 @@
 
   * Bundled with GHC 7.10.1
 
+  * Semantic change: `joinDrive "/foo" "bar"` now returns `"/foo/bar"`,
+    instead of `"/foobar"`.
+
   * Bug fix: `isDrive ""` now retuns `False`, instead of `True`.
 
   * Bug fix: on Windows, `dropTrailingPathSeparator "/"` now returns `"/"`
