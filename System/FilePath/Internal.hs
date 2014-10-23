@@ -602,7 +602,9 @@ combineAlways :: FilePath -> FilePath -> FilePath
 combineAlways a b | null a = b
                   | null b = a
                   | hasTrailingPathSeparator a = a ++ b
-                  | isDrive a = joinDrive a b
+                  | isDrive a = case a of
+                      [a1,':'] | isWindows && isLetter a1 -> a ++ b
+                      _ -> a ++ [pathSeparator] ++ b
                   | otherwise = a ++ [pathSeparator] ++ b
 
 
