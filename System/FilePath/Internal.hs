@@ -643,15 +643,7 @@ splitPath x = [drive | drive /= ""] ++ f path
 -- > Valid x => joinPath (splitDirectories x) `equalFilePath` x
 -- > splitDirectories "" == []
 splitDirectories :: FilePath -> [FilePath]
-splitDirectories path =
-        if hasDrive path then head pathComponents : f (tail pathComponents)
-        else f pathComponents
-    where
-        pathComponents = splitPath path
-
-        f = map g
-        g x = if null res then x else res
-            where res = takeWhile (not . isPathSeparator) x
+splitDirectories = map dropTrailingPathSeparator . splitPath
 
 
 -- | Join path elements back together.
