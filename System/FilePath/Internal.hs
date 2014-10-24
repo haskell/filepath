@@ -386,7 +386,7 @@ joinDrive :: FilePath -> FilePath -> FilePath
 joinDrive a b | isPosix = a ++ b
               | null a = b
               | null b = a
-              | isPathSeparator (last a) = a ++ b
+              | hasTrailingPathSeparator a = a ++ b
               | otherwise = case a of
                                 [a1,':'] | isLetter a1 -> a ++ b
                                 _ -> a ++ [pathSeparator] ++ b
@@ -602,7 +602,7 @@ combine a b | hasLeadingPathSeparator b || hasDrive b = b
 combineAlways :: FilePath -> FilePath -> FilePath
 combineAlways a b | null a = b
                   | null b = a
-                  | isPathSeparator (last a) = a ++ b
+                  | hasTrailingPathSeparator a = a ++ b
                   | isDrive a = joinDrive a b
                   | otherwise = a ++ [pathSeparator] ++ b
 
