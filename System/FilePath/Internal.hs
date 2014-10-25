@@ -750,6 +750,7 @@ makeRelative root path
 -- > Windows: normalise "c:\\" == "C:\\"
 -- > Windows: normalise "\\\\server\\test" == "\\\\server\\test"
 -- > Windows: normalise "c:/file" == "C:\\file"
+-- > Windows: normalise "\\" == "\\"
 -- >          normalise "." == "."
 -- > Posix:   normalise "./" == "./"
 -- > Posix:   normalise "./." == "./"
@@ -757,7 +758,7 @@ makeRelative root path
 -- > Posix:   normalise "bob/fred/." == "bob/fred/"
 normalise :: FilePath -> FilePath
 normalise path = joinDrive' (normaliseDrive drv) (f pth)
-              ++ [pathSeparator | isDirPath pth]
+              ++ [pathSeparator | isDirPath pth && length pth > 1]
     where
         (drv,pth) = splitDrive path
 
