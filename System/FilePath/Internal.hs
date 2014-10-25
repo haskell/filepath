@@ -807,14 +807,16 @@ badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5
 -- > Windows: isValid "c:\\test\\prn.txt" == False
 -- > Windows: isValid "c:\\nul\\file" == False
 -- > Windows: isValid "\\\\" == False
+-- > Windows: isValid "\\\\\\foo" == False
 isValid :: FilePath -> Bool
 isValid "" = False
 isValid _ | isPosix = True
 isValid path =
         not (any (`elem` badCharacters) x2) &&
         not (any f $ splitDirectories x2) &&
-        not (length path >= 2 && all isPathSeparator path)
+        not (length x1 >= 2 && all isPathSeparator x1)
     where
+        x1 = head (splitPath path)
         x2 = dropDrive path
         f x = map toUpper (dropExtensions x) `elem` badElements
 
@@ -831,10 +833,13 @@ isValid path =
 -- > Windows: makeValid "c:\\test\\prn.txt" == "c:\\test\\prn_.txt"
 -- > Windows: makeValid "c:\\test/prn.txt" == "c:\\test/prn_.txt"
 -- > Windows: makeValid "c:\\nul\\file" == "c:\\nul_\\file"
+-- > Windows: makeValid "\\\\\\foo" == "\\\\drive"
 makeValid :: FilePath -> FilePath
 makeValid "" = "_"
 makeValid path | isPosix = path
-makeValid x | length x >= 2 && all isPathSeparator x = take 2 x ++ "drive"
+makeValid xs | length x >= 2 && all isPathSeparator x = take 2 x ++ "drive"
+    where
+        x = head (splitPath xs)
 makeValid path = joinDrive drv $ validElements $ validChars pth
     where
         (drv,pth) = splitDrive path
