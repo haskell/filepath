@@ -4,6 +4,8 @@
 
   * Bundled with GHC 7.10.1
 
+  * Bug fix: `isDrive ""` now retuns `False`, instead of `True`.
+
   * Bug fix: on Windows, `dropTrailingPathSeparator "/"` now returns `"/"`
     unchanged, instead of the normalised `"\\"`.
 
