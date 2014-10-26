@@ -683,6 +683,7 @@ joinPath = foldr combine ""
 -- >          not (equalFilePath "foo" "/foo")
 -- > Posix:   not (equalFilePath "foo" "FOO")
 -- > Windows: equalFilePath "foo" "FOO"
+-- > Windows: not (equalFilePath "C:" "C:/")
 equalFilePath :: FilePath -> FilePath -> Bool
 equalFilePath a b = f a == f b
     where
