@@ -10,6 +10,9 @@
   * Bug fix: on Windows, `equalFilePath "C:\\" "C:"` now retuns `False`,
     instead of `True`.
 
+  * Bug fix: on Windows, `isValid "\\\\\\foo"` now returns `False`, instead
+    of `True`.
+
 ## 1.3.0.2  *Mar 2014*
 
   * Bundled with GHC 7.8.1
