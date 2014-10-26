@@ -686,11 +686,8 @@ joinPath = foldr combine ""
 equalFilePath :: FilePath -> FilePath -> Bool
 equalFilePath a b = f a == f b
     where
-        f x | isWindows = dropTrailSlash $ map toLower $ normalise x
-            | otherwise = dropTrailSlash $ normalise x
-
-        dropTrailSlash x | length x >= 2 && hasTrailingPathSeparator x = init x
-                         | otherwise = x
+        f x | isWindows = dropTrailingPathSeparator $ map toLower $ normalise x
+            | otherwise = dropTrailingPathSeparator $ normalise x
 
 
 -- | Contract a filename, based on a relative path.
