@@ -640,7 +640,7 @@ splitPath x = [drive | drive /= ""] ++ f path
 -- >          splitDirectories "test/file" == ["test","file"]
 -- >          splitDirectories "/test/file" == ["/","test","file"]
 -- > Windows: splitDirectories "C:\\test\\file" == ["C:\\", "test", "file"]
--- > Valid x => joinPath (splitDirectories x) `equalFilePath` x
+-- > Posix:   Valid x => joinPath (splitDirectories x) `equalFilePath` x
 -- > splitDirectories "" == []
 splitDirectories :: FilePath -> [FilePath]
 splitDirectories path =
