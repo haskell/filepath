@@ -59,7 +59,7 @@ test-suite filepath-tests
     build-depends:
         filepath,
         base,
-        QuickCheck == 2.6.*,
+        QuickCheck > 2.6 && < 2.8,
         random     == 1.0.*
 
 source-repository head
