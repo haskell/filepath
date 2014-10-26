@@ -10,6 +10,9 @@
   * Bug fix: on Windows, `normalise "\\"` now retuns `"\\"` unchanged,
     instead of `"\\\\"`.
 
+  * Bug fix: on Windows, `normalise "//server/test"` now retuns
+    `"\\\\server\\test"`, instead of `"//server/test"` unchanged.
+
 ## 1.3.0.2  *Mar 2014*
 
   * Bundled with GHC 7.8.1

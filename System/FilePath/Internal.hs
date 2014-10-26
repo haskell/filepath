@@ -749,6 +749,7 @@ makeRelative root path
 -- > Windows: normalise "c:\\file/bob\\" == "C:\\file\\bob\\"
 -- > Windows: normalise "c:\\" == "C:\\"
 -- > Windows: normalise "\\\\server\\test" == "\\\\server\\test"
+-- > Windows: normalise "//server/test" == "\\\\server\\test"
 -- > Windows: normalise "c:/file" == "C:\\file"
 -- > Windows: normalise "\\" == "\\"
 -- >          normalise "." == "."
@@ -783,7 +784,7 @@ normaliseDrive :: FilePath -> FilePath
 normaliseDrive drive | isPosix = drive
 normaliseDrive drive = if isJust $ readDriveLetter x2
                        then map toUpper x2
-                       else drive
+                       else x2
     where
         x2 = map repSlash drive
 
