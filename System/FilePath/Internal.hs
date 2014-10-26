@@ -700,7 +700,6 @@ equalFilePath a b = f a == f b
 --
 -- >          Valid y => equalFilePath x y || (isRelative x && makeRelative y x == x) || equalFilePath (y </> makeRelative y x) x
 -- >          makeRelative x x == "."
--- >          null y || equalFilePath (makeRelative x (x </> y)) y || null (takeFileName x)
 -- > Windows: makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
 -- > Windows: makeRelative "C:\\Home" "c:/home/bob" == "bob"
 -- > Windows: makeRelative "C:\\Home" "D:\\Home\\Bob" == "D:\\Home\\Bob"
