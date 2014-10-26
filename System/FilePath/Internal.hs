@@ -679,8 +679,8 @@ joinPath = foldr combine ""
 --
 -- >          x == y ==> equalFilePath x y
 -- >          normalise x == normalise y ==> equalFilePath x y
--- > Posix:   equalFilePath "foo" "foo/"
--- > Posix:   not (equalFilePath "foo" "/foo")
+-- >          equalFilePath "foo" "foo/"
+-- >          not (equalFilePath "foo" "/foo")
 -- > Posix:   not (equalFilePath "foo" "FOO")
 -- > Windows: equalFilePath "foo" "FOO"
 equalFilePath :: FilePath -> FilePath -> Bool
