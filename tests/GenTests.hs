@@ -68,7 +68,7 @@ splitLex x = case lex x of
 
 -- Valid a => z   ===>  (\a -> z) (makeValid a)
 makeValid :: [String] -> [String]
-makeValid ("Valid":a:"=>":z) = "(\\":a:"->":z ++ ")":"(":"makeValid":a:")":[]
+makeValid ("Valid":a:"=>":z) = "(\\":a:"->":makeValid z ++ ")":"(":"makeValid":a:")":[]
 makeValid x = x
 
 
