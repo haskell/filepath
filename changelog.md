@@ -21,6 +21,9 @@
   * Bug fix: on Windows, `normalise "//server/test"` now retuns
     `"\\\\server\\test"`, instead of `"//server/test"` unchanged.
 
+  * Bug fix: on Windows, `makeRelative "/" "//"` now returns `"//"`, instead
+    of `""`.
+
 ## 1.3.0.2  *Mar 2014*
 
   * Bundled with GHC 7.8.1
