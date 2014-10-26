@@ -638,6 +638,8 @@ splitPath x = [drive | drive /= ""] ++ f path
 -- > Windows: splitDirectories "C:\\test\\file" == ["C:\\", "test", "file"]
 -- >          Valid x => joinPath (splitDirectories x) `equalFilePath` x
 -- >          splitDirectories "" == []
+-- > Windows: splitDirectories "C:\\test\\\\\\file" == ["C:\\", "test", "file"]
+-- >          splitDirectories "/test///file" == ["/","test","file"]
 splitDirectories :: FilePath -> [FilePath]
 splitDirectories = map dropTrailingPathSeparator . splitPath
 
@@ -733,7 +735,10 @@ makeRelative root path
 -- > Windows: normalise "c:\\file/bob\\" == "C:\\file\\bob\\"
 -- > Windows: normalise "c:\\" == "C:\\"
 -- > Windows: normalise "\\\\server\\test" == "\\\\server\\test"
+-- > Windows: normalise "//server/test" == "\\\\server\\test"
 -- > Windows: normalise "c:/file" == "C:\\file"
+-- > Windows: normalise "/file" == "\\file"
+-- > Windows: normalise "\\" == "\\"
 -- >          normalise "." == "."
 -- > Posix:   normalise "./" == "./"
 -- > Posix:   normalise "./." == "./"
@@ -741,7 +746,7 @@ makeRelative root path
 -- > Posix:   normalise "bob/fred/." == "bob/fred/"
 normalise :: FilePath -> FilePath
 normalise path = joinDrive' (normaliseDrive drv) (f pth)
-              ++ [pathSeparator | isDirPath pth]
+              ++ [pathSeparator | isDirPath pth && length pth > 1]
     where
         (drv,pth) = splitDrive path
 
@@ -751,13 +756,10 @@ normalise path = joinDrive' (normaliseDrive drv) (f pth)
         isDirPath xs = hasTrailingPathSeparator xs
             || not (null xs) && last xs == '.' && hasTrailingPathSeparator (init xs)
 
-        f = joinPath . dropDots . splitDirectories . propSep
+        f = joinPath . dropDots . propSep . splitDirectories
 
-        propSep (a:b:xs)
-         | isPathSeparator a && isPathSeparator b = propSep (a:xs)
-        propSep (a:xs)
-         | isPathSeparator a = pathSeparator : propSep xs
-        propSep (x:xs) = x : propSep xs
+        propSep (x:xs) | all isPathSeparator x = [pathSeparator] : xs
+                       | otherwise = x : xs
         propSep [] = []
 
         dropDots = filter ("." /=)
@@ -766,7 +768,7 @@ normaliseDrive :: FilePath -> FilePath
 normaliseDrive drive | isPosix = drive
 normaliseDrive drive = if isJust $ readDriveLetter x2
                        then map toUpper x2
-                       else drive
+                       else x2
     where
         x2 = map repSlash drive
 
