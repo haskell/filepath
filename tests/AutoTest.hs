@@ -36,7 +36,7 @@ instance Arbitrary QChar where
 
 quickSafe :: Testable a => a -> IO ()
 quickSafe prop = do
-    res <- quickCheckWithResult (stdArgs { chatty = False }) prop
+    res <- quickCheckWithResult stdArgs{chatty=False, maxSuccess=10000} prop
     case res of
         Success{} -> return ()
         _ -> error $ show res
