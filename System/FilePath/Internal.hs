@@ -39,6 +39,10 @@
 --
 -- The examples in code format descibed by each function are used to generate
 -- tests, and should give clear semantics for the functions.
+--
+-- References:
+-- [1] "Naming Files, Paths, and Namespaces"
+-- http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247.aspx
 -----------------------------------------------------------------------------
 
 module System.FilePath.MODULE_NAME
@@ -79,11 +83,6 @@ module System.FilePath.MODULE_NAME
     makeRelative,
     isRelative, isAbsolute,
     isValid, makeValid
-
-#ifdef TESTING
-    , isRelativeDrive
-#endif
-
     )
     where
 
@@ -342,9 +341,8 @@ addSlash :: FilePath -> FilePath -> (FilePath, FilePath)
 addSlash a xs = (a++c,d)
     where (c,d) = span isPathSeparator xs
 
--- http://msdn.microsoft.com/library/default.asp?url=/library/en-us/fileio/fs/naming_a_file.asp
+-- See [1].
 -- "\\?\D:\<path>" or "\\?\UNC\<server>\<share>"
--- a is "\\?\"
 readDriveUNC :: FilePath -> Maybe (FilePath, FilePath)
 readDriveUNC (s1:s2:'?':s3:xs) | all isPathSeparator [s1,s2,s3] =
     case map toUpper xs of
@@ -352,6 +350,7 @@ readDriveUNC (s1:s2:'?':s3:xs) | all isPathSeparator [s1,s2,s3] =
             let (a,b) = readDriveShareName (drop 4 xs)
             in Just (s1:s2:'?':s3:take 4 xs ++ a, b)
         _ -> case readDriveLetter xs of
+                 -- Extended-length path.
                  Just (a,b) -> Just (s1:s2:'?':s3:a,b)
                  Nothing -> Nothing
 readDriveUNC _ = Nothing
@@ -370,7 +369,7 @@ readDriveShare (s1:s2:xs) | isPathSeparator s1 && isPathSeparator s2 =
 readDriveShare _ = Nothing
 
 {- assume you have already seen \\ -}
-{- share\bob -> "share","\","bob" -}
+{- share\bob -> "share\", "bob" -}
 readDriveShareName :: String -> (FilePath, FilePath)
 readDriveShareName name = addSlash a b
     where (a,b) = break isPathSeparator name
@@ -408,11 +407,21 @@ dropDrive = snd . splitDrive
 -- | Does a path have a drive.
 --
 -- > not (hasDrive x) == null (takeDrive x)
+-- > Posix:   hasDrive "/foo" == True
+-- > Windows: hasDrive "C:\\foo" == True
+-- > Windows: hasDrive "C:foo" == True
+-- >          hasDrive "foo" == False
+-- >          hasDrive "" == False
 hasDrive :: FilePath -> Bool
 hasDrive = not . null . takeDrive
 
 
 -- | Is an element a drive
+--
+-- > Posix:   isDrive "/" == True
+-- > Posix:   isDrive "/foo" == False
+-- > Windows: isDrive "C:\\" == True
+-- > Windows: isDrive "C:\\foo" == False
 isDrive :: FilePath -> Bool
 isDrive = null . dropDrive
 
@@ -423,7 +432,7 @@ isDrive = null . dropDrive
 -- | Split a filename into directory and file. 'combine' is the inverse.
 --
 -- > Valid x => uncurry (</>) (splitFileName x) == x || fst (splitFileName x) == "./"
--- > Valid x => isValid (fst (splitFileName x))
+-- > Posix:   Valid x => isValid (fst (splitFileName x))
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
 -- > splitFileName "file/" == ("file/", "")
 -- > splitFileName "bob" == ("./", "bob")
@@ -502,6 +511,11 @@ hasTrailingPathSeparator "" = False
 hasTrailingPathSeparator x = isPathSeparator (last x)
 
 
+hasLeadingPathSeparator :: FilePath -> Bool
+hasLeadingPathSeparator "" = False
+hasLeadingPathSeparator x = isPathSeparator (head x)
+
+
 -- | Add a trailing file path separator if one is not already present.
 --
 -- > hasTrailingPathSeparator (addTrailingPathSeparator x)
@@ -514,14 +528,14 @@ addTrailingPathSeparator x = if hasTrailingPathSeparator x then x else x ++ [pat
 -- | Remove any trailing path separators
 --
 -- > dropTrailingPathSeparator "file/test/" == "file/test"
--- > Posix:    not (hasTrailingPathSeparator (dropTrailingPathSeparator x)) || isDrive x
--- > Posix:    dropTrailingPathSeparator "/" == "/"
+-- >           dropTrailingPathSeparator "/" == "/"
 -- > Windows:  dropTrailingPathSeparator "\\" == "\\"
+-- > Posix:    not (hasTrailingPathSeparator (dropTrailingPathSeparator x)) || isDrive x
 dropTrailingPathSeparator :: FilePath -> FilePath
 dropTrailingPathSeparator x =
     if hasTrailingPathSeparator x && not (isDrive x)
     then let x' = reverse $ dropWhile isPathSeparator $ reverse x
-         in if null x' then [pathSeparator] else x'
+         in if null x' then [last x] else x'
     else x
 
 
@@ -529,6 +543,8 @@ dropTrailingPathSeparator x =
 --
 -- >           takeDirectory x `isPrefixOf` x || takeDirectory x == "."
 -- >           takeDirectory "foo" == "."
+-- >           takeDirectory "/" == "/"
+-- >           takeDirectory "/foo" == "/"
 -- >           takeDirectory "/foo/bar/baz" == "/foo/bar"
 -- >           takeDirectory "/foo/bar/baz/" == "/foo/bar/baz"
 -- >           takeDirectory "foo/bar/baz" == "foo/bar"
@@ -549,15 +565,41 @@ replaceDirectory :: FilePath -> String -> FilePath
 replaceDirectory x dir = combineAlways dir (takeFileName x)
 
 
--- | Combine two paths, if the second path 'isAbsolute', then it returns the second.
+-- | Combine two paths, if the second path starts with a path separator or a
+-- drive letter, then it returns the second.
 --
 -- > Valid x => combine (takeDirectory x) (takeFileName x) `equalFilePath` x
+--
+-- Combined:
 -- > Posix:   combine "/" "test" == "/test"
 -- > Posix:   combine "home" "bob" == "home/bob"
+-- > Posix:   combine "x:" "foo" == "x:/foo"
+-- > Windows: combine "C:\\foo" "bar" == "C:\\foo\\bar"
 -- > Windows: combine "home" "bob" == "home\\bob"
+--
+-- Not combined:
+-- > Posix:   combine "home" "/bob" == "/bob"
+-- > Windows: combine "home" "C:\\bob" == "C:\\bob"
+--
+-- Not combined (tricky):
+-- On Windows, if a filepath starts with a single slash, it is relative to the
+-- root of the current drive. In [1], this is (confusingly) referred to as an
+-- absolute path.
+-- The current behavior of @combine@ is to never combine these forms.
+--
 -- > Windows: combine "home" "/bob" == "/bob"
+-- > Windows: combine "home" "\\bob" == "\\bob"
+-- > Windows: combine "C:\\home" "\\bob" == "\\bob"
+--
+-- On Windows, from [1]: "If a file name begins with only a disk designator
+-- but not the backslash after the colon, it is interpreted as a relative path
+-- to the current directory on the drive with the specified letter."
+-- The current behavior of @combine@ is to never combine these forms.
+--
+-- > Windows: combine "D:\\foo" "C:bar" == "C:bar"
+-- > Windows: combine "C:\\foo" "C:bar" == "C:bar"
 combine :: FilePath -> FilePath -> FilePath
-combine a b | hasDrive b || (not (null b) && isPathSeparator (head b)) = b
+combine a b | hasLeadingPathSeparator b || hasDrive b = b
             | otherwise = combineAlways a b
 
 -- | Combine two paths, assuming rhs is NOT absolute.
@@ -595,8 +637,9 @@ splitPath x = [drive | drive /= ""] ++ f path
 
 -- | Just as 'splitPath', but don't add the trailing slashes to each element.
 --
--- > splitDirectories "test/file" == ["test","file"]
--- > splitDirectories "/test/file" == ["/","test","file"]
+-- >          splitDirectories "test/file" == ["test","file"]
+-- >          splitDirectories "/test/file" == ["/","test","file"]
+-- > Windows: splitDirectories "C:\\test\\file" == ["C:\\", "test", "file"]
 -- > Valid x => joinPath (splitDirectories x) `equalFilePath` x
 -- > splitDirectories "" == []
 splitDirectories :: FilePath -> [FilePath]
@@ -646,7 +689,7 @@ equalFilePath a b = f a == f b
         f x | isWindows = dropTrailSlash $ map toLower $ normalise x
             | otherwise = dropTrailSlash $ normalise x
 
-        dropTrailSlash x | length x >= 2 && isPathSeparator (last x) = init x
+        dropTrailSlash x | length x >= 2 && hasTrailingPathSeparator x = init x
                          | otherwise = x
 
 
@@ -721,9 +764,8 @@ normalise path = joinDrive' (normaliseDrive drv) (f pth)
         joinDrive' "" "" = "."
         joinDrive' d p = joinDrive d p
 
-        isDirPath xs = lastSep xs
-            || not (null xs) && last xs == '.' && lastSep (init xs)
-        lastSep xs = not (null xs) && isPathSeparator (last xs)
+        isDirPath xs = hasTrailingPathSeparator xs
+            || not (null xs) && last xs == '.' && hasTrailingPathSeparator (init xs)
 
         f = joinPath . dropDots . splitDirectories . propSep
 
@@ -746,8 +788,7 @@ normaliseDrive drive = if isJust $ readDriveLetter x2
 
         repSlash x = if isPathSeparator x then pathSeparator else x
 
--- information for validity functions on Windows
--- see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/fileio/fs/naming_a_file.asp
+-- Information for validity functions on Windows. See [1].
 badCharacters :: [Char]
 badCharacters = ":*?><|\""
 badElements :: [FilePath]
@@ -783,6 +824,7 @@ isValid path =
 -- > isValid (makeValid x)
 -- > isValid x ==> makeValid x == x
 -- > makeValid "" == "_"
+-- > Windows: makeValid "c:\\already\\/valid" == "c:\\already\\/valid"
 -- > Windows: makeValid "c:\\test:of_test" == "c:\\test_of_test"
 -- > Windows: makeValid "test*" == "test_"
 -- > Windows: makeValid "c:\\test\\nul" == "c:\\test\\nul_"
@@ -802,8 +844,8 @@ makeValid path = joinDrive drv $ validElements $ validChars pth
             | otherwise = x
 
         validElements x = joinPath $ map g $ splitPath x
-        g x = h (reverse b) ++ reverse a
-            where (a,b) = span isPathSeparator $ reverse x
+        g x = h a ++ b
+            where (a,b) = break isPathSeparator x
         h x = if map toUpper a `elem` badElements then a ++ "_" <.> b else x
             where (a,b) = splitExtensions x
 
@@ -813,26 +855,34 @@ makeValid path = joinDrive drv $ validElements $ validChars pth
 -- > Windows: isRelative "path\\test" == True
 -- > Windows: isRelative "c:\\test" == False
 -- > Windows: isRelative "c:test" == True
+-- > Windows: isRelative "c:\\" == False
+-- > Windows: isRelative "c:/" == False
 -- > Windows: isRelative "c:" == True
 -- > Windows: isRelative "\\\\foo" == False
+-- > Windows: isRelative "\\\\?\\foo" == False
+-- > Windows: isRelative "\\\\?\\UNC\\foo" == False
 -- > Windows: isRelative "/foo" == True
+-- > Windows: isRelative "\\foo" == True
 -- > Posix:   isRelative "test/path" == True
 -- > Posix:   isRelative "/test" == False
+-- > Posix:   isRelative "/" == False
+--
+-- According to [1]:
+--
+-- * "A UNC name of any format [is never relative]."
+--
+-- * "You cannot use the "\\?\" prefix with a relative path."
 isRelative :: FilePath -> Bool
 isRelative = isRelativeDrive . takeDrive
 
 
--- Disable these tests for now, as we want to be able to run the
--- testsuite without doing a special TESTING compilation
--- -- > isRelativeDrive "" == True
--- -- > Windows: isRelativeDrive "c:\\" == False
--- -- > Windows: isRelativeDrive "c:/" == False
--- -- > Windows: isRelativeDrive "c:" == True
--- -- > Windows: isRelativeDrive "\\\\foo" == False
--- -- > Posix:   isRelativeDrive "/" == False
+{- c:foo -}
+-- From [1]: "If a file name begins with only a disk designator but not the
+-- backslash after the colon, it is interpreted as a relative path to the
+-- current directory on the drive with the specified letter."
 isRelativeDrive :: String -> Bool
 isRelativeDrive x = null x ||
-    maybe False (not . isPathSeparator . last . fst) (readDriveLetter x)
+    maybe False (not . hasTrailingPathSeparator . fst) (readDriveLetter x)
 
 
 -- | @not . 'isRelative'@
