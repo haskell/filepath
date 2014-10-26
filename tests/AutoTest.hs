@@ -26,6 +26,7 @@ newtype QFilePath = QFilePath FilePath
 
 instance Arbitrary QFilePath where
     arbitrary = fmap (QFilePath . map fromQChar) arbitrary
+    shrink (QFilePath x) = map QFilePath $ shrink x
 
 newtype QChar = QChar {fromQChar :: Char}
 
