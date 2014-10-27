@@ -426,7 +426,7 @@ isDrive x = not (null x) && null (dropDrive x)
 -- | Split a filename into directory and file. 'combine' is the inverse.
 --
 -- > Valid x => uncurry (</>) (splitFileName x) == x || fst (splitFileName x) == "./"
--- > Posix:   Valid x => isValid (fst (splitFileName x))
+-- > Valid x => isValid (fst (splitFileName x))
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
 -- > splitFileName "file/" == ("file/", "")
 -- > splitFileName "bob" == ("./", "bob")
