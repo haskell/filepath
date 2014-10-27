@@ -681,12 +681,14 @@ equalFilePath a b = f a == f b
 --   There is no corresponding @makeAbsolute@ function, instead use
 --   @System.Directory.canonicalizePath@ which has the same effect.
 --
+-- >          Valid y => Valid x => equalFilePath x y || (isRelative x && makeRelative y x == x) || equalFilePath (y </> makeRelative y x) x
 -- >          makeRelative x x == "."
 -- > Windows: makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
 -- > Windows: makeRelative "C:\\Home" "c:/home/bob" == "bob"
 -- > Windows: makeRelative "C:\\Home" "D:\\Home\\Bob" == "D:\\Home\\Bob"
 -- > Windows: makeRelative "C:\\Home" "C:Home\\Bob" == "C:Home\\Bob"
 -- > Windows: makeRelative "/Home" "/home/bob" == "bob"
+-- > Windows: makeRelative "/" "//" == "//"
 -- > Posix:   makeRelative "/Home" "/home/bob" == "/home/bob"
 -- > Posix:   makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
 -- > Posix:   makeRelative "/fred" "bob" == "bob"
@@ -708,10 +710,10 @@ makeRelative root path
             where (a,b) = break isPathSeparator $ dropWhile isPathSeparator x
 
         -- on windows, need to drop '/' which is kind of absolute, but not a drive
-        dropAbs (x:xs) | isPathSeparator x = xs
+        dropAbs x | hasLeadingPathSeparator x && not (hasDrive x) = tail x
         dropAbs x = dropDrive x
 
-        takeAbs (x:_) | isPathSeparator x = [pathSeparator]
+        takeAbs x | hasLeadingPathSeparator x && not (hasDrive x) = [pathSeparator]
         takeAbs x = map (\y -> if isPathSeparator y then pathSeparator else toLower y) $ takeDrive x
 
 -- | Normalise a file
