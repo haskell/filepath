@@ -383,13 +383,7 @@ readDriveShareName name = addSlash a b
 -- > Windows: joinDrive "\\\\share" "foo" == "\\\\share\\foo"
 -- > Windows: joinDrive "/:" "foo" == "/:\\foo"
 joinDrive :: FilePath -> FilePath -> FilePath
-joinDrive a b | isPosix = a ++ b
-              | null a = b
-              | null b = a
-              | isPathSeparator (last a) = a ++ b
-              | otherwise = case a of
-                                [a1,':'] | isLetter a1 -> a ++ b
-                                _ -> a ++ [pathSeparator] ++ b
+joinDrive = combineAlways
 
 -- | Get the drive from a filepath.
 --
@@ -602,9 +596,10 @@ combine a b | hasLeadingPathSeparator b || hasDrive b = b
 combineAlways :: FilePath -> FilePath -> FilePath
 combineAlways a b | null a = b
                   | null b = a
-                  | isPathSeparator (last a) = a ++ b
-                  | isDrive a = joinDrive a b
-                  | otherwise = a ++ [pathSeparator] ++ b
+                  | hasTrailingPathSeparator a = a ++ b
+                  | otherwise = case a of
+                      [a1,':'] | isWindows && isLetter a1 -> a ++ b
+                      _ -> a ++ [pathSeparator] ++ b
 
 
 -- | A nice alias for 'combine'.
