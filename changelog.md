@@ -27,6 +27,9 @@
   * Bug fix: on Windows, `normalise "\\"` now retuns `"\\"` unchanged,
     instead of `"\\\\"`.
 
+  * Bug fix: on Windows, `normalise "C:.\\"` now retuns `"C:"`, instead of
+    `"C:\\"`.
+
   * Bug fix: on Windows, `normalise "//server/test"` now retuns
     `"\\\\server\\test"`, instead of `"//server/test"` unchanged.
 

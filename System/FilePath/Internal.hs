@@ -731,6 +731,7 @@ makeRelative root path
 -- > Posix:   normalise "./bob/fred/" == "bob/fred/"
 -- > Windows: normalise "c:\\file/bob\\" == "C:\\file\\bob\\"
 -- > Windows: normalise "c:\\" == "C:\\"
+-- > Windows: normalise "C:.\\" == "C:"
 -- > Windows: normalise "\\\\server\\test" == "\\\\server\\test"
 -- > Windows: normalise "//server/test" == "\\\\server\\test"
 -- > Windows: normalise "c:/file" == "C:\\file"
@@ -755,6 +756,7 @@ normalise path = result ++ [pathSeparator | addPathSeparator]
 
         addPathSeparator = isDirPath pth
             && not (hasTrailingPathSeparator result)
+            && not (isRelativeDrive drv)
 
         isDirPath xs = hasTrailingPathSeparator xs
             || not (null xs) && last xs == '.' && hasTrailingPathSeparator (init xs)
@@ -868,7 +870,8 @@ makeValid path = joinDrive drv $ validElements $ validChars pth
 --
 -- * "You cannot use the "\\?\" prefix with a relative path."
 isRelative :: FilePath -> Bool
-isRelative = isRelativeDrive . takeDrive
+isRelative x = null drive || isRelativeDrive drive
+    where drive = takeDrive x
 
 
 {- c:foo -}
@@ -876,7 +879,7 @@ isRelative = isRelativeDrive . takeDrive
 -- backslash after the colon, it is interpreted as a relative path to the
 -- current directory on the drive with the specified letter."
 isRelativeDrive :: String -> Bool
-isRelativeDrive x = null x ||
+isRelativeDrive x =
     maybe False (not . hasTrailingPathSeparator . fst) (readDriveLetter x)
 
 
