@@ -736,19 +736,24 @@ makeRelative root path
 -- > Windows: normalise "c:/file" == "C:\\file"
 -- > Windows: normalise "/file" == "\\file"
 -- > Windows: normalise "\\" == "\\"
+-- > Windows: normalise "/./" == "\\"
 -- >          normalise "." == "."
 -- > Posix:   normalise "./" == "./"
 -- > Posix:   normalise "./." == "./"
+-- > Posix:   normalise "/./" == "/"
 -- > Posix:   normalise "/" == "/"
 -- > Posix:   normalise "bob/fred/." == "bob/fred/"
 normalise :: FilePath -> FilePath
-normalise path = joinDrive' (normaliseDrive drv) (f pth)
-              ++ [pathSeparator | isDirPath pth && length pth > 1]
+normalise path = result ++ [pathSeparator | addPathSeparator]
     where
         (drv,pth) = splitDrive path
+        result = joinDrive' (normaliseDrive drv) (f pth)
 
         joinDrive' "" "" = "."
         joinDrive' d p = joinDrive d p
+
+        addPathSeparator = isDirPath pth
+            && not (hasTrailingPathSeparator result)
 
         isDirPath xs = hasTrailingPathSeparator xs
             || not (null xs) && last xs == '.' && hasTrailingPathSeparator (init xs)
