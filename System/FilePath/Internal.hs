@@ -426,7 +426,7 @@ isDrive x = not (null x) && null (dropDrive x)
 -- | Split a filename into directory and file. 'combine' is the inverse.
 --
 -- > Valid x => uncurry (</>) (splitFileName x) == x || fst (splitFileName x) == "./"
--- > Posix:   Valid x => isValid (fst (splitFileName x))
+-- > Valid x => isValid (fst (splitFileName x))
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
 -- > splitFileName "file/" == ("file/", "")
 -- > splitFileName "bob" == ("./", "bob")
@@ -731,24 +731,32 @@ makeRelative root path
 -- > Posix:   normalise "./bob/fred/" == "bob/fred/"
 -- > Windows: normalise "c:\\file/bob\\" == "C:\\file\\bob\\"
 -- > Windows: normalise "c:\\" == "C:\\"
+-- > Windows: normalise "C:.\\" == "C:"
 -- > Windows: normalise "\\\\server\\test" == "\\\\server\\test"
 -- > Windows: normalise "//server/test" == "\\\\server\\test"
 -- > Windows: normalise "c:/file" == "C:\\file"
 -- > Windows: normalise "/file" == "\\file"
 -- > Windows: normalise "\\" == "\\"
+-- > Windows: normalise "/./" == "\\"
 -- >          normalise "." == "."
 -- > Posix:   normalise "./" == "./"
 -- > Posix:   normalise "./." == "./"
+-- > Posix:   normalise "/./" == "/"
 -- > Posix:   normalise "/" == "/"
 -- > Posix:   normalise "bob/fred/." == "bob/fred/"
+-- > Posix:   normalise "//home" == "/home"
 normalise :: FilePath -> FilePath
-normalise path = joinDrive' (normaliseDrive drv) (f pth)
-              ++ [pathSeparator | isDirPath pth && length pth > 1]
+normalise path = result ++ [pathSeparator | addPathSeparator]
     where
         (drv,pth) = splitDrive path
+        result = joinDrive' (normaliseDrive drv) (f pth)
 
         joinDrive' "" "" = "."
         joinDrive' d p = joinDrive d p
+
+        addPathSeparator = isDirPath pth
+            && not (hasTrailingPathSeparator result)
+            && not (isRelativeDrive drv)
 
         isDirPath xs = hasTrailingPathSeparator xs
             || not (null xs) && last xs == '.' && hasTrailingPathSeparator (init xs)
@@ -762,7 +770,8 @@ normalise path = joinDrive' (normaliseDrive drv) (f pth)
         dropDots = filter ("." /=)
 
 normaliseDrive :: FilePath -> FilePath
-normaliseDrive drive | isPosix = drive
+normaliseDrive "" = ""
+normaliseDrive _ | isPosix = [pathSeparator]
 normaliseDrive drive = if isJust $ readDriveLetter x2
                        then map toUpper x2
                        else x2
@@ -861,7 +870,8 @@ makeValid path = joinDrive drv $ validElements $ validChars pth
 --
 -- * "You cannot use the "\\?\" prefix with a relative path."
 isRelative :: FilePath -> Bool
-isRelative = isRelativeDrive . takeDrive
+isRelative x = null drive || isRelativeDrive drive
+    where drive = takeDrive x
 
 
 {- c:foo -}
@@ -869,7 +879,7 @@ isRelative = isRelativeDrive . takeDrive
 -- backslash after the colon, it is interpreted as a relative path to the
 -- current directory on the drive with the specified letter."
 isRelativeDrive :: String -> Bool
-isRelativeDrive x = null x ||
+isRelativeDrive x =
     maybe False (not . hasTrailingPathSeparator . fst) (readDriveLetter x)
 
 

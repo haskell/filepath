@@ -7,6 +7,12 @@
   * Semantic change: `joinDrive "/foo" "bar"` now returns `"/foo/bar"`,
     instead of `"/foobar"`.
 
+  * Bug fix, on Posix systems, `normalise "//home"` now returns `"/home"`,
+    instead of `"//home"`.
+
+  * Bug fix, `normalise "/./"` now returns "/" on Posix and "\\" on Windows,
+    instead of "//" and "\\\\".
+
   * Bug fix: `isDrive ""` now retuns `False`, instead of `True`.
 
   * Bug fix: on Windows, `dropTrailingPathSeparator "/"` now returns `"/"`
@@ -20,6 +26,9 @@
 
   * Bug fix: on Windows, `normalise "\\"` now retuns `"\\"` unchanged,
     instead of `"\\\\"`.
+
+  * Bug fix: on Windows, `normalise "C:.\\"` now retuns `"C:"`, instead of
+    `"C:\\"`.
 
   * Bug fix: on Windows, `normalise "//server/test"` now retuns
     `"\\\\server\\test"`, instead of `"//server/test"` unchanged.
