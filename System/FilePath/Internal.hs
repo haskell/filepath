@@ -743,6 +743,7 @@ makeRelative root path
 -- > Posix:   normalise "/./" == "/"
 -- > Posix:   normalise "/" == "/"
 -- > Posix:   normalise "bob/fred/." == "bob/fred/"
+-- > Posix:   normalise "//home" == "/home"
 normalise :: FilePath -> FilePath
 normalise path = result ++ [pathSeparator | addPathSeparator]
     where
@@ -767,7 +768,8 @@ normalise path = result ++ [pathSeparator | addPathSeparator]
         dropDots = filter ("." /=)
 
 normaliseDrive :: FilePath -> FilePath
-normaliseDrive drive | isPosix = drive
+normaliseDrive "" = ""
+normaliseDrive _ | isPosix = [pathSeparator]
 normaliseDrive drive = if isJust $ readDriveLetter x2
                        then map toUpper x2
                        else x2

@@ -7,6 +7,9 @@
   * Semantic change: `joinDrive "/foo" "bar"` now returns `"/foo/bar"`,
     instead of `"/foobar"`.
 
+  * Bug fix, on Posix systems, `normalise "//home"` now returns `"/home"`,
+    instead of `"//home"`.
+
   * Bug fix, `normalise "/./"` now returns "/" on Posix and "\\" on Windows,
     instead of "//" and "\\\\".
 
