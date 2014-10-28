@@ -377,7 +377,7 @@ readDriveShareName name = addSlash a b
 
 -- | Join a drive and the rest of the path.
 --
--- >          uncurry joinDrive (splitDrive x) == x
+-- > Valid x => uncurry joinDrive (splitDrive x) == x
 -- > Windows: joinDrive "C:" "foo" == "C:foo"
 -- > Windows: joinDrive "C:\\" "bar" == "C:\\bar"
 -- > Windows: joinDrive "\\\\share" "foo" == "\\\\share\\foo"
