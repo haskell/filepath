@@ -24,6 +24,9 @@
   * Bug fix: on Windows, `isValid "\\\\\\foo"` now returns `False`, instead
     of `True`.
 
+  * Bug fix: on Windows, `isValid "\\\\?\\D:file"` now returns `False`,
+    instead of `True`.
+
   * Bug fix: on Windows, `normalise "\\"` now retuns `"\\"` unchanged,
     instead of `"\\\\"`.
 
