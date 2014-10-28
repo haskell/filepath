@@ -808,8 +808,7 @@ isValid path =
         not (any f $ splitDirectories x2) &&
         not (length x1 >= 2 && all isPathSeparator x1)
     where
-        x1 = head (splitPath path)
-        x2 = dropDrive path
+        (x1,x2) = splitDrive path
         f x = map toUpper (dropExtensions x) `elem` badElements
 
 
@@ -828,11 +827,10 @@ isValid path =
 -- > Windows: makeValid "\\\\\\foo" == "\\\\drive"
 makeValid :: FilePath -> FilePath
 makeValid "" = "_"
-makeValid path | isPosix = path
-makeValid xs | length x >= 2 && all isPathSeparator x = take 2 x ++ "drive"
-    where
-        x = head (splitPath xs)
-makeValid path = joinDrive drv $ validElements $ validChars pth
+makeValid path
+        | isPosix = path
+        | length drv >= 2 && all isPathSeparator drv = take 2 drv ++ "drive"
+        | otherwise = joinDrive drv $ validElements $ validChars pth
     where
         (drv,pth) = splitDrive path
 
