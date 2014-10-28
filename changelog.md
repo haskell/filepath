@@ -1,43 +1,34 @@
 # Changelog for [`filepath` package](http://hackage.haskell.org/package/filepath)
 
+_Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes.
+
 ## 1.3.0.3  *TBA*
 
   * Bundled with GHC 7.10.1
 
-  * Semantic change: `joinDrive "/foo" "bar"` now returns `"/foo/bar"`,
-    instead of `"/foobar"`.
+  * Semantic change: `joinDrive /foo bar` now returns `/foo/bar`,     instead of `/foobar`
 
-  * Bug fix, on Posix systems, `normalise "//home"` now returns `"/home"`,
-    instead of `"//home"`.
+  * Bug fix: on Posix systems, `normalise //home` now returns `/home`, instead of `//home`
 
-  * Bug fix, `normalise "/./"` now returns "/" on Posix and "\\" on Windows,
-    instead of "//" and "\\\\".
+  * Bug fix: `normalise /./` now returns `/` on Posix and `\` on Windows, instead of `//` and `\\`
 
-  * Bug fix: `isDrive ""` now retuns `False`, instead of `True`.
+  * Bug fix: `isDrive ""` now returns `False`, instead of `True`
 
-  * Bug fix: on Windows, `dropTrailingPathSeparator "/"` now returns `"/"`
-    unchanged, instead of the normalised `"\\"`.
+  * Bug fix: on Windows, `dropTrailingPathSeparator /` now returns `/` unchanged, instead of the normalised `\`
 
-  * Bug fix: on Windows, `equalFilePath "C:\\" "C:"` now retuns `False`,
-    instead of `True`.
+  * Bug fix: on Windows, `equalFilePath C:\ C:` now returns `False`, instead of `True`
 
-  * Bug fix: on Windows, `isValid "\\\\\\foo"` now returns `False`, instead
-    of `True`.
+  * Bug fix: on Windows, `isValid \\\foo` now returns `False`, instead of `True`
 
-  * Bug fix: on Windows, `isValid "\\\\?\\D:file"` now returns `False`,
-    instead of `True`.
+  * Bug fix: on Windows, `isValid \\?\D:file` now returns `False`, instead of `True`
 
-  * Bug fix: on Windows, `normalise "\\"` now retuns `"\\"` unchanged,
-    instead of `"\\\\"`.
+  * Bug fix: on Windows, `normalise \` now returns `\` unchanged, instead of `\\`
 
-  * Bug fix: on Windows, `normalise "C:.\\"` now retuns `"C:"`, instead of
-    `"C:\\"`.
+  * Bug fix: on Windows, `normalise C:.\` now returns `C:`, instead of `C:\\`
 
-  * Bug fix: on Windows, `normalise "//server/test"` now retuns
-    `"\\\\server\\test"`, instead of `"//server/test"` unchanged.
+  * Bug fix: on Windows, `normalise //server/test` now returns `\\server\test`, instead of `//server/test` unchanged
 
-  * Bug fix: on Windows, `makeRelative "/" "//"` now returns `"//"`, instead
-    of `""`.
+  * Bug fix: on Windows, `makeRelative / //` now returns `//`, instead of `""`
 
 ## 1.3.0.2  *Mar 2014*
 
@@ -59,4 +50,4 @@
 
   * Add support for SafeHaskell
 
-  * Fix `normalise "/"` to result in `"/"` rather than `"/."`
+  * Bug fix: `normalise /` now returns `/`, instead of `/.`
