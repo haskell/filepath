@@ -31,7 +31,7 @@ instance Arbitrary QFilePath where
 newtype QChar = QChar {fromQChar :: Char}
 
 instance Arbitrary QChar where
-    arbitrary = fmap QChar $ elements "?|./:\\abcd 123;_"
+    arbitrary = fmap QChar $ elements "?./:\\a ;_"
 
 
 
