@@ -40,4 +40,5 @@ quickSafe prop = do
     res <- quickCheckWithResult stdArgs{chatty=False, maxSuccess=10000} prop
     case res of
         Success{} -> return ()
-        _ -> error $ show res
+        -- Output is already escaped. Do not call show on it, but print as-is.
+        _ -> error $ show res{output=""} ++ "\n" ++ (output res)
