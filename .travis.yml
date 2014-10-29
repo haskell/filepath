@@ -22,7 +22,6 @@ install:
  - cabal install --only-dependencies --enable-tests;
 
 script:
- - cd tests/ && runghc ./GenTests.hs && cd ..
  - cabal configure --enable-tests -v2
  - cabal build
  - cabal test

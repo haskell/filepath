@@ -46,10 +46,6 @@ library
 
     ghc-options: -Wall
 
--- When run directly from the Git repo, you need to
--- generate the tests/FilePath_Tests.hs file via
---
---  cd tests/ && runghc ./GenTests.hs
 test-suite filepath-tests
     type: exitcode-stdio-1.0
     default-language: Haskell98
