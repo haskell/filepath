@@ -53,7 +53,7 @@ test-suite filepath-tests
     ghc-options: -main-is Test
     hs-source-dirs: tests
     other-modules:
-        AutoTest
+        TestUtil
     build-depends:
         filepath,
         base,

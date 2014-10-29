@@ -1,5 +1,5 @@
 module Test(main) where
-import AutoTest
+import TestUtil
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 main :: IO ()

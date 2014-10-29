@@ -1,6 +1,6 @@
 
-module AutoTest(
-    module AutoTest,
+module TestUtil(
+    module TestUtil,
     module Test.QuickCheck,
     module Data.List
     ) where
