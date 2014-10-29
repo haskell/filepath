@@ -6,10 +6,7 @@ module AutoTest(
     ) where
 
 import Test.QuickCheck hiding ((==>))
-import Data.Char
-import System.Random
 import Data.List
-import Control.Monad
 
 infixr 0 ==>
 a ==> b = not a || b
