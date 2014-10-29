@@ -1,10 +1,11 @@
 :set -fwarn-unused-binds -fwarn-unused-imports
 :set -isrc -itest
-:load System.FilePath System.FilePath.Windows System.FilePath.Posix
+:load System.FilePath System.FilePath.Windows System.FilePath.Posix Generate
 import qualified System.FilePath.Windows as Windows
 import qualified System.FilePath.Posix as Posix
 
 :def docs_ const $ return $ unlines [":!cabal haddock"]
 :def docs const $ return $ unlines [":docs_",":!start dist\\doc\\html\\filepath\\System-FilePath.html"]
 
+:def gen const $ return "Generate.main"
 :def test const $ return $ unlines [":!runhaskell Generate.hs",":!cabal test"]
