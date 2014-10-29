@@ -12,12 +12,6 @@ infixr 0 ==>
 a ==> b = not a || b
 
 
-constTest :: Bool -> IO ()
-constTest True = return ()
-constTest False = error "Failed on constTest"
-
-
-
 newtype QFilePath = QFilePath FilePath
                     deriving Show
 
@@ -32,8 +26,8 @@ instance Arbitrary QChar where
 
 
 
-quickSafe :: Testable a => a -> IO ()
-quickSafe prop = do
+test :: Testable a => a -> IO ()
+test prop = do
     res <- quickCheckWithResult stdArgs{chatty=False, maxSuccess=10000} prop
     case res of
         Success{} -> return ()
