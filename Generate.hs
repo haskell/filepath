@@ -9,13 +9,8 @@ import System.Directory
 import System.IO
 
 
-data Test
-    = Expr String
-    | Test [String] String
+data Test = Test {testVars :: [String], _testBody :: String}
       deriving Show
-
-isExpr (Expr{}) = True
-isExpr _ = False
 
 
 main :: IO ()
@@ -41,7 +36,6 @@ getTest (line,xs) | "-- > " `isPrefixOf` xs = f $ drop 5 xs
             | "Posix:"   `isPrefixOf` x = let res = grabTest (drop 6 x) in [g "P" res]
             | otherwise = let res = grabTest x in [g "W" res, g "P" res]
 
-        g p (Expr x) = (line,Expr (h p x))
         g p (Test a x) = (line,Test a (h p x))
         
         h p x = joinLex $ map (addPrefix p) $ makeValid $ splitLex x
@@ -61,7 +55,7 @@ fpops = ["</>","<.>"]
 
 
 grabTest :: String -> Test
-grabTest x = if null free then Expr x else Test free x
+grabTest x = Test free x
     where
         free = sort $ nub [x | x <- lexs, length x == 1, all isAlpha x]
         lexs = splitLex x
@@ -102,7 +96,7 @@ rejoinTests xs = unlines $
 genTests :: [(Int, Test)] -> String
 genTests xs = rejoinTests $ concatMap f $ zip [1..] (one++many)
     where
-        (one,many) = partition (isExpr . snd) xs
+        (one,many) = partition (null . testVars . snd) xs
 
         f (tno,(lno,test)) =
             [" putStrLn \"Test " ++ show tno ++ ", from line " ++ show lno ++ "\""
@@ -110,7 +104,7 @@ genTests xs = rejoinTests $ concatMap f $ zip [1..] (one++many)
 
 -- the result must be a line of the type "IO ()"
 genTest :: Test -> String
-genTest (Expr x) = "test (" ++ x ++ ")"
+genTest (Test [] x) = "test (" ++ x ++ ")"
 genTest (Test free x) = "test (\\" ++ concatMap ((' ':) . f) free ++ " -> (" ++ x ++ "))"
     where
         f [a] | a >= 'x' = "(QFilePath " ++ [a] ++ ")"
