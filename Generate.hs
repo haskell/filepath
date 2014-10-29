@@ -1,8 +1,11 @@
 
 module Generate(main) where
 
+import Control.Exception
+import Control.Monad
 import Data.Char
 import Data.List
+import System.Directory
 import System.IO
 
 
@@ -19,7 +22,7 @@ main :: IO ()
 main = do
     src <- readFile "System/FilePath/Internal.hs"
     let tests = concatMap getTest $ zip [1..] (lines src)
-    writeFileBinary "tests/TestGen.hs" (prefix ++ genTests tests)
+    writeFileBinaryChanged "tests/TestGen.hs" (prefix ++ genTests tests)
 
 prefix = unlines
     ["module TestGen(tests) where"
@@ -115,3 +118,16 @@ genTest (Test free x) = "quickSafe (\\" ++ concatMap ((' ':) . f) free ++ " -> (
 
 writeFileBinary :: FilePath -> String -> IO ()
 writeFileBinary file x = withBinaryFile file WriteMode $ \h -> hPutStr h x
+
+readFileBinary' :: FilePath -> IO String
+readFileBinary' file = withBinaryFile file ReadMode $ \h -> do
+    s <- hGetContents h
+    evaluate $ length s
+    return s
+
+writeFileBinaryChanged :: FilePath -> String -> IO ()
+writeFileBinaryChanged file x = do
+    b <- doesFileExist file
+    old <- if b then fmap Just $ readFileBinary' file else return Nothing
+    when (Just x /= old) $
+        writeFileBinary file x
