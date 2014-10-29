@@ -16,7 +16,7 @@ isExpr _ = False
 
 main = do src <- readFile "System/FilePath/Internal.hs"
           let tests = concatMap getTest $ zip [1..] (lines src)
-          writeFile "tests/FilePath_Test.hs" (prefix ++ genTests tests)
+          writeFileBinary "tests/FilePath_Test.hs" (prefix ++ genTests tests)
 
 prefix = unlines
     ["import AutoTest"
@@ -107,3 +107,6 @@ genTest (Test free x) = "quickSafe (\\" ++ concatMap ((' ':) . f) free ++ " -> (
     where
         f [a] | a >= 'x' = "(QFilePath " ++ [a] ++ ")"
         f x = x
+
+writeFileBinary :: FilePath -> String -> IO ()
+writeFileBinary file x = withBinaryFile file WriteMode $ \h -> hPutStr h x
