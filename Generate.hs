@@ -14,9 +14,9 @@ isExpr (Expr{}) = True
 isExpr _ = False
 
 
-main = do src <- readFile "../System/FilePath/Internal.hs"
+main = do src <- readFile "System/FilePath/Internal.hs"
           let tests = concatMap getTest $ zip [1..] (lines src)
-          writeFile "FilePath_Test.hs" (prefix ++ genTests tests)
+          writeFile "tests/FilePath_Test.hs" (prefix ++ genTests tests)
 
 prefix = unlines
     ["import AutoTest"
