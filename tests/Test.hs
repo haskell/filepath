@@ -1,6 +1,8 @@
+module Test(main) where
 import AutoTest
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
+main :: IO ()
 main = do
  block1
  block2

@@ -22,9 +22,11 @@ main = do
     writeFileBinary "tests/Test.hs" (prefix ++ genTests tests)
 
 prefix = unlines
-    ["import AutoTest"
+    ["module Test(main) where"
+    ,"import AutoTest"
     ,"import qualified System.FilePath.Windows as W"
     ,"import qualified System.FilePath.Posix as P"
+    ,"main :: IO ()"
     ,"main = do"
     ]
 
