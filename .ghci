@@ -4,7 +4,7 @@
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 
-:def docs_ const $ return $ unlines [":!cabal haddock"]
+:def docs_ const $ return ":!cabal haddock"
 :def docs const $ return $ unlines [":docs_",":!start dist\\doc\\html\\filepath\\System-FilePath.html"]
 
 :def gen const $ return "Generate.main"
