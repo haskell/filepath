@@ -1,22 +1,25 @@
 
-module Main where
+module Generate(main) where
 
 import Data.Char
 import Data.List
 import System.IO
 
 
-data Test = Expr String
-          | Test [String] String
-          deriving Show
+data Test
+    = Expr String
+    | Test [String] String
+      deriving Show
 
 isExpr (Expr{}) = True
 isExpr _ = False
 
 
-main = do src <- readFile "System/FilePath/Internal.hs"
-          let tests = concatMap getTest $ zip [1..] (lines src)
-          writeFileBinary "tests/FilePath_Test.hs" (prefix ++ genTests tests)
+main :: IO ()
+main = do
+    src <- readFile "System/FilePath/Internal.hs"
+    let tests = concatMap getTest $ zip [1..] (lines src)
+    writeFileBinary "tests/FilePath_Test.hs" (prefix ++ genTests tests)
 
 prefix = unlines
     ["import AutoTest"
