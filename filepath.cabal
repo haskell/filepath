@@ -49,7 +49,7 @@ library
 test-suite filepath-tests
     type: exitcode-stdio-1.0
     default-language: Haskell98
-    main-is: FilePath_Test.hs
+    main-is: Test.hs
     hs-source-dirs: tests
     other-modules: AutoTest
     build-depends:

@@ -19,7 +19,7 @@ main :: IO ()
 main = do
     src <- readFile "System/FilePath/Internal.hs"
     let tests = concatMap getTest $ zip [1..] (lines src)
-    writeFileBinary "tests/FilePath_Test.hs" (prefix ++ genTests tests)
+    writeFileBinary "tests/Test.hs" (prefix ++ genTests tests)
 
 prefix = unlines
     ["import AutoTest"
