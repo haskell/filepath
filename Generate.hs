@@ -19,15 +19,15 @@ main :: IO ()
 main = do
     src <- readFile "System/FilePath/Internal.hs"
     let tests = concatMap getTest $ zip [1..] (lines src)
-    writeFileBinary "tests/Test.hs" (prefix ++ genTests tests)
+    writeFileBinary "tests/TestGen.hs" (prefix ++ genTests tests)
 
 prefix = unlines
-    ["module Test(main) where"
+    ["module TestGen(tests) where"
     ,"import TestUtil"
     ,"import qualified System.FilePath.Windows as W"
     ,"import qualified System.FilePath.Posix as P"
-    ,"main :: IO ()"
-    ,"main = do"
+    ,"tests :: IO ()"
+    ,"tests = do"
     ]
 
 
