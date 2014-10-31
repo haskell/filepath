@@ -202,7 +202,7 @@ getSearchPath = fmap splitSearchPath (getEnv "PATH")
 -- | Split on the extension. 'addExtension' is the inverse.
 --
 -- > uncurry (++) (splitExtension x) == x
--- > uncurry addExtension (splitExtension x) == x
+-- > Valid x => uncurry addExtension (splitExtension x) == x
 -- > splitExtension "file.txt" == ("file",".txt")
 -- > splitExtension "file" == ("file","")
 -- > splitExtension "file/file.txt" == ("file/file",".txt")
@@ -274,7 +274,7 @@ hasExtension = any isExtSeparator . takeFileName
 -- | Split on all extensions
 --
 -- > uncurry (++) (splitExtensions x) == x
--- > uncurry addExtension (splitExtensions x) == x
+-- > Valid x => uncurry addExtension (splitExtensions x) == x
 -- > splitExtensions "file.tar.gz" == ("file",".tar.gz")
 splitExtensions :: FilePath -> (FilePath, String)
 splitExtensions x = (a ++ c, d)
