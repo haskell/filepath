@@ -807,7 +807,7 @@ isValid _ | isPosix = True
 isValid path =
         not (any (`elem` badCharacters) x2) &&
         not (any f $ splitDirectories x2) &&
-        not (length x1 >= 2 && all isPathSeparator x1) &&
+        not (isJust (readDriveShare x1) && all isPathSeparator x1) &&
         not (isJust (readDriveUNC x1) && not (hasTrailingPathSeparator x1))
     where
         (x1,x2) = splitDrive path
@@ -832,7 +832,7 @@ makeValid :: FilePath -> FilePath
 makeValid "" = "_"
 makeValid path
         | isPosix = path
-        | length drv >= 2 && all isPathSeparator drv = take 2 drv ++ "drive"
+        | isJust (readDriveShare drv) && all isPathSeparator drv = take 2 drv ++ "drive"
         | isJust (readDriveUNC drv) && not (hasTrailingPathSeparator drv) =
             makeValid (drv ++ [pathSeparator] ++ pth)
         | otherwise = joinDrive drv $ validElements $ validChars pth
