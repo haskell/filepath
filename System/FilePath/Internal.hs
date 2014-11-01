@@ -180,6 +180,7 @@ isExtSeparator = (== extSeparator)
 -- > Posix:   splitSearchPath "File1::File2:File3" == ["File1",".","File2","File3"]
 -- > Windows: splitSearchPath "File1;File2;File3"  == ["File1","File2","File3"]
 -- > Windows: splitSearchPath "File1;;File2;File3" == ["File1","File2","File3"]
+-- > Windows: splitSearchPath "File1;\"File2\";File3" == ["File1","File2","File3"]
 splitSearchPath :: String -> [FilePath]
 splitSearchPath = f
     where
@@ -188,6 +189,7 @@ splitSearchPath = f
            (pre, _:post) -> g pre ++ f post
 
     g "" = ["." | isPosix]
+    g ('\"':x@(_:_)) | isWindows && last x == '\"' = [init x]
     g x = [x]
 
 
