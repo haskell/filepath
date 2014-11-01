@@ -211,12 +211,12 @@ getSearchPath = fmap splitSearchPath (getEnv "PATH")
 -- > splitExtension "file/path.txt.bob.fred" == ("file/path.txt.bob",".fred")
 -- > splitExtension "file/path.txt/" == ("file/path.txt/","")
 splitExtension :: FilePath -> (String, String)
-splitExtension x = case d of
+splitExtension x = case nameDot of
                        "" -> (x,"")
-                       (y:ys) -> (a ++ reverse ys, y : reverse c)
+                       _ -> (dir ++ init nameDot, extSeparator : ext)
     where
-        (a,b) = splitFileName_ x
-        (c,d) = break isExtSeparator $ reverse b
+        (dir,file) = splitFileName_ x
+        (nameDot,ext) = breakEnd isExtSeparator file
 
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
 --
@@ -444,10 +444,10 @@ splitFileName x = (if null dir then "./" else dir, name)
 -- look strange and upset simple equality properties.  See
 -- e.g. replaceFileName.
 splitFileName_ :: FilePath -> (String, String)
-splitFileName_ x = (c ++ reverse b, reverse a)
+splitFileName_ x = (drv ++ dir, file)
     where
-        (a,b) = break isPathSeparator $ reverse d
-        (c,d) = splitDrive x
+        (drv,pth) = splitDrive x
+        (dir,file) = breakEnd isPathSeparator pth
 
 -- | Set the filename.
 --
@@ -528,7 +528,7 @@ addTrailingPathSeparator x = if hasTrailingPathSeparator x then x else x ++ [pat
 dropTrailingPathSeparator :: FilePath -> FilePath
 dropTrailingPathSeparator x =
     if hasTrailingPathSeparator x && not (isDrive x)
-    then let x' = reverse $ dropWhile isPathSeparator $ reverse x
+    then let x' = dropWhileEnd isPathSeparator x
          in if null x' then [last x] else x'
     else x
 
@@ -891,3 +891,22 @@ isRelativeDrive x =
 -- > isAbsolute x == not (isRelative x)
 isAbsolute :: FilePath -> Bool
 isAbsolute = not . isRelative
+
+
+-----------------------------------------------------------------------------
+-- dropWhileEnd (>2) [1,2,3,4,1,2,3,4] == [1,2,3,4,1,2])
+-- Note that Data.List.dropWhileEnd is only available in base >= 4.5.
+dropWhileEnd :: (a -> Bool) -> [a] -> [a]
+dropWhileEnd p = reverse . dropWhile p . reverse
+
+-- takeWhileEnd (>2) [1,2,3,4,1,2,3,4] == [3,4])
+takeWhileEnd :: (a -> Bool) -> [a] -> [a]
+takeWhileEnd p = reverse . takeWhile p . reverse
+
+-- spanEnd (>2) [1,2,3,4,1,2,3,4] = ([1,2,3,4,1,2], [3,4])
+spanEnd :: (a -> Bool) -> [a] -> ([a], [a])
+spanEnd p xs = (dropWhileEnd p xs, takeWhileEnd p xs)
+
+-- breakEnd (< 2) [1,2,3,4,1,2,3,4] == ([1,2,3,4,1],[2,3,4])
+breakEnd :: (a -> Bool) -> [a] -> ([a], [a])
+breakEnd p = spanEnd (not . p)
