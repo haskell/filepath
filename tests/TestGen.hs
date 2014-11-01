@@ -536,9 +536,9 @@ block11 = do
  putStrLn "Test 253, from line 204"
  test (\ (QFilePath x) -> (uncurry ( ++ ) ( P.splitExtension x ) == x))
  putStrLn "Test 254, from line 205"
- test (\ (QFilePath x) -> (uncurry W.addExtension ( W.splitExtension x ) == x))
+ test (\ (QFilePath x) -> ((\ x -> uncurry W.addExtension ( W.splitExtension x ) == x ) ( W.makeValid x )))
  putStrLn "Test 255, from line 205"
- test (\ (QFilePath x) -> (uncurry P.addExtension ( P.splitExtension x ) == x))
+ test (\ (QFilePath x) -> ((\ x -> uncurry P.addExtension ( P.splitExtension x ) == x ) ( P.makeValid x )))
  putStrLn "Test 256, from line 223"
  test (\ (QFilePath x) -> (W.takeExtension x == snd ( W.splitExtension x )))
  putStrLn "Test 257, from line 223"
@@ -568,9 +568,9 @@ block11 = do
  putStrLn "Test 269, from line 276"
  test (\ (QFilePath x) -> (uncurry ( ++ ) ( P.splitExtensions x ) == x))
  putStrLn "Test 270, from line 277"
- test (\ (QFilePath x) -> (uncurry W.addExtension ( W.splitExtensions x ) == x))
+ test (\ (QFilePath x) -> ((\ x -> uncurry W.addExtension ( W.splitExtensions x ) == x ) ( W.makeValid x )))
  putStrLn "Test 271, from line 277"
- test (\ (QFilePath x) -> (uncurry P.addExtension ( P.splitExtensions x ) == x))
+ test (\ (QFilePath x) -> ((\ x -> uncurry P.addExtension ( P.splitExtensions x ) == x ) ( P.makeValid x )))
  putStrLn "Test 272, from line 287"
  test (\ (QFilePath x) -> (not $ W.hasExtension ( W.dropExtensions x )))
  putStrLn "Test 273, from line 287"
