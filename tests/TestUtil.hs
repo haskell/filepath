@@ -7,23 +7,23 @@ module TestUtil(
 
 import Test.QuickCheck hiding ((==>))
 import Data.List
+import Control.Monad
 
 infixr 0 ==>
 a ==> b = not a || b
 
 
-newtype QFilePath = QFilePath FilePath
-                    deriving Show
+newtype QFilePath = QFilePath FilePath deriving Show
 
 instance Arbitrary QFilePath where
-    arbitrary = fmap (QFilePath . map fromQChar) arbitrary
+    arbitrary = fmap QFilePath arbitraryFilePath
     shrink (QFilePath x) = map QFilePath $ shrink x
 
-newtype QChar = QChar {fromQChar :: Char}
 
-instance Arbitrary QChar where
-    arbitrary = fmap QChar $ elements "?./:\\a ;_"
-
+arbitraryFilePath :: Gen FilePath
+arbitraryFilePath = sized $ \n -> do
+    k <- choose (0,n)
+    replicateM k $ elements "?./:\\a ;_"
 
 
 test :: Testable a => a -> IO ()
