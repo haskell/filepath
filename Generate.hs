@@ -110,6 +110,10 @@ genTest (Test free x) = "test (\\" ++ concatMap ((' ':) . f) free ++ " -> (" ++ 
         f [a] | a >= 'x' = "(QFilePath " ++ [a] ++ ")"
         f x = x
 
+
+---------------------------------------------------------------------
+-- UTILITIES
+
 writeFileBinary :: FilePath -> String -> IO ()
 writeFileBinary file x = withBinaryFile file WriteMode $ \h -> hPutStr h x
 
