@@ -1,6 +1,6 @@
 
 module TestUtil(
-    module TestUtil,
+    (==>), QFilePath(..), test,
     module Test.QuickCheck,
     module Data.List
     ) where
