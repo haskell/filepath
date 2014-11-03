@@ -21,7 +21,7 @@ main = do
         ,"import qualified System.FilePath.Posix as P"
         ,"tests :: [(String, Test)]"
         ,"tests ="] ++
-        ["    " ++ c ++ "(" ++ show t1 ++ "," ++ t2 ++ ")" | (c,(t1,t2)) <- zip ("[":repeat ",") tests] ++
+        ["    " ++ c ++ "(" ++ show t1 ++ ", " ++ t2 ++ ")" | (c,(t1,t2)) <- zip ("[":repeat ",") tests] ++
         ["    ]"]
 
 
@@ -45,8 +45,8 @@ parseTest (stripPrefix "-- > " -> Just x) = platform $ toLexemes x
             where (a,b) = break (== "=>") x
         valid p x = free p [] x
 
-        free p val x = Test p [(ctor v, v) | v <- nub vars] x
-            where vars = [v | v@[c] <- x, isAlpha c]
+        free p val x = Test p [(ctor v, v) | v <- vars] x
+            where vars = nub $ sort [v | v@[c] <- x, isAlpha c]
                   ctor v = if v < "x" then "" else if v `elem` val then "QFilePathValid" ++ show p else "QFilePath"
 parseTest _ = []
 
@@ -58,13 +58,22 @@ toLexemes x = case lex x of
     y -> error $ "Generate.toLexemes, " ++ show x ++ " -> " ++ show y
 
 
+fromLexemes :: [String] -> String
+fromLexemes = unwords . f
+    where
+        f ("`":x:"`":xs) = ("`" ++ x ++ "`") : f xs
+        f (x:y:xs) | x `elem` ["[","("] || y `elem` [",",")","]"] = f $ (x ++ y) : xs
+        f (x:xs) = x : f xs
+        f [] = []
+
+
 renderTest :: Test -> (String, String)
 renderTest Test{..} = (body, code)
     where
         code = "test $ " ++ if null testVars then body else "\\" ++ unwords vars ++ " -> " ++ body
-        vars = ["(" ++ ctor ++ " " ++ v ++ ")" | (ctor,v) <- testVars]
+        vars = [if null ctor then v else "(" ++ ctor ++ " " ++ v ++ ")" | (ctor,v) <- testVars]
 
-        body = unwords $ map (qualify testPlatform) testBody
+        body = fromLexemes $ map (qualify testPlatform) testBody
 
 
 qualify :: PW -> String -> String
