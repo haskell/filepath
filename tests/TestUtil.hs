@@ -1,6 +1,7 @@
 
 module TestUtil(
-    (==>), QFilePath(..), QFilePathValidW(..), QFilePathValidP(..), test,
+    (==>), QFilePath(..), QFilePathValidW(..), QFilePathValidP(..),
+    test, Test,
     module Test.QuickCheck,
     module Data.List
     ) where
@@ -50,10 +51,11 @@ shrinkValid wrap valid o =
     where countA = length . filter (== 'a')
 
 
-test :: Testable a => a -> IO ()
-test prop = do
-    res <- quickCheckWithResult stdArgs{chatty=False, maxSuccess=10000} prop
-    case res of
-        Success{} -> return ()
-        -- Output is already escaped. Do not call show on it, but print as-is.
-        _ -> error $ show res{output=""} ++ "\n" ++ (output res)
+data Test = Test Property Bool
+
+test :: Testable prop => prop -> Test
+test prop = Test (property prop) (exhaustive prop)
+
+instance Testable Test where
+    property (Test x _) = x
+    exhaustive (Test _ x) = x

@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards, ViewPatterns #-}
 
 module Generate(main) where
 
@@ -9,106 +10,71 @@ import System.Directory
 import System.IO
 
 
-data Test = Test {testVars :: [String], _testBody :: String}
-      deriving Show
-
-
 main :: IO ()
 main = do
     src <- readFile "System/FilePath/Internal.hs"
-    let tests = concatMap getTest $ zip [1..] (lines src)
-    writeFileBinaryChanged "tests/TestGen.hs" (prefix ++ genTests tests)
+    let tests = map renderTest $ concatMap parseTest $ lines src
+    writeFileBinaryChanged "tests/TestGen.hs" $ unlines $
+        ["module TestGen(tests) where"
+        ,"import TestUtil"
+        ,"import qualified System.FilePath.Windows as W"
+        ,"import qualified System.FilePath.Posix as P"
+        ,"tests :: [(String, Test)]"
+        ,"tests ="] ++
+        ["    " ++ c ++ "(" ++ show t1 ++ "," ++ t2 ++ ")" | (c,(t1,t2)) <- zip ("[":repeat ",") tests] ++
+        ["    ]"]
 
-prefix = unlines
-    ["module TestGen(tests) where"
-    ,"import TestUtil"
-    ,"import qualified System.FilePath.Windows as W"
-    ,"import qualified System.FilePath.Posix as P"
-    ,"tests :: IO ()"
-    ,"tests = do"
-    ]
 
 
-getTest :: (Int,String) -> [(Int,Test)]
-getTest (line,xs) | "-- > " `isPrefixOf` xs = f $ drop 5 xs
+data PW = P | W deriving Show -- Posix or Windows
+data Test = Test
+    {testPlatform :: PW
+    ,testVars :: [(String,String)]   -- generator constructor, variable
+    ,testBody :: [String]
+    }
+
+
+parseTest :: String -> [Test]
+parseTest (stripPrefix "-- > " -> Just x) = platform $ toLexemes x
     where
-        f x | "Windows:" `isPrefixOf` x = let res = grabTest (drop 8 x) in [g "W" res]
-            | "Posix:"   `isPrefixOf` x = let res = grabTest (drop 6 x) in [g "P" res]
-            | otherwise = let res = grabTest x in [g "W" res, g "P" res]
+        platform ("Windows":":":x) = [valid W x]
+        platform ("Posix"  :":":x) = [valid P x]
+        platform x                 = [valid P x, valid W x]
 
-        g p (Test a x) = (line,Test a (h p x))
-        
-        h p x = joinLex $ map (addPrefix p) $ makeValid $ splitLex x
+        valid p ("Valid":x) = free p a $ drop 1 b
+            where (a,b) = break (== "=>") x
+        valid p x = free p [] x
 
-getTest _ = []
-
-
-addPrefix :: String -> String -> String
-addPrefix pre str | str `elem` fpops || (all isAlpha str && length str > 1 && not (str `elem` prelude))
-                      = pre ++ "." ++ str
-                  | otherwise = str
+        free p val x = Test p [(ctor v, v) | v <- nub vars] x
+            where vars = [v | v@[c] <- x, isAlpha c]
+                  ctor v = if v < "x" then "" else if v `elem` val then "QFilePathValid" ++ show p else "QFilePath"
+parseTest _ = []
 
 
-prelude = ["elem","uncurry","snd","fst","not","null","if","then","else"
-          ,"True","False","concat","isPrefixOf","isSuffixOf"]
-fpops = ["</>","<.>"]
+toLexemes :: String -> [String]
+toLexemes x = case lex x of
+    [("","")] -> []
+    [(x,y)] -> x : toLexemes y
+    y -> error $ "Generate.toLexemes, " ++ show x ++ " -> " ++ show y
 
 
-grabTest :: String -> Test
-grabTest x = Test free x
+renderTest :: Test -> (String, String)
+renderTest Test{..} = (body, code)
     where
-        free = sort $ nub [x | x <- lexs, length x == 1, all isAlpha x]
-        lexs = splitLex x
+        code = "test $ " ++ if null testVars then body else "\\" ++ unwords vars ++ " -> " ++ body
+        vars = ["(" ++ ctor ++ " " ++ v ++ ")" | (ctor,v) <- testVars]
+
+        body = unwords $ map (qualify testPlatform) testBody
 
 
-
-splitLex :: String -> [String]
-splitLex x = case lex x of
-                [("","")] -> []
-                [(x,y)] -> x : splitLex y
-                y -> error $ "GenTests.splitLex, " ++ show x ++ " -> " ++ show y
-
--- Valid a => z   ===>  (\a -> z) (makeValid a)
-makeValid :: [String] -> [String]
-makeValid ("Valid":a:"=>":z) = "(\\":a:"->":makeValid z ++ ")":"(":"makeValid":a:")":[]
-makeValid x = x
-
-
-joinLex :: [String] -> String
-joinLex = unwords
-
-
--- would be concat, but GHC has 'issues'
-rejoinTests :: [String] -> String
-rejoinTests xs = unlines $
-                     [" block" ++ show i | i <- [1..length res]] ++
-                     concat (zipWith rejoin [1..] res)
+qualify :: PW -> String -> String
+qualify pw str
+    | str `elem` fpops || (all isAlpha str && length str > 1 && not (str `elem` prelude)) = show pw ++ "." ++ str
+    | otherwise = str
     where
-        res = divide xs
-    
-        divide [] = []
-        divide x = a : divide b
-            where (a,b) = splitAt 50 x
-        
-        rejoin n xs = ("block" ++ show n ++ " = do") : xs
-
-
-genTests :: [(Int, Test)] -> String
-genTests xs = rejoinTests $ concatMap f $ zip [1..] (one++many)
-    where
-        (one,many) = partition (null . testVars . snd) xs
-
-        f (tno,(lno,test)) =
-            [" putStrLn \"Test " ++ show tno ++ ", from line " ++ show lno ++ "\""
-            ," " ++ genTest test]
-
--- the result must be a line of the type "IO ()"
-genTest :: Test -> String
-genTest (Test [] x) = "test (" ++ x ++ ")"
-genTest (Test free x) = "test (\\" ++ concatMap ((' ':) . f) free ++ " -> (" ++ x ++ "))"
-    where
-        f [a] | a >= 'x' = "(QFilePath " ++ [a] ++ ")"
-        f x = x
+        prelude = ["elem","uncurry","snd","fst","not","null","if","then","else"
+                  ,"True","False","concat","isPrefixOf","isSuffixOf"]
+        fpops = ["</>","<.>"]
 
 
 ---------------------------------------------------------------------
