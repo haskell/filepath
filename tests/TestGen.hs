@@ -1,3 +1,4 @@
+-- GENERATED CODE: See ../Generate.hs
 module TestGen(tests) where
 import TestUtil
 import qualified System.FilePath.Windows as W

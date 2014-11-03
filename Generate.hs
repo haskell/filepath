@@ -15,7 +15,8 @@ main = do
     src <- readFile "System/FilePath/Internal.hs"
     let tests = map renderTest $ concatMap parseTest $ lines src
     writeFileBinaryChanged "tests/TestGen.hs" $ unlines $
-        ["module TestGen(tests) where"
+        ["-- GENERATED CODE: See ../Generate.hs"
+        ,"module TestGen(tests) where"
         ,"import TestUtil"
         ,"import qualified System.FilePath.Windows as W"
         ,"import qualified System.FilePath.Posix as P"
