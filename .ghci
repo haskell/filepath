@@ -8,6 +8,6 @@ import qualified System.FilePath.Posix as P
 :def docs const $ return $ unlines [":docs_",":!start dist\\doc\\html\\filepath\\System-FilePath.html"]
 
 :def gen const $ return "Generate.main"
-:def test const $ return "Test.main"
+:def test \x -> return $ if null x then "Test.main" else "System.Environment.withArgs [" ++ show x ++ "] Test.main"
 :def go const $ return $ unlines [":reload",":gen",":reload",":test",":gen",":reload"]
 :def testfull const $ return $ unlines [":reload","gen",":reload","!cabal test"]
