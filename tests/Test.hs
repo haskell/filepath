@@ -15,7 +15,7 @@ main = do
     let total = length tests
     bs <- forM (zip [1..] tests) $ \(i,(msg,prop)) -> do
         putStrLn $ "Test " ++ show i ++ " of " ++ show total ++ ": " ++ msg
-        res <- quickCheckWithResult stdArgs{maxSuccess=count} prop
+        res <- quickCheckWithResult stdArgs{chatty=False, maxSuccess=count} prop
         case res of
             Success{} -> return True
             _ -> putStrLn "TEST FAILURE!" >> return False
