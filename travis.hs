@@ -1,4 +1,8 @@
 
-import System.Process.Extra
+import System.Exit
+import System.Process
 
-main = system_ "runhaskell Generate"
+main = do
+    ExitSuccess <- system "runhaskell Generate"
+    return ()
+
