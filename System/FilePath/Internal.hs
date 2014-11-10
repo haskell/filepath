@@ -151,7 +151,9 @@ pathSeparators = if isWindows then "\\/" else "/"
 --
 -- > isPathSeparator a == (a `elem` pathSeparators)
 isPathSeparator :: Char -> Bool
-isPathSeparator = (`elem` pathSeparators)
+isPathSeparator '/' = True
+isPathSeparator '\\' = isWindows
+isPathSeparator _ = False
 
 
 -- | The character that is used to separate the entries in the $PATH environment variable.
