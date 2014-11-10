@@ -738,8 +738,10 @@ equalFilePath a b = f a == f b
 --   There is no corresponding @makeAbsolute@ function, instead use
 --   @System.Directory.canonicalizePath@ which has the same effect.
 --
--- >          Valid x y => equalFilePath x y || (isRelative x && makeRelative y x == x) || equalFilePath (y </> makeRelative y x) x
+-- >          makeRelative "/directory" "/directory/file.ext" == "file.ext"
+-- >          Valid x => makeRelative (takeDirectory x) x `equalFilePath` takeFileName x
 -- >          makeRelative x x == "."
+-- >          Valid x y => equalFilePath x y || (isRelative x && makeRelative y x == x) || equalFilePath (y </> makeRelative y x) x
 -- > Windows: makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
 -- > Windows: makeRelative "C:\\Home" "c:/home/bob" == "bob"
 -- > Windows: makeRelative "C:\\Home" "D:\\Home\\Bob" == "D:\\Home\\Bob"
