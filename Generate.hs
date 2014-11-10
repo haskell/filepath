@@ -83,7 +83,7 @@ qualify pw str
     | otherwise = str
     where
         prelude = ["elem","uncurry","snd","fst","not","null","if","then","else"
-                  ,"True","False","concat","isPrefixOf","isSuffixOf"]
+                  ,"True","False","concat","isPrefixOf","isSuffixOf","any"]
         fpops = ["</>","<.>","-<.>"]
 
 
