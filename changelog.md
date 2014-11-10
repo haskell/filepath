@@ -6,6 +6,8 @@ _Note: below all `FilePath` values are unquoted, so `\\` really means two backsl
 
   * Bundled with GHC 7.10.1
 
+  * New function: Add `-<.>` as an alias for `replaceExtension`.
+
   * Semantic change: `joinDrive /foo bar` now returns `/foo/bar`, instead of `/foobar`
 
   * Semantic change: on Windows, `splitSearchPath File1;\"File 2\"` now returns `[File1,File2]` instead of `[File1,\"File2\"]`

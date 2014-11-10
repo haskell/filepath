@@ -52,6 +52,8 @@ tests =
     ,("W.takeExtension (W.addExtension x \"ext\") == \".ext\"", test $ \(QFilePathValidW x) -> W.takeExtension (W.addExtension x "ext") == ".ext")
     ,("P.takeExtension (P.replaceExtension x \"ext\") == \".ext\"", test $ \(QFilePathValidP x) -> P.takeExtension (P.replaceExtension x "ext") == ".ext")
     ,("W.takeExtension (W.replaceExtension x \"ext\") == \".ext\"", test $ \(QFilePathValidW x) -> W.takeExtension (W.replaceExtension x "ext") == ".ext")
+    ,("\"foo.o\" P.-<.> \"c\" == \"foo.c\"", test $ "foo.o" P.-<.> "c" == "foo.c")
+    ,("\"foo.o\" W.-<.> \"c\" == \"foo.c\"", test $ "foo.o" W.-<.> "c" == "foo.c")
     ,("P.replaceExtension \"file.txt\" \".bob\" == \"file.bob\"", test $ P.replaceExtension "file.txt" ".bob" == "file.bob")
     ,("W.replaceExtension \"file.txt\" \".bob\" == \"file.bob\"", test $ W.replaceExtension "file.txt" ".bob" == "file.bob")
     ,("P.replaceExtension \"file.txt\" \"bob\" == \"file.bob\"", test $ P.replaceExtension "file.txt" "bob" == "file.bob")

@@ -58,7 +58,7 @@ module System.FilePath.MODULE_NAME
 
     -- * Extension methods
     splitExtension,
-    takeExtension, replaceExtension, dropExtension, addExtension, hasExtension, (<.>),
+    takeExtension, replaceExtension, (-<.>), dropExtension, addExtension, hasExtension, (<.>),
     splitExtensions, dropExtensions, takeExtensions,
 
     -- * Drive methods
@@ -92,7 +92,7 @@ import Data.Maybe(isJust, fromJust)
 import System.Environment(getEnv)
 
 
-infixr 7  <.>
+infixr 7  <.>, -<.>
 infixr 5  </>
 
 
@@ -227,6 +227,12 @@ splitExtension x = case nameDot of
 -- > Valid x => takeExtension (replaceExtension x "ext") == ".ext"
 takeExtension :: FilePath -> String
 takeExtension = snd . splitExtension
+
+-- | Remove the current extension and add another, an alias for 'replaceExtension'.
+--
+-- > "foo.o" -<.> "c" == "foo.c"
+(-<.>) :: FilePath -> String -> FilePath
+(-<.>) = replaceExtension
 
 -- | Set the extension of a file, overwriting one if already present.
 --
