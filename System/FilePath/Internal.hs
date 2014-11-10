@@ -15,36 +15,51 @@
 -- Stability   :  stable
 -- Portability :  portable
 --
--- A library for FilePath manipulations, using MODULE_NAME style paths on
+-- A library for 'FilePath' manipulations, using MODULE_NAME style paths on
 -- all platforms. Importing "System.FilePath" is usually better.
 --
--- Some short examples:
+-- Given the eample 'FilePath': @\/directory\/file.ext@
 --
--- You are given a C file, you want to figure out the corresponding object (.o) file:
+-- We can use the following functions to extract pieces.
 --
--- @'replaceExtension' file \"o\"@
+-- * 'takeFileName' gives @\"file.ext\"@
 --
--- Haskell module Main imports Test, you have the file named main:
+-- * 'takeDirectory' gives @\"\/directory\"@
+--
+-- * 'takeExtension' gives @\".ext\"@
+--
+-- * 'dropExtension' gives @\"\/directory\/file\"@
+--
+-- * 'takeBaseName' gives @\"file\"@
+--
+-- And we could have built an equivalent path with the following expressions:
+--
+-- * @\"\/directory\" '</>' \"file.ext\"@.
+--
+-- * @\"\/directory\/file" '<.>' \"ext\"@.
+--
+-- * @\"\/directory\/file.txt" '-<.>' \"ext\"@.
+--
+-- Each function in this module is documented with several examples,
+-- which are also used as tests.
+--
+-- Here are a few examples of using the @filepath@ functions together:
+--
+-- /Example 1:/ Find the possible locations of a Haskell module @Test@ imported from module @Main@:
 --
 -- @['replaceFileName' path_to_main \"Test\" '<.>' ext | ext <- [\"hs\",\"lhs\"] ]@
 --
--- You want to download a file from the web and save it to disk:
+-- /Example 2:/ Download a file from @url@ and save it to disk:
 --
 -- @do let file = 'makeValid' url
 --   System.IO.createDirectoryIfMissing True ('takeDirectory' file)@
 --
--- You want to compile a Haskell file, but put the hi file under \"interface\"
+-- /Example 3:/ Compile a Haskell file, putting the @.hi@ file under @interface@:
 --
--- @'takeDirectory' file '</>' \"interface\" '</>' ('takeFileName' file \`replaceExtension\` \"hi\"@)
---
--- The examples in code format descibed by each function are used to generate
--- tests, and should give clear semantics for the functions.
+-- @'takeDirectory' file '</>' \"interface\" '</>' ('takeFileName' file '-<.>' \"hi\")@
 --
 -- References:
--- [1] "Naming Files, Paths, and Namespaces"
--- http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247.aspx
------------------------------------------------------------------------------
-
+-- [1] <http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247.aspx Naming Files, Paths and Namespaces> (Microsoft MSDN)
 module System.FilePath.MODULE_NAME
     (
     -- * Separator predicates
