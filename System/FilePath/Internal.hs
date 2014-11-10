@@ -183,8 +183,6 @@ isExtSeparator :: Char -> Bool
 isExtSeparator = (== extSeparator)
 
 
-
-
 ---------------------------------------------------------------------
 -- Path methods (environment $PATH)
 
@@ -210,7 +208,7 @@ splitSearchPath = f
     g x = [x]
 
 
--- | Get a list of filepaths in the $PATH.
+-- | Get a list of 'FilePath's in the $PATH variable.
 getSearchPath :: IO [FilePath]
 getSearchPath = fmap splitSearchPath (getEnv "PATH")
 
@@ -220,6 +218,7 @@ getSearchPath = fmap splitSearchPath (getEnv "PATH")
 
 -- | Split on the extension. 'addExtension' is the inverse.
 --
+-- > splitExtension "/directory/path.ext" == ("/directory/path",".ext")
 -- > uncurry (++) (splitExtension x) == x
 -- > Valid x => uncurry addExtension (splitExtension x) == x
 -- > splitExtension "file.txt" == ("file",".txt")
@@ -239,41 +238,51 @@ splitExtension x = case nameDot of
 
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
 --
+-- > takeExtension "/directory/path.ext" == ".ext"
 -- > takeExtension x == snd (splitExtension x)
 -- > Valid x => takeExtension (addExtension x "ext") == ".ext"
 -- > Valid x => takeExtension (replaceExtension x "ext") == ".ext"
 takeExtension :: FilePath -> String
 takeExtension = snd . splitExtension
 
--- | Remove the current extension and add another, an alias for 'replaceExtension'.
+-- | Remove the current extension and add another, equivalent to 'replaceExtension'.
 --
+-- > "/directory/path.txt" -<.> "ext" == "/directory/path.ext"
+-- > "/directory/path.txt" -<.> ".ext" == "/directory/path.ext"
 -- > "foo.o" -<.> "c" == "foo.c"
 (-<.>) :: FilePath -> String -> FilePath
 (-<.>) = replaceExtension
 
--- | Set the extension of a file, overwriting one if already present.
+-- | Set the extension of a file, overwriting one if already present, equivalent to '<.>'.
 --
+-- > replaceExtension "/directory/path.txt" "ext" == "/directory/path.ext"
+-- > replaceExtension "/directory/path.txt" ".ext" == "/directory/path.ext"
 -- > replaceExtension "file.txt" ".bob" == "file.bob"
 -- > replaceExtension "file.txt" "bob" == "file.bob"
 -- > replaceExtension "file" ".bob" == "file.bob"
 -- > replaceExtension "file.txt" "" == "file"
 -- > replaceExtension "file.fred.bob" "txt" == "file.fred.txt"
+-- > replaceExtension x y == addExtension (dropExtension x) y
 replaceExtension :: FilePath -> String -> FilePath
 replaceExtension x y = dropExtension x <.> y
 
--- | Alias to 'addExtension', for people who like that sort of thing.
+-- | Add an extension, even if there is already one there, equivalent to 'addExtension'.
+--
+-- > "/directory/path" <.> "ext" == "/directory/path.ext"
+-- > "/directory/path" <.> ".ext" == "/directory/path.ext"
 (<.>) :: FilePath -> String -> FilePath
 (<.>) = addExtension
 
 -- | Remove last extension, and the \".\" preceding it.
 --
+-- > dropExtension "/directory/path.ext" == "/directory/path"
 -- > dropExtension x == fst (splitExtension x)
 dropExtension :: FilePath -> FilePath
 dropExtension = fst . splitExtension
 
--- | Add an extension, even if there is already one there.
---   E.g. @addExtension \"foo.txt\" \"bat\" -> \"foo.txt.bat\"@.
+-- | Add an extension, even if there is already one there, equivalent to '<.>'.
 --
+-- > addExtension "/directory/path" "ext" == "/directory/path.ext"
 -- > addExtension "file.txt" "bib" == "file.txt.bib"
 -- > addExtension "file." ".bib" == "file..bib"
 -- > addExtension "file" ".bib" == "file.bib"
@@ -291,13 +300,17 @@ addExtension file xs@(x:_) = joinDrive a res
 
 -- | Does the given filename have an extension?
 --
+-- > hasExtension "/directory/path.ext" == True
+-- > hasExtension "/directory/path" == False
 -- > null (takeExtension x) == not (hasExtension x)
 hasExtension :: FilePath -> Bool
 hasExtension = any isExtSeparator . takeFileName
 
 
--- | Split on all extensions
+-- | Split on all extensions.
 --
+-- > splitExtensions "/directory/path.ext" == ("/directory/path",".ext")
+-- > splitExtensions "file.tar.gz" == ("file",".tar.gz")
 -- > uncurry (++) (splitExtensions x) == x
 -- > Valid x => uncurry addExtension (splitExtensions x) == x
 -- > splitExtensions "file.tar.gz" == ("file",".tar.gz")
@@ -307,14 +320,18 @@ splitExtensions x = (a ++ c, d)
         (a,b) = splitFileName_ x
         (c,d) = break isExtSeparator b
 
--- | Drop all extensions
+-- | Drop all extensions.
 --
--- > not $ hasExtension (dropExtensions x)
+-- > dropExtensions "/directory/path.ext" == "/directory/path"
+-- > dropExtensions "file.tar.gz" == "file"
+-- > not $ hasExtension $ dropExtensions x
+-- > not $ any isExtSeparator $ takeFileName $ dropExtensions x
 dropExtensions :: FilePath -> FilePath
 dropExtensions = fst . splitExtensions
 
--- | Get all extensions
+-- | Get all extensions.
 --
+-- > takeExtensions "/directory/path.ext" == ".ext"
 -- > takeExtensions "file.tar.gz" == ".tar.gz"
 takeExtensions :: FilePath -> String
 takeExtensions = snd . splitExtensions
@@ -331,7 +348,7 @@ isLetter x = isAsciiLower x || isAsciiUpper x
 
 
 -- | Split a path into a drive and a path.
---   On Unix, \/ is a Drive.
+--   On Posix, \/ is a Drive.
 --
 -- > uncurry (++) (splitDrive x) == x
 -- > Windows: splitDrive "file" == ("","file")
@@ -449,7 +466,9 @@ isDrive x = not (null x) && null (dropDrive x)
 -- Operations on a filepath, as a list of directories
 
 -- | Split a filename into directory and file. 'combine' is the inverse.
+--   The first component will often end with a trailing slash.
 --
+-- > splitFileName "/directory/file.ext" == ("/directory/","file.ext")
 -- > Valid x => uncurry (</>) (splitFileName x) == x || fst (splitFileName x) == "./"
 -- > Valid x => isValid (fst (splitFileName x))
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
@@ -476,12 +495,15 @@ splitFileName_ x = (drv ++ dir, file)
 
 -- | Set the filename.
 --
+-- > replaceFileName "/directory/other.txt" "file.ext" == "/directory/file.ext"
 -- > Valid x => replaceFileName x (takeFileName x) == x
 replaceFileName :: FilePath -> String -> FilePath
 replaceFileName x y = a </> y where (a,_) = splitFileName_ x
 
--- | Drop the filename.
+-- | Drop the filename. Unlike 'takeDirectory', this function will leave
+--   a trailing path separator on the directory.
 --
+-- > dropFileName "/directory/file.ext" == "/directory/"
 -- > dropFileName x == fst (splitFileName x)
 dropFileName :: FilePath -> FilePath
 dropFileName = fst . splitFileName
@@ -489,6 +511,7 @@ dropFileName = fst . splitFileName
 
 -- | Get the file name.
 --
+-- > takeFileName "/directory/file.ext" == "file.ext"
 -- > takeFileName "test/" == ""
 -- > takeFileName x `isSuffixOf` x
 -- > takeFileName x == snd (splitFileName x)
@@ -500,6 +523,7 @@ takeFileName = snd . splitFileName
 
 -- | Get the base name, without an extension or path.
 --
+-- > takeBaseName "/directory/file.ext" == "file"
 -- > takeBaseName "file/test.txt" == "test"
 -- > takeBaseName "dave.ext" == "dave"
 -- > takeBaseName "" == ""
@@ -511,6 +535,7 @@ takeBaseName = dropExtension . takeFileName
 
 -- | Set the base name.
 --
+-- > replaceBaseName "/directory/other.ext" "file" == "/directory/file.ext"
 -- > replaceBaseName "file/test.txt" "bob" == "file/bob.txt"
 -- > replaceBaseName "fred" "bill" == "bill"
 -- > replaceBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
@@ -560,6 +585,7 @@ dropTrailingPathSeparator x =
 
 -- | Get the directory name, move up one level.
 --
+-- >           takeDirectory "/directory/other.ext" == "/directory"
 -- >           takeDirectory x `isPrefixOf` x || takeDirectory x == "."
 -- >           takeDirectory "foo" == "."
 -- >           takeDirectory "/" == "/"
@@ -575,6 +601,7 @@ takeDirectory = dropTrailingPathSeparator . dropFileName
 
 -- | Set the directory, keeping the filename the same.
 --
+-- > replaceDirectory "root/file.ext" "/directory/" == "/directory/file.ext"
 -- > Valid x => replaceDirectory x (takeDirectory x) `equalFilePath` x
 replaceDirectory :: FilePath -> String -> FilePath
 replaceDirectory x dir = combineAlways dir (takeFileName x)
@@ -627,13 +654,17 @@ combineAlways a b | null a = b
                       _ -> a ++ [pathSeparator] ++ b
 
 
--- | A nice alias for 'combine'.
+-- | Join two values with a path separator. For examples and caveats see the equivalent function 'combine'.
+--
+-- > Posix:   "/directory" </> "file.ext" == "/directory/file.ext"
+-- > Windows: "/directory" </> "file.ext" == "/directory\\file.ext"
 (</>) :: FilePath -> FilePath -> FilePath
 (</>) = combine
 
 
 -- | Split a path by the directory separator.
 --
+-- > splitPath "/directory/file.ext" == ["/","directory/","file.ext"]
 -- > concat (splitPath x) == x
 -- > splitPath "test//item/" == ["test//","item/"]
 -- > splitPath "test/item/file" == ["test/","item/","file"]
@@ -653,6 +684,7 @@ splitPath x = [drive | drive /= ""] ++ f path
 
 -- | Just as 'splitPath', but don't add the trailing slashes to each element.
 --
+-- >          splitDirectories "/directory/file.ext" == ["/","directory","file.ext"]
 -- >          splitDirectories "test/file" == ["test","file"]
 -- >          splitDirectories "/test/file" == ["/","test","file"]
 -- > Windows: splitDirectories "C:\\test\\file" == ["C:\\", "test", "file"]
@@ -666,12 +698,12 @@ splitDirectories = map dropTrailingPathSeparator . splitPath
 
 -- | Join path elements back together.
 --
+-- > joinPath ["/","directory/","file.ext"] == "/directory/file.ext"
 -- > Valid x => joinPath (splitPath x) == x
 -- > joinPath [] == ""
 -- > Posix: joinPath ["test","file","path"] == "test/file/path"
-
--- Note that this definition on c:\\c:\\, join then split will give c:\\.
 joinPath :: [FilePath] -> FilePath
+-- Note that this definition on c:\\c:\\, join then split will give c:\\.
 joinPath = foldr combine ""
 
 
