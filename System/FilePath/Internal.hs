@@ -1,6 +1,7 @@
 #if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
 #endif
+{-# LANGUAGE PatternGuards #-}
 
 -- This template expects CPP definitions for:
 --     MODULE_NAME = Posix | Windows
@@ -102,7 +103,7 @@ module System.FilePath.MODULE_NAME
     where
 
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
-import Data.Maybe(isJust, fromJust)
+import Data.Maybe(isJust)
 
 import System.Environment(getEnv)
 
@@ -366,16 +367,9 @@ isLetter x = isAsciiLower x || isAsciiUpper x
 -- > Posix:   splitDrive "file" == ("","file")
 splitDrive :: FilePath -> (FilePath, FilePath)
 splitDrive x | isPosix = span (== '/') x
-
-splitDrive x | isJust y = fromJust y
-    where y = readDriveLetter x
-
-splitDrive x | isJust y = fromJust y
-    where y = readDriveUNC x
-
-splitDrive x | isJust y = fromJust y
-    where y = readDriveShare x
-
+splitDrive x | Just y <- readDriveLetter x = y
+splitDrive x | Just y <- readDriveUNC x = y
+splitDrive x | Just y <- readDriveShare x = y
 splitDrive x = ("",x)
 
 addSlash :: FilePath -> FilePath -> (FilePath, FilePath)
