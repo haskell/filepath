@@ -1,4 +1,4 @@
-# FilePath [![Hackage version](https://img.shields.io/hackage/v/filepath.svg?style=flat)](http://hackage.haskell.org/package/filepath) [![Build Status](http://img.shields.io/travis/haskell/filepath.svg?style=flat)](https://travis-ci.org/haskell/filepath)
+# FilePath [![Hackage version](https://img.shields.io/hackage/v/filepath.svg?style=flat)](https://hackage.haskell.org/package/filepath) [![Build Status](https://img.shields.io/travis/haskell/filepath.svg?style=flat)](https://travis-ci.org/haskell/filepath)
 
 The `filepath` package provides functionality for manipulating `FilePath` values, and is shipped with both [GHC](https://www.haskell.org/ghc/) and the [Haskell Platform](https://www.haskell.org/platform/). It provides three modules:
 
