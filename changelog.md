@@ -1,6 +1,6 @@
 # Changelog for [`filepath` package](http://hackage.haskell.org/package/filepath)
 
-_Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes.
+_Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
 ## 1.3.1.0  *TBA*
 
