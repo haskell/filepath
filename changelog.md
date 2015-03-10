@@ -2,7 +2,7 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
-## 1.3.1.0  *TBA*
+## 1.4.0.0  *Mar 2015*
 
   * Bundled with GHC 7.10.1
 
