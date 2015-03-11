@@ -729,8 +729,8 @@ equalFilePath a b = f a == f b
 
 -- | Contract a filename, based on a relative path.
 --
---   There is no corresponding @makeAbsolute@ function, instead use
---   @System.Directory.canonicalizePath@ which has the same effect.
+--   The corresponding @makeAbsolute@ function can be found in
+--   @System.Directory@.
 --
 -- >          makeRelative "/directory" "/directory/file.ext" == "file.ext"
 -- >          Valid x => makeRelative (takeDirectory x) x `equalFilePath` takeFileName x
