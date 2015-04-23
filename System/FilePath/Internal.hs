@@ -840,7 +840,9 @@ badElements :: [FilePath]
 badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "CLOCK$"]
 
 
--- | Is a FilePath valid, i.e. could you create a file like it?
+-- | Is a FilePath valid, i.e. could you create a file like it? This function checks for invalid names,
+--   and invalid characters, but does not check if length limits are exceeded, as these are typically
+--   filesystem dependent.
 --
 -- >          isValid "" == False
 -- >          isValid "\0" == False
