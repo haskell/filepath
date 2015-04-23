@@ -2,6 +2,8 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+ * Bug fix: `isValid "\0"` now returns `False`, instead of `True`
+
 ## 1.4.0.0  *Mar 2015*
 
   * Bundled with GHC 7.10.1

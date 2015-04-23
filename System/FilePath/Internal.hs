@@ -843,6 +843,7 @@ badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5
 -- | Is a FilePath valid, i.e. could you create a file like it?
 --
 -- >          isValid "" == False
+-- >          isValid "\0" == False
 -- > Posix:   isValid "/random_ path:*" == True
 -- > Posix:   isValid x == not (null x)
 -- > Windows: isValid "c:\\test" == True
@@ -856,6 +857,7 @@ badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5
 -- > Windows: isValid "\\\\?\\D:file" == False
 isValid :: FilePath -> Bool
 isValid "" = False
+isValid x | '\0' `elem` x = False
 isValid _ | isPosix = True
 isValid path =
         not (any (`elem` badCharacters) x2) &&
@@ -872,6 +874,7 @@ isValid path =
 -- > isValid (makeValid x)
 -- > isValid x ==> makeValid x == x
 -- > makeValid "" == "_"
+-- > makeValid "file\0name" == "file_name"
 -- > Windows: makeValid "c:\\already\\/valid" == "c:\\already\\/valid"
 -- > Windows: makeValid "c:\\test:of_test" == "c:\\test_of_test"
 -- > Windows: makeValid "test*" == "test_"
@@ -884,7 +887,7 @@ isValid path =
 makeValid :: FilePath -> FilePath
 makeValid "" = "_"
 makeValid path
-        | isPosix = path
+        | isPosix = map (\x -> if x == '\0' then '_' else x) path
         | isJust (readDriveShare drv) && all isPathSeparator drv = take 2 drv ++ "drive"
         | isJust (readDriveUNC drv) && not (hasTrailingPathSeparator drv) =
             makeValid (drv ++ [pathSeparator] ++ pth)
@@ -893,7 +896,7 @@ makeValid path
         (drv,pth) = splitDrive path
 
         validChars = map f
-        f x | x `elem` badCharacters = '_'
+        f x | x `elem` badCharacters || x == '\0' = '_'
             | otherwise = x
 
         validElements x = joinPath $ map g $ splitPath x
