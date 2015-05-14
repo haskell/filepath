@@ -19,7 +19,7 @@
 -- A library for 'FilePath' manipulations, using MODULE_NAME style paths on
 -- all platforms. Importing "System.FilePath" is usually better.
 --
--- Given the eample 'FilePath': @\/directory\/file.ext@
+-- Given the example 'FilePath': @\/directory\/file.ext@
 --
 -- We can use the following functions to extract pieces.
 --
