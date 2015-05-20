@@ -254,7 +254,7 @@ takeExtension = snd . splitExtension
 (-<.>) :: FilePath -> String -> FilePath
 (-<.>) = replaceExtension
 
--- | Set the extension of a file, overwriting one if already present, equivalent to '<.>'.
+-- | Set the extension of a file, overwriting one if already present, equivalent to '-<.>'.
 --
 -- > replaceExtension "/directory/path.txt" "ext" == "/directory/path.ext"
 -- > replaceExtension "/directory/path.txt" ".ext" == "/directory/path.ext"
