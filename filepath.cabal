@@ -26,6 +26,7 @@ description:
 
 extra-source-files:
     System/FilePath/Internal.hs
+extra-doc-files:
     README.md
     changelog.md
 
