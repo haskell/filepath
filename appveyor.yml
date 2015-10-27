@@ -16,4 +16,4 @@ test_script:
 - stack init
 - stack setup > nul
 - echo "" | stack --no-terminal build
-- stack runhaskell Generate.hs
+- stack runghc Generate.hs
