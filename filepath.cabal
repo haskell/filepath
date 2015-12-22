@@ -30,6 +30,10 @@ extra-doc-files:
     README.md
     changelog.md
 
+source-repository head
+    type:     git
+    location: https://github.com/haskell/filepath.git
+
 library
     default-language: Haskell98
     other-extensions:
@@ -61,7 +65,3 @@ test-suite filepath-tests
         filepath,
         base,
         QuickCheck >= 2.7 && < 2.9
-
-source-repository head
-    type:     git
-    location: https://github.com/haskell/filepath.git
