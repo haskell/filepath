@@ -606,6 +606,8 @@ replaceDirectory x dir = combineAlways dir (takeFileName x)
 -- | Combine two paths, if the second path starts with a path separator or a
 --   drive letter, then it returns the second.
 --
+-- > Posix:   "/directory" </> "file.ext" == "/directory/file.ext"
+-- > Windows: "/directory" </> "file.ext" == "/directory\\file.ext"
 -- > Valid x => combine (takeDirectory x) (takeFileName x) `equalFilePath` x
 --
 --   Combined:
@@ -654,9 +656,6 @@ combineAlways a b | null a = b
 
 
 -- | Join two values with a path separator. For examples and caveats see the equivalent function 'combine'.
---
--- > Posix:   "/directory" </> "file.ext" == "/directory/file.ext"
--- > Windows: "/directory" </> "file.ext" == "/directory\\file.ext"
 (</>) :: FilePath -> FilePath -> FilePath
 (</>) = combine
 
