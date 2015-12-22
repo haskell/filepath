@@ -76,6 +76,7 @@ module System.FilePath.MODULE_NAME
     splitExtension,
     takeExtension, replaceExtension, (-<.>), dropExtension, addExtension, hasExtension, (<.>),
     splitExtensions, dropExtensions, takeExtensions, replaceExtensions,
+    stripExtension,
 
     -- * Filename\/directory functions
     splitFileName,
@@ -104,6 +105,7 @@ module System.FilePath.MODULE_NAME
 
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.Maybe(isJust)
+import Data.List(stripPrefix)
 
 import System.Environment(getEnv)
 
@@ -308,6 +310,30 @@ addExtension file xs@(x:_) = joinDrive a res
 -- > null (takeExtension x) == not (hasExtension x)
 hasExtension :: FilePath -> Bool
 hasExtension = any isExtSeparator . takeFileName
+
+
+-- | Drop the given extension from a FilePath, and the \".\" preceding it.
+--
+-- It returns Nothing if the FilePath does not have the extension given, or
+-- Just the part before the extension, if it does.
+--
+-- It is safer to use this function than System.FilePath.dropExtensions,
+-- because FilePath might be something like 'file.name.ext1.ext2', where we
+-- want to only drop the 'ext1.ext2' part, but keep the full 'file.name' part.
+--
+-- > stripExtension "hs.o" "foo.x.hs.o" == Just "foo.x"
+-- > stripExtension "hi.o" "foo.x.hs.o" == Nothing
+-- > dropExtension x == fromJust (stripExtension (takeExtension x) x)
+-- > dropExtensions x == fromJust (stripExtension (takeExtensions x) x)
+-- > stripExtension ".c.d" "a.b.c.d"  == Just "a.b"
+-- > stripExtension ".c.d" "a.b..c.d" == Just "a.b."
+-- > stripExtension "baz"  "foo.bar"  == Nothing
+-- > stripExtension "bar"  "foobar"   == Nothing
+-- > stripExtension ""     x          == Just x
+stripExtension :: String -> FilePath -> Maybe FilePath
+stripExtension []        path = Just path
+stripExtension ext@(x:_) path = stripSuffix dotExt path
+    where dotExt = if isExtSeparator x then ext else '.':ext
 
 
 -- | Split on all extensions.
@@ -996,3 +1022,9 @@ spanEnd p xs = (dropWhileEnd p xs, takeWhileEnd p xs)
 -- breakEnd (< 2) [1,2,3,4,1,2,3,4] == ([1,2,3,4,1],[2,3,4])
 breakEnd :: (a -> Bool) -> [a] -> ([a], [a])
 breakEnd p = spanEnd (not . p)
+
+-- | The stripSuffix function drops the given suffix from a list. It returns
+-- Nothing if the list did not end with the suffix given, or Just the list
+-- before the suffix, if it does.
+stripSuffix :: Eq a => [a] -> [a] -> Maybe [a]
+stripSuffix xs ys = reverse <$> stripPrefix (reverse xs) (reverse ys)
