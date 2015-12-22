@@ -461,7 +461,7 @@ isDrive x = not (null x) && null (dropDrive x)
 ---------------------------------------------------------------------
 -- Operations on a filepath, as a list of directories
 
--- | Split a filename into directory and file. 'combine' is the inverse.
+-- | Split a filename into directory and file. '</>' is the inverse.
 --   The first component will often end with a trailing slash.
 --
 -- > splitFileName "/directory/file.ext" == ("/directory/","file.ext")
@@ -624,39 +624,39 @@ combineAlways a b | null a = b
 -- > Posix:   "/directory" </> "file.ext" == "/directory/file.ext"
 -- > Windows: "/directory" </> "file.ext" == "/directory\\file.ext"
 -- >          "directory" </> "/file.ext" == "/file.ext"
--- > Valid x => combine (takeDirectory x) (takeFileName x) `equalFilePath` x
+-- > Valid x => (takeDirectory x </> takeFileName x) `equalFilePath` x
 --
 --   Combined:
 --
--- > Posix:   combine "/" "test" == "/test"
--- > Posix:   combine "home" "bob" == "home/bob"
--- > Posix:   combine "x:" "foo" == "x:/foo"
--- > Windows: combine "C:\\foo" "bar" == "C:\\foo\\bar"
--- > Windows: combine "home" "bob" == "home\\bob"
+-- > Posix:   "/" </> "test" == "/test"
+-- > Posix:   "home" </> "bob" == "home/bob"
+-- > Posix:   "x:" </> "foo" == "x:/foo"
+-- > Windows: "C:\\foo" </> "bar" == "C:\\foo\\bar"
+-- > Windows: "home" </> "bob" == "home\\bob"
 --
 --   Not combined:
 --
--- > Posix:   combine "home" "/bob" == "/bob"
--- > Windows: combine "home" "C:\\bob" == "C:\\bob"
+-- > Posix:   "home" </> "/bob" == "/bob"
+-- > Windows: "home" </> "C:\\bob" == "C:\\bob"
 --
 --   Not combined (tricky):
 --
 --   On Windows, if a filepath starts with a single slash, it is relative to the
 --   root of the current drive. In [1], this is (confusingly) referred to as an
 --   absolute path.
---   The current behavior of @combine@ is to never combine these forms.
+--   The current behavior of @</>@ is to never combine these forms.
 --
--- > Windows: combine "home" "/bob" == "/bob"
--- > Windows: combine "home" "\\bob" == "\\bob"
--- > Windows: combine "C:\\home" "\\bob" == "\\bob"
+-- > Windows: "home" </> "/bob" == "/bob"
+-- > Windows: "home" </> "\\bob" == "\\bob"
+-- > Windows: "C:\\home" </> "\\bob" == "\\bob"
 --
 --   On Windows, from [1]: "If a file name begins with only a disk designator
 --   but not the backslash after the colon, it is interpreted as a relative path
 --   to the current directory on the drive with the specified letter."
---   The current behavior of @combine@ is to never combine these forms.
+--   The current behavior of @</>@ is to never combine these forms.
 --
--- > Windows: combine "D:\\foo" "C:bar" == "C:bar"
--- > Windows: combine "C:\\foo" "C:bar" == "C:bar"
+-- > Windows: "D:\\foo" </> "C:bar" == "C:bar"
+-- > Windows: "C:\\foo" </> "C:bar" == "C:bar"
 (</>) :: FilePath -> FilePath -> FilePath
 (</>) = combine
 
