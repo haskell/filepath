@@ -188,6 +188,8 @@ isExtSeparator = (== extSeparator)
 -- Path methods (environment $PATH)
 
 -- | Take a string, split it on the 'searchPathSeparator' character.
+--   Blank items are ignored on Windows, and converted to @.@ on Posix.
+--   On Windows path elements are stripped of quotes.
 --
 --   Follows the recommendations in
 --   <http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap08.html>
