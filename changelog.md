@@ -4,6 +4,8 @@ _Note: below all `FilePath` values are unquoted, so `\\` really means two backsl
 
 ## 1.4.1.0  *Unreleased*
 
+ * Add `replaceExtensions` function.
+
  * Make `isValid` detect more invalid Windows paths, e.g. `nul .txt` and `foo\nbar`.
 
  * Improve the documentation.

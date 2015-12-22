@@ -75,7 +75,7 @@ module System.FilePath.MODULE_NAME
     -- * Extension functions
     splitExtension,
     takeExtension, replaceExtension, (-<.>), dropExtension, addExtension, hasExtension, (<.>),
-    splitExtensions, dropExtensions, takeExtensions,
+    splitExtensions, dropExtensions, takeExtensions, replaceExtensions,
 
     -- * Filename\/directory functions
     splitFileName,
@@ -338,6 +338,17 @@ dropExtensions = fst . splitExtensions
 -- > takeExtensions "file.tar.gz" == ".tar.gz"
 takeExtensions :: FilePath -> String
 takeExtensions = snd . splitExtensions
+
+
+-- | Replace all extensions of a file with a new extension. Note
+--   that 'replaceExtension' and 'addExtension' both work for adding
+--   multiple extensions, so only required when you need to drop
+--   all extensions first.
+--
+-- > replaceExtensions "file.fred.bob" "txt" == "file.txt"
+-- > replaceExtensions "file.fred.bob" "tar.gz" == "file.tar.gz"
+replaceExtensions :: FilePath -> String -> FilePath
+replaceExtensions x y = dropExtensions x <.> y
 
 
 
