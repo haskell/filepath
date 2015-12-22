@@ -729,7 +729,10 @@ equalFilePath a b = f a == f b
             | otherwise = dropTrailingPathSeparator $ normalise x
 
 
--- | Contract a filename, based on a relative path.
+-- | Contract a filename, based on a relative path. Note that the resulting path
+--   will never introduce @..@ paths, as the presence of symlinks means @..\/b@
+--   may not reach @a\/b@ if it starts from @a\/c@. For a worked example see
+--   <http://neilmitchell.blogspot.co.uk/2015/10/filepaths-are-subtle-symlinks-are-hard.html this blog post>.
 --
 --   The corresponding @makeAbsolute@ function can be found in
 --   @System.Directory@.
