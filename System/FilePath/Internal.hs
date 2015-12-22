@@ -620,6 +620,8 @@ combineAlways a b | null a = b
 
 -- | Combine two paths with a path separator.
 --   If the second path starts with a path separator or a drive letter, then it returns the second.
+--   The intention is that @setCurrentDirectory dir; readFile file@ will access the same file as
+--   @readFile (dir '</>' file)@.
 --
 -- > Posix:   "/directory" </> "file.ext" == "/directory/file.ext"
 -- > Windows: "/directory" </> "file.ext" == "/directory\\file.ext"
