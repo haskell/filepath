@@ -683,7 +683,7 @@ combineAlways a b | null a = b
 --   On Windows, if a filepath starts with a single slash, it is relative to the
 --   root of the current drive. In [1], this is (confusingly) referred to as an
 --   absolute path.
---   The current behavior of @</>@ is to never combine these forms.
+--   The current behavior of '</>' is to never combine these forms.
 --
 -- > Windows: "home" </> "/bob" == "/bob"
 -- > Windows: "home" </> "\\bob" == "\\bob"
@@ -692,7 +692,7 @@ combineAlways a b | null a = b
 --   On Windows, from [1]: "If a file name begins with only a disk designator
 --   but not the backslash after the colon, it is interpreted as a relative path
 --   to the current directory on the drive with the specified letter."
---   The current behavior of @</>@ is to never combine these forms.
+--   The current behavior of '</>' is to never combine these forms.
 --
 -- > Windows: "D:\\foo" </> "C:bar" == "C:bar"
 -- > Windows: "C:\\foo" </> "C:bar" == "C:bar"
