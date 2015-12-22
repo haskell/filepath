@@ -34,6 +34,7 @@ library
     default-language: Haskell98
     other-extensions:
         CPP
+        PatternGuards
     if impl(GHC >= 7.2)
         other-extensions: Safe
 
