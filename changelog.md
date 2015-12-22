@@ -2,6 +2,10 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+## 1.4.1.0  *Unreleased*
+
+ * Improve the documentation.
+
  * Bug fix: `isValid "\0"` now returns `False`, instead of `True`
 
 ## 1.4.0.0  *Mar 2015*
