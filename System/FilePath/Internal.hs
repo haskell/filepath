@@ -312,14 +312,12 @@ hasExtension :: FilePath -> Bool
 hasExtension = any isExtSeparator . takeFileName
 
 
--- | Drop the given extension from a FilePath, and the \".\" preceding it.
+-- | Drop the given extension from a FilePath, and the @\".\"@ preceding it.
+--   Returns 'Nothing' if the FilePath does not have the given extension, or
+--   'Just' and the part before the extension if it does.
 --
--- It returns Nothing if the FilePath does not have the extension given, or
--- Just the part before the extension, if it does.
---
--- It is safer to use this function than System.FilePath.dropExtensions,
--- because FilePath might be something like 'file.name.ext1.ext2', where we
--- want to only drop the 'ext1.ext2' part, but keep the full 'file.name' part.
+--   This function can be more predictable than 'dropExtensions', especially if the filename
+--   might itself contain @.@ characters.
 --
 -- > stripExtension "hs.o" "foo.x.hs.o" == Just "foo.x"
 -- > stripExtension "hi.o" "foo.x.hs.o" == Nothing
