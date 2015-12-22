@@ -846,8 +846,12 @@ normaliseDrive drive = if isJust $ readDriveLetter x2
 -- Information for validity functions on Windows. See [1].
 badCharacters :: [Char]
 badCharacters = ":*?><|\""
+
 badElements :: [FilePath]
-badElements = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "CLOCK$"]
+badElements =
+    ["CON","PRN","AUX","NUL","CLOCK$"
+    ,"COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9"
+    ,"LPT1","LPT2","LPT3","LPT4","LPT5","LPT6","LPT7","LPT8","LPT9"]
 
 
 -- | Is a FilePath valid, i.e. could you create a file like it? This function checks for invalid names,
