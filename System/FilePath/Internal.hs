@@ -604,35 +604,38 @@ replaceDirectory x dir = combineAlways dir (takeFileName x)
 
 
 -- | Combine two paths, if the second path starts with a path separator or a
--- drive letter, then it returns the second.
+--   drive letter, then it returns the second.
 --
 -- > Valid x => combine (takeDirectory x) (takeFileName x) `equalFilePath` x
 --
--- Combined:
+--   Combined:
+--
 -- > Posix:   combine "/" "test" == "/test"
 -- > Posix:   combine "home" "bob" == "home/bob"
 -- > Posix:   combine "x:" "foo" == "x:/foo"
 -- > Windows: combine "C:\\foo" "bar" == "C:\\foo\\bar"
 -- > Windows: combine "home" "bob" == "home\\bob"
 --
--- Not combined:
+--   Not combined:
+--
 -- > Posix:   combine "home" "/bob" == "/bob"
 -- > Windows: combine "home" "C:\\bob" == "C:\\bob"
 --
--- Not combined (tricky):
--- On Windows, if a filepath starts with a single slash, it is relative to the
--- root of the current drive. In [1], this is (confusingly) referred to as an
--- absolute path.
--- The current behavior of @combine@ is to never combine these forms.
+--   Not combined (tricky):
+--
+--   On Windows, if a filepath starts with a single slash, it is relative to the
+--   root of the current drive. In [1], this is (confusingly) referred to as an
+--   absolute path.
+--   The current behavior of @combine@ is to never combine these forms.
 --
 -- > Windows: combine "home" "/bob" == "/bob"
 -- > Windows: combine "home" "\\bob" == "\\bob"
 -- > Windows: combine "C:\\home" "\\bob" == "\\bob"
 --
--- On Windows, from [1]: "If a file name begins with only a disk designator
--- but not the backslash after the colon, it is interpreted as a relative path
--- to the current directory on the drive with the specified letter."
--- The current behavior of @combine@ is to never combine these forms.
+--   On Windows, from [1]: "If a file name begins with only a disk designator
+--   but not the backslash after the colon, it is interpreted as a relative path
+--   to the current directory on the drive with the specified letter."
+--   The current behavior of @combine@ is to never combine these forms.
 --
 -- > Windows: combine "D:\\foo" "C:bar" == "C:bar"
 -- > Windows: combine "C:\\foo" "C:bar" == "C:bar"
