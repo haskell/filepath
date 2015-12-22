@@ -872,6 +872,8 @@ badElements =
 -- > Windows: isValid "\\\\\\foo" == False
 -- > Windows: isValid "\\\\?\\D:file" == False
 -- > Windows: isValid "foo\tbar" == False
+-- > Windows: isValid "nul .txt" == False
+-- > Windows: isValid " nul.txt" == True
 isValid :: FilePath -> Bool
 isValid "" = False
 isValid x | '\0' `elem` x = False
@@ -883,7 +885,7 @@ isValid path =
         not (isJust (readDriveUNC x1) && not (hasTrailingPathSeparator x1))
     where
         (x1,x2) = splitDrive path
-        f x = map toUpper (dropExtensions x) `elem` badElements
+        f x = map toUpper (dropWhileEnd (== ' ') $ dropExtensions x) `elem` badElements
 
 
 -- | Take a FilePath and make it valid; does not change already valid FilePaths.
@@ -901,6 +903,7 @@ isValid path =
 -- > Windows: makeValid "c:\\nul\\file" == "c:\\nul_\\file"
 -- > Windows: makeValid "\\\\\\foo" == "\\\\drive"
 -- > Windows: makeValid "\\\\?\\D:file" == "\\\\?\\D:\\file"
+-- > Windows: makeValid "nul .txt" == "nul _.txt"
 makeValid :: FilePath -> FilePath
 makeValid "" = "_"
 makeValid path
@@ -918,7 +921,7 @@ makeValid path
         validElements x = joinPath $ map g $ splitPath x
         g x = h a ++ b
             where (a,b) = break isPathSeparator x
-        h x = if map toUpper a `elem` badElements then a ++ "_" <.> b else x
+        h x = if map toUpper (dropWhileEnd (== ' ') a) `elem` badElements then a ++ "_" <.> b else x
             where (a,b) = splitExtensions x
 
 
