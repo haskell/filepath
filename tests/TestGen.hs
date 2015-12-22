@@ -384,6 +384,7 @@ tests =
     ,("W.isValid \"\\\\\\\\\" == False", test $ W.isValid "\\\\" == False)
     ,("W.isValid \"\\\\\\\\\\\\foo\" == False", test $ W.isValid "\\\\\\foo" == False)
     ,("W.isValid \"\\\\\\\\?\\\\D:file\" == False", test $ W.isValid "\\\\?\\D:file" == False)
+    ,("W.isValid \"foo\\tbar\" == False", test $ W.isValid "foo\tbar" == False)
     ,("P.isValid (P.makeValid x)", test $ \(QFilePath x) -> P.isValid (P.makeValid x))
     ,("W.isValid (W.makeValid x)", test $ \(QFilePath x) -> W.isValid (W.makeValid x))
     ,("P.isValid x ==> P.makeValid x == x", test $ \(QFilePath x) -> P.isValid x ==> P.makeValid x == x)

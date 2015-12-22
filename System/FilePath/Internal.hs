@@ -844,8 +844,8 @@ normaliseDrive drive = if isJust $ readDriveLetter x2
         repSlash x = if isPathSeparator x then pathSeparator else x
 
 -- Information for validity functions on Windows. See [1].
-badCharacters :: [Char]
-badCharacters = ":*?><|\""
+isBadCharacter :: Char -> Bool
+isBadCharacter x = x >= '\0' && x <= '\31' || x `elem` ":*?><|\""
 
 badElements :: [FilePath]
 badElements =
@@ -871,12 +871,13 @@ badElements =
 -- > Windows: isValid "\\\\" == False
 -- > Windows: isValid "\\\\\\foo" == False
 -- > Windows: isValid "\\\\?\\D:file" == False
+-- > Windows: isValid "foo\tbar" == False
 isValid :: FilePath -> Bool
 isValid "" = False
 isValid x | '\0' `elem` x = False
 isValid _ | isPosix = True
 isValid path =
-        not (any (`elem` badCharacters) x2) &&
+        not (any isBadCharacter x2) &&
         not (any f $ splitDirectories x2) &&
         not (isJust (readDriveShare x1) && all isPathSeparator x1) &&
         not (isJust (readDriveUNC x1) && not (hasTrailingPathSeparator x1))
@@ -912,8 +913,7 @@ makeValid path
         (drv,pth) = splitDrive path
 
         validChars = map f
-        f x | x `elem` badCharacters || x == '\0' = '_'
-            | otherwise = x
+        f x = if isBadCharacter x then '_' else x
 
         validElements x = joinPath $ map g $ splitPath x
         g x = h a ++ b
