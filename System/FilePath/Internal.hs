@@ -603,8 +603,23 @@ replaceDirectory :: FilePath -> String -> FilePath
 replaceDirectory x dir = combineAlways dir (takeFileName x)
 
 
--- | Combine two paths, if the second path starts with a path separator or a
---   drive letter, then it returns the second.
+-- | An alias for '</>'.
+combine :: FilePath -> FilePath -> FilePath
+combine a b | hasLeadingPathSeparator b || hasDrive b = b
+            | otherwise = combineAlways a b
+
+-- | Combine two paths, assuming rhs is NOT absolute.
+combineAlways :: FilePath -> FilePath -> FilePath
+combineAlways a b | null a = b
+                  | null b = a
+                  | hasTrailingPathSeparator a = a ++ b
+                  | otherwise = case a of
+                      [a1,':'] | isWindows && isLetter a1 -> a ++ b
+                      _ -> a ++ [pathSeparator] ++ b
+
+
+-- | Combine two paths with a path separator.
+--   If the second path starts with a path separator or a drive letter, then it returns the second.
 --
 -- > Posix:   "/directory" </> "file.ext" == "/directory/file.ext"
 -- > Windows: "/directory" </> "file.ext" == "/directory\\file.ext"
@@ -641,21 +656,6 @@ replaceDirectory x dir = combineAlways dir (takeFileName x)
 --
 -- > Windows: combine "D:\\foo" "C:bar" == "C:bar"
 -- > Windows: combine "C:\\foo" "C:bar" == "C:bar"
-combine :: FilePath -> FilePath -> FilePath
-combine a b | hasLeadingPathSeparator b || hasDrive b = b
-            | otherwise = combineAlways a b
-
--- | Combine two paths, assuming rhs is NOT absolute.
-combineAlways :: FilePath -> FilePath -> FilePath
-combineAlways a b | null a = b
-                  | null b = a
-                  | hasTrailingPathSeparator a = a ++ b
-                  | otherwise = case a of
-                      [a1,':'] | isWindows && isLetter a1 -> a ++ b
-                      _ -> a ++ [pathSeparator] ++ b
-
-
--- | Join two values with a path separator. For examples and caveats see the equivalent function 'combine'.
 (</>) :: FilePath -> FilePath -> FilePath
 (</>) = combine
 
