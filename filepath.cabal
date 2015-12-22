@@ -60,7 +60,7 @@ test-suite filepath-tests
     build-depends:
         filepath,
         base,
-        QuickCheck >= 2.7 && < 2.8
+        QuickCheck >= 2.7 && < 2.9
 
 source-repository head
     type:     git
