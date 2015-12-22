@@ -623,6 +623,7 @@ combineAlways a b | null a = b
 --
 -- > Posix:   "/directory" </> "file.ext" == "/directory/file.ext"
 -- > Windows: "/directory" </> "file.ext" == "/directory\\file.ext"
+-- >          "directory" </> "/file.ext" == "/file.ext"
 -- > Valid x => combine (takeDirectory x) (takeFileName x) `equalFilePath` x
 --
 --   Combined:
