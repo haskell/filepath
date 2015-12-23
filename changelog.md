@@ -4,6 +4,8 @@ _Note: below all `FilePath` values are unquoted, so `\\` really means two backsl
 
 ## 1.4.1.0  *Unreleased*
 
+ * Bundled with GHC 8.0.1
+
  * Add `replaceExtensions` and `stripExtension` functions.
 
  * Make `isValid` detect more invalid Windows paths, e.g. `nul .txt` and `foo\nbar`.
