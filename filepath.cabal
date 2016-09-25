@@ -1,3 +1,4 @@
+cabal-version:  >= 1.10
 name:           filepath
 version:        1.4.1.0
 -- NOTE: Don't forget to update ./changelog.md
@@ -11,7 +12,6 @@ homepage:       https://github.com/haskell/filepath#readme
 category:       System
 build-type:     Simple
 synopsis:       Library for manipulating FilePaths in a cross platform way.
-cabal-version:  >=1.10
 tested-with:    GHC==8.0.1, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2
 description:
     This package provides functionality for manipulating @FilePath@ values, and is shipped with both <https://www.haskell.org/ghc/ GHC> and the <https://www.haskell.org/platform/ Haskell Platform>. It provides three modules:
