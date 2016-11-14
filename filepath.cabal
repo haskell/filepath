@@ -1,6 +1,6 @@
 cabal-version:  >= 1.10
 name:           filepath
-version:        1.4.1.0
+version:        1.4.1.1
 -- NOTE: Don't forget to update ./changelog.md
 license:        BSD3
 license-file:   LICENSE
