@@ -1,7 +1,6 @@
 
 module TestUtil(
     (==>), QFilePath(..), QFilePathValidW(..), QFilePathValidP(..),
-    test, Test,
     module Test.QuickCheck,
     module Data.List,
     module Data.Maybe
@@ -51,13 +50,3 @@ shrinkValid wrap valid o =
     | y <- map valid $ shrinkList (\x -> ['a' | x /= 'a']) o
     , length y < length o || (length y == length o && countA y > countA o)]
     where countA = length . filter (== 'a')
-
-
-data Test = Test Property Bool
-
-test :: Testable prop => prop -> Test
-test prop = Test (property prop) (exhaustive prop)
-
-instance Testable Test where
-    property (Test x _) = x
-    exhaustive (Test _ x) = x

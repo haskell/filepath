@@ -20,7 +20,7 @@ main = do
         ,"import TestUtil"
         ,"import qualified System.FilePath.Windows as W"
         ,"import qualified System.FilePath.Posix as P"
-        ,"tests :: [(String, Test)]"
+        ,"tests :: [(String, Property)]"
         ,"tests ="] ++
         ["    " ++ c ++ "(" ++ show t1 ++ ", " ++ t2 ++ ")" | (c,(t1,t2)) <- zip ("[":repeat ",") tests] ++
         ["    ]"]
@@ -71,7 +71,7 @@ fromLexemes = unwords . f
 renderTest :: Test -> (String, String)
 renderTest Test{..} = (body, code)
     where
-        code = "test $ " ++ if null testVars then body else "\\" ++ unwords vars ++ " -> " ++ body
+        code = "property $ " ++ if null testVars then body else "\\" ++ unwords vars ++ " -> " ++ body
         vars = [if null ctor then v else "(" ++ ctor ++ " " ++ v ++ ")" | (ctor,v) <- testVars]
 
         body = fromLexemes $ map (qualify testPlatform) testBody
