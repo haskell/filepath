@@ -96,6 +96,8 @@ tests =
     ,("W.addExtension \"file\" \".bib\" == \"file.bib\"", property $ W.addExtension "file" ".bib" == "file.bib")
     ,("P.addExtension \"/\" \"x\" == \"/.x\"", property $ P.addExtension "/" "x" == "/.x")
     ,("W.addExtension \"/\" \"x\" == \"/.x\"", property $ W.addExtension "/" "x" == "/.x")
+    ,("P.addExtension x \"\" == x", property $ \(QFilePath x) -> P.addExtension x "" == x)
+    ,("W.addExtension x \"\" == x", property $ \(QFilePath x) -> W.addExtension x "" == x)
     ,("P.takeFileName (P.addExtension (P.addTrailingPathSeparator x) \"ext\") == \".ext\"", property $ \(QFilePathValidP x) -> P.takeFileName (P.addExtension (P.addTrailingPathSeparator x) "ext") == ".ext")
     ,("W.takeFileName (W.addExtension (W.addTrailingPathSeparator x) \"ext\") == \".ext\"", property $ \(QFilePathValidW x) -> W.takeFileName (W.addExtension (W.addTrailingPathSeparator x) "ext") == ".ext")
     ,("W.addExtension \"\\\\\\\\share\" \".txt\" == \"\\\\\\\\share\\\\.txt\"", property $ W.addExtension "\\\\share" ".txt" == "\\\\share\\.txt")
