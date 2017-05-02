@@ -3,6 +3,7 @@ module TestGen(tests) where
 import TestUtil
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
+{-# ANN module "HLint: ignore" #-}
 tests :: [(String, Property)]
 tests =
     [("W.pathSeparator == '\\\\'", property $ W.pathSeparator == '\\')

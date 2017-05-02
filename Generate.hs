@@ -20,6 +20,7 @@ main = do
         ,"import TestUtil"
         ,"import qualified System.FilePath.Windows as W"
         ,"import qualified System.FilePath.Posix as P"
+        ,"{-# ANN module \"HLint: ignore\" #-}"
         ,"tests :: [(String, Property)]"
         ,"tests ="] ++
         ["    " ++ c ++ "(" ++ show t1 ++ ", " ++ t2 ++ ")" | (c,(t1,t2)) <- zip ("[":repeat ",") tests] ++
