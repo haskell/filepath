@@ -7,9 +7,5 @@ env:
 - GHCVER=8.0.2
 - GHCVER=head
 
-matrix:
-  allow_failures:
-  - env: GHCVER=head
-
 script:
 - wget https://raw.github.com/ndmitchell/neil/master/travis.sh -O - --quiet | sh
