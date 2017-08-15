@@ -75,7 +75,7 @@ module System.FilePath.MODULE_NAME
     -- * Extension functions
     splitExtension,
     takeExtension, replaceExtension, (-<.>), dropExtension, addExtension, hasExtension, (<.>),
-    splitExtensions, dropExtensions, takeExtensions, replaceExtensions,
+    splitExtensions, dropExtensions, takeExtensions, replaceExtensions, isExtensionOf,
     stripExtension,
 
     -- * Filename\/directory functions
@@ -312,6 +312,15 @@ addExtension file xs@(x:_) = joinDrive a res
 hasExtension :: FilePath -> Bool
 hasExtension = any isExtSeparator . takeFileName
 
+
+-- | Is the given string the final extension of the filename?
+--   The extension should not include the separator.
+--
+-- > "png" `isExtensionOf` "/directory/file.png"     == True
+-- > "png" `isExtensionOf` "/directory/file.png.jpg" == False
+-- > "csv" `isExtensionOf` "/directory/data.csv"     == True
+isExtensionOf :: String -> FilePath -> Bool
+isExtensionOf ext = (== ext) . drop 1 . takeExtension
 
 -- | Drop the given extension from a FilePath, and the @\".\"@ preceding it.
 --   Returns 'Nothing' if the FilePath does not have the given extension, or
