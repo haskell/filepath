@@ -53,7 +53,7 @@
 -- /Example 2:/ Download a file from @url@ and save it to disk:
 --
 -- @do let file = 'makeValid' url
---   System.IO.createDirectoryIfMissing True ('takeDirectory' file)@
+--   System.Directory.createDirectoryIfMissing True ('takeDirectory' file)@
 --
 -- /Example 3:/ Compile a Haskell file, putting the @.hi@ file under @interface@:
 --
