@@ -315,22 +315,11 @@ hasExtension = any isExtSeparator . takeFileName
 
 -- | Does the given filename have the specified extension?
 --
---   The extension may exclude the separator
 -- > "png" `isExtensionOf` "/directory/file.png" == True
---
---   And it may include it
 -- > ".png" `isExtensionOf` "/directory/file.png" == True
---
---   Multiple extensions are allowed
 -- > ".tar.gz" `isExtensionOf` "bar/foo.tar.gz" == True
---
---   But partial matches are not
 -- > "ar.gz" `isExtensionOf` "bar/foo.tar.gz" == False
---
---   Extensions are matched from the end, so the following yields @False@
 -- > "png" `isExtensionOf` "/directory/file.png.jpg" == False
-
---   The argument cannot simply be a suffix, it has to be to a valid extension
 -- > "csv/table.csv" `isExtensionOf` "/data/csv/table.csv" == False
 isExtensionOf :: String -> FilePath -> Bool
 isExtensionOf ext@('.':_) = isSuffixOf ext . takeExtensions
