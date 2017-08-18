@@ -105,7 +105,7 @@ module System.FilePath.MODULE_NAME
 
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.Maybe(isJust)
-import Data.List(stripPrefix)
+import Data.List(stripPrefix, isSuffixOf)
 
 import System.Environment(getEnv)
 
@@ -313,14 +313,28 @@ hasExtension :: FilePath -> Bool
 hasExtension = any isExtSeparator . takeFileName
 
 
--- | Is the given string the final extension of the filename?
---   The extension should not include the separator.
+-- | Does the given filename have the specified extension?
 --
--- > "png" `isExtensionOf` "/directory/file.png"     == True
+--   The extension may exclude the separator
+-- > "png" `isExtensionOf` "/directory/file.png" == True
+--
+--   And it may include it
+-- > ".png" `isExtensionOf` "/directory/file.png" == True
+--
+--   Multiple extensions are allowed
+-- > ".tar.gz" `isExtensionOf` "bar/foo.tar.gz" == True
+--
+--   But partial matches are not
+-- > "ar.gz" `isExtensionOf` "bar/foo.tar.gz" == False
+--
+--   Extensions are matched from the end, so the following yields @False@
 -- > "png" `isExtensionOf` "/directory/file.png.jpg" == False
--- > "csv" `isExtensionOf` "/directory/data.csv"     == True
+
+--   The argument cannot simply be a suffix, it has to be to a valid extension
+-- > "csv/table.csv" `isExtensionOf` "/data/csv/table.csv" == False
 isExtensionOf :: String -> FilePath -> Bool
-isExtensionOf ext = (== ext) . drop 1 . takeExtension
+isExtensionOf ext@('.':_) = isSuffixOf ext . takeExtensions
+isExtensionOf ext         = isSuffixOf ('.':ext) . takeExtensions
 
 -- | Drop the given extension from a FilePath, and the @\".\"@ preceding it.
 --   Returns 'Nothing' if the FilePath does not have the given extension, or
