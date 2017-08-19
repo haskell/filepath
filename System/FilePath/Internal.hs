@@ -75,7 +75,7 @@ module System.FilePath.MODULE_NAME
     -- * Extension functions
     splitExtension,
     takeExtension, replaceExtension, (-<.>), dropExtension, addExtension, hasExtension, (<.>),
-    splitExtensions, dropExtensions, takeExtensions, replaceExtensions,
+    splitExtensions, dropExtensions, takeExtensions, replaceExtensions, isExtensionOf,
     stripExtension,
 
     -- * Filename\/directory functions
@@ -105,7 +105,7 @@ module System.FilePath.MODULE_NAME
 
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.Maybe(isJust)
-import Data.List(stripPrefix)
+import Data.List(stripPrefix, isSuffixOf)
 
 import System.Environment(getEnv)
 
@@ -312,6 +312,18 @@ addExtension file xs@(x:_) = joinDrive a res
 hasExtension :: FilePath -> Bool
 hasExtension = any isExtSeparator . takeFileName
 
+
+-- | Does the given filename have the specified extension?
+--
+-- > "png" `isExtensionOf` "/directory/file.png" == True
+-- > ".png" `isExtensionOf` "/directory/file.png" == True
+-- > ".tar.gz" `isExtensionOf` "bar/foo.tar.gz" == True
+-- > "ar.gz" `isExtensionOf` "bar/foo.tar.gz" == False
+-- > "png" `isExtensionOf` "/directory/file.png.jpg" == False
+-- > "csv/table.csv" `isExtensionOf` "/data/csv/table.csv" == False
+isExtensionOf :: String -> FilePath -> Bool
+isExtensionOf ext@('.':_) = isSuffixOf ext . takeExtensions
+isExtensionOf ext         = isSuffixOf ('.':ext) . takeExtensions
 
 -- | Drop the given extension from a FilePath, and the @\".\"@ preceding it.
 --   Returns 'Nothing' if the FilePath does not have the given extension, or
