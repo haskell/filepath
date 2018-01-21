@@ -6,7 +6,7 @@ license:        BSD3
 license-file:   LICENSE
 author:         Neil Mitchell <ndmitchell@gmail.com>
 maintainer:     Neil Mitchell <ndmitchell@gmail.com>
-copyright:      Neil Mitchell 2005-2017
+copyright:      Neil Mitchell 2005-2018
 bug-reports:    https://github.com/haskell/filepath/issues
 homepage:       https://github.com/haskell/filepath#readme
 category:       System
