@@ -2,7 +2,9 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
-## Unreleased
+## 1.4.2 *Jan 2018*
+
+ * Bundled with GHC 8.4.1
 
  * Add `isExtensionOf` function.
 
