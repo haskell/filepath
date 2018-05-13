@@ -1,4 +1,6 @@
-#if __GLASGOW_HASKELL__ >= 704
+#ifdef IS_CURRENT
+{-# LANGUAGE ForeignFunctionInterface, JavaScriptFFI, Trustworthy #-}
+#elif __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
 #endif
 {-# LANGUAGE PatternGuards #-}
@@ -63,6 +65,8 @@
 -- [1] <http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247.aspx Naming Files, Paths and Namespaces> (Microsoft MSDN)
 module System.FilePath.MODULE_NAME
     (
+    isWindows, isPosix,
+
     -- * Separator predicates
     FilePath,
     pathSeparator, pathSeparators, isPathSeparator,
@@ -126,8 +130,12 @@ isPosix = not isWindows
 
 -- | Is the operating system Windows like
 isWindows :: Bool
+#ifdef IS_CURRENT
+isWindows = js_isWindows
+foreign import javascript unsafe "h$filepath_isWindows()" js_isWindows :: Bool
+#else
 isWindows = IS_WINDOWS
-
+#endif
 
 ---------------------------------------------------------------------
 -- The basic functions
