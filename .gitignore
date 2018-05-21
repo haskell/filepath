@@ -2,3 +2,4 @@ GNUmakefile
 dist-install/
 dist/
 ghc.mk
+.stack-work/
