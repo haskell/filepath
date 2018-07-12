@@ -105,7 +105,7 @@ module System.FilePath.MODULE_NAME
 
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.Maybe(isJust)
-import Data.List(stripPrefix, isSuffixOf)
+import Data.List(stripPrefix, isSuffixOf, isPrefixOf)
 
 import System.Environment(getEnv)
 
@@ -856,6 +856,7 @@ makeRelative root path
 -- > Posix:   normalise "/" == "/"
 -- > Posix:   normalise "bob/fred/." == "bob/fred/"
 -- > Posix:   normalise "//home" == "/home"
+-- > Posix:   normalise "./-bob" == "./-bob"
 normalise :: FilePath -> FilePath
 normalise path = result ++ [pathSeparator | addPathSeparator]
     where
@@ -872,11 +873,16 @@ normalise path = result ++ [pathSeparator | addPathSeparator]
         isDirPath xs = hasTrailingPathSeparator xs
             || not (null xs) && last xs == '.' && hasTrailingPathSeparator (init xs)
 
-        f = joinPath . dropDots . propSep . splitDirectories
+        f = joinPath . condDropDots . propSep . splitDirectories
 
         propSep (x:xs) | all isPathSeparator x = [pathSeparator] : xs
                        | otherwise = x : xs
         propSep [] = []
+
+        -- Do not normalise "./-foo" to "-foo". (See GHC Trac 12674)
+        condDropDots (".":x2:xs) | "-" `isPrefixOf` x2 = ".":x2:xs
+                                 | otherwise           = dropDots (x2:xs)
+        condDropDots xs = dropDots xs
 
         dropDots = filter ("." /=)
 
