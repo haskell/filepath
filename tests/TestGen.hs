@@ -406,6 +406,7 @@ tests =
     ,("P.normalise \"/\" == \"/\"", property $ P.normalise "/" == "/")
     ,("P.normalise \"bob/fred/.\" == \"bob/fred/\"", property $ P.normalise "bob/fred/." == "bob/fred/")
     ,("P.normalise \"//home\" == \"/home\"", property $ P.normalise "//home" == "/home")
+    ,("P.normalise \"./-bob\" == \"./-bob\"", property $ P.normalise "./-bob" == "./-bob")
     ,("P.isValid \"\" == False", property $ P.isValid "" == False)
     ,("W.isValid \"\" == False", property $ W.isValid "" == False)
     ,("P.isValid \"\\0\" == False", property $ P.isValid "\0" == False)
