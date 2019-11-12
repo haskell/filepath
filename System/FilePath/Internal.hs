@@ -85,6 +85,7 @@ module System.FilePath.MODULE_NAME
     takeDirectory, replaceDirectory,
     combine, (</>),
     splitPath, joinPath, splitDirectories,
+    stripFilePath,
 
     -- * Drive functions
     splitDrive, joinDrive,
@@ -826,6 +827,49 @@ makeRelative root path
 
         takeAbs x | hasLeadingPathSeparator x && not (hasDrive x) = [pathSeparator]
         takeAbs x = map (\y -> if isPathSeparator y then pathSeparator else toLower y) $ takeDrive x
+
+-- | Strip the given directory from the filepath if and only if
+-- the given directory is a prefix of the filepath.
+--
+-- >>> stripFilePath "app" "app/File.hs"
+-- Just "File.hs"
+--
+-- >>> stripFilePath "src" "app/File.hs"
+-- Nothing
+--
+-- >>> stripFilePath "src" "src-dir/File.hs"
+-- Nothing
+--
+-- >>> stripFilePath "." "src/File.hs"
+-- Just "src/File.hs"
+--
+-- >>> stripFilePath "app/" "./app/Lib/File.hs"
+-- Just "Lib/File.hs"
+--
+-- >>> stripFilePath "/app/" "./app/Lib/File.hs"
+-- Nothing -- Nothing since '/app/' is absolute
+--
+-- >>> stripFilePath "/app" "/app/Lib/File.hs"
+-- Just "Lib/File.hs"
+stripFilePath :: FilePath -> FilePath -> Maybe FilePath
+stripFilePath "." fp
+  | isRelative fp = Just fp
+  | otherwise = Nothing
+stripFilePath dir' fp'
+  | Just relativeFpParts <- splitDir `stripPrefix` splitFp = Just (joinPath relativeFpParts)
+  | otherwise = Nothing
+  where
+    dir = normalise dir'
+    fp = normalise fp'
+    
+    splitFp = splitPath fp
+    splitDir = splitPath dir
+
+    stripFilePath' (x:xs) (y:ys)
+      | x `equalFilePath` y = stripFilePath' xs ys
+      | otherwise = Nothing
+    stripFilePath' [] ys = Just ys
+    stripFilePath' _ [] = Nothing
 
 -- | Normalise a file
 --
