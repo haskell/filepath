@@ -7,3 +7,9 @@
 
 # We use [Char] because sometimes we really are talking about a set of Char.
 - ignore: {name: "Use String"}
+
+# We don't use the extra library
+- ignore: {name: "Use drop1"}
+- ignore: {name: "Use upper"}
+- ignore: {name: "Use lower"}
+- ignore: {name: "Use zipFrom"}
