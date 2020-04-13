@@ -1,0 +1,65 @@
+clone_folder: "c:\\WORK"
+
+branches:
+  only:
+    - master
+
+environment:
+  global:
+    CABOPTS:  "--store-dir=C:\\SR --http-transport=plain-http"
+  matrix:
+    # 64 bit builds
+    - GHCVER: "8.10.1"
+      CHOCOPTS:
+    - GHCVER: "8.8.3"
+      CHOCOPTS:
+    - GHCVER: "8.6.5"
+      CHOCOPTS:
+    - GHCVER: "8.4.4"
+      CHOCOPTS:
+    - GHCVER: "8.2.2"
+      CHOCOPTS:
+    - GHCVER: "8.0.2"
+      CHOCOPTS:
+    - GHCVER: "7.10.3.2"
+      CHOCOPTS:
+    - GHCVER: "7.8.4.1"
+      CHOCOPTS:
+    # 32 bit builds
+
+    # GHC HQ have not produced a 32 bit binary for Windows again.
+    # I will now install GHC 8.6.5 instead.  If you find this
+    # unacceptable please let them know that 32-bits is important
+    # by creating an issue at https://gitlab.haskell.org/ghc/ghc/issues
+
+    # - GHCVER: "8.8.1"
+    #   CHOCOPTS: --forcex86
+
+    - GHCVER: "8.6.5"
+      CHOCOPTS: --forcex86
+    - GHCVER: "8.4.4"
+      CHOCOPTS: --forcex86
+    - GHCVER: "8.2.2"
+      CHOCOPTS: --forcex86
+
+    # older segfault?
+
+cache:
+- "C:\\SR"
+
+install:
+ - "choco install -y ghc --version %GHCVER% %CHOCOPTS%"
+ - "choco install -y cabal %CHOCOPTS%"
+ - "refreshenv"
+ - "set PATH=C:\\ghc\\ghc-%GHCVER%:C:\\msys64\\mingw64\\bin;C:\\msys64\\usr\\bin;%PATH%"
+ - "cabal --version"
+ - "ghc --version"
+ - "cabal %CABOPTS% update -v"
+
+build: off
+
+test_script:
+ - IF EXIST configure.ac bash -c "autoreconf -i"
+ - "echo packages:. > cabal.project"
+ - "cabal %CABOPTS% v2-build -j1 all"
+ - "cabal %CABOPTS% v2-test -j1 all"
