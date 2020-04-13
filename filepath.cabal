@@ -1,4 +1,4 @@
-cabal-version:  >= 1.18
+cabal-version:  1.18
 name:           filepath
 version:        1.4.2.1
 -- NOTE: Don't forget to update ./changelog.md
@@ -12,7 +12,7 @@ homepage:       https://github.com/haskell/filepath#readme
 category:       System
 build-type:     Simple
 synopsis:       Library for manipulating FilePaths in a cross platform way.
-tested-with:    GHC==8.10.1, GHC==8.8.3, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2, GHC==8.0.2
+tested-with:    GHC==8.10.1 || ==8.8.3 || ==8.6.5 || ==8.4.4 || ==8.2.2 || ==8.0.2 || ==7.10.3 || ==7.8.4 || ==7.6.3 || ==7.4.2 || ==7.2.2 || ==7.0.2
 description:
     This package provides functionality for manipulating @FilePath@ values, and is shipped with both <https://www.haskell.org/ghc/ GHC> and the <https://www.haskell.org/platform/ Haskell Platform>. It provides three modules:
     .
@@ -48,7 +48,7 @@ library
         System.FilePath.Windows
 
     build-depends:
-        base >= 4.9 && < 4.16
+        base >= 4.3 && < 4.16
 
     ghc-options: -Wall
 
@@ -56,7 +56,6 @@ test-suite filepath-tests
     type: exitcode-stdio-1.0
     default-language: Haskell2010
     main-is: Test.hs
-    ghc-options: -main-is Test
     hs-source-dirs: tests
     other-modules:
         TestGen
@@ -64,4 +63,4 @@ test-suite filepath-tests
     build-depends:
         filepath,
         base,
-        QuickCheck >= 2.7 && < 2.14
+        QuickCheck >= 2.14 && < 2.15
