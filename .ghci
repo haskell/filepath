@@ -4,10 +4,10 @@
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 
-:def docs_ const $ return ":!cabal haddock"
-:def docs const $ return $ unlines [":docs_",":!start dist\\doc\\html\\filepath\\System-FilePath.html"]
+:def docs_ const $ pure ":!cabal haddock"
+:def docs const $ pure $ unlines [":docs_",":!start dist\\doc\\html\\filepath\\System-FilePath.html"]
 
-:def gen const $ return "Generate.main"
-:def test \x -> return $ if null x then "Test.main" else "System.Environment.withArgs [" ++ show x ++ "] Test.main"
-:def go \x -> return $ unlines [":reload",":gen",":reload",":test " ++ x,":gen",":reload"]
-:def testfull const $ return $ unlines [":reload","gen",":reload","!cabal test"]
+:def gen const $ pure "Generate.main"
+:def test \x -> pure $ if null x then "Test.main" else "System.Environment.withArgs [" ++ show x ++ "] Test.main"
+:def go \x -> pure $ unlines [":reload",":gen",":reload",":test " ++ x,":gen",":reload"]
+:def testfull const $ pure $ unlines [":reload","gen",":reload","!cabal test"]

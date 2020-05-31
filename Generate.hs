@@ -100,11 +100,11 @@ readFileBinary' :: FilePath -> IO String
 readFileBinary' file = withBinaryFile file ReadMode $ \h -> do
     s <- hGetContents h
     evaluate $ length s
-    return s
+    pure s
 
 writeFileBinaryChanged :: FilePath -> String -> IO ()
 writeFileBinaryChanged file x = do
     b <- doesFileExist file
-    old <- if b then fmap Just $ readFileBinary' file else return Nothing
+    old <- if b then fmap Just $ readFileBinary' file else pure Nothing
     when (Just x /= old) $
         writeFileBinary file x
