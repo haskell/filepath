@@ -48,7 +48,7 @@ library
         System.FilePath.Windows
 
     build-depends:
-        base >= 4.9 && < 4.16
+        base >= 4.9 && < 4.17
 
     ghc-options: -Wall
 
