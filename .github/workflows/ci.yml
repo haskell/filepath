@@ -1,0 +1,36 @@
+name: ci
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+defaults:
+  run:
+    shell: bash
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, ghc: 8.0.2 }
+          - { os: ubuntu-latest, ghc: 8.2.2 }
+          - { os: ubuntu-latest, ghc: 8.4.4 }
+          - { os: ubuntu-latest, ghc: 8.6.5 }
+          - { os: ubuntu-latest, ghc: 8.8.4 }
+          - { os: ubuntu-latest, ghc: 8.10.2 }
+          - { os: ubuntu-18.04, ghc: head }
+          - { os: windows-latest, ghc: 9.0 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - if: startsWith(matrix.os, 'ubuntu-')
+        run: |
+          sudo add-apt-repository ppa:hvr/ghc
+          sudo apt-get update
+      - if: startsWith(matrix.os, 'windows-')
+        run: echo 'C:\msys64\usr\bin' >> $GITHUB_PATH
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: ${{ matrix.ghc }}
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v2
+      - uses: ndmitchell/neil@master
