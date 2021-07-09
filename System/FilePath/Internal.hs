@@ -920,6 +920,10 @@ badElements =
 -- > Windows: isValid "\\\\\\foo" == False
 -- > Windows: isValid "\\\\?\\D:file" == False
 -- > Windows: isValid "foo\tbar" == False
+-- > Windows: isValid "foo." == False
+-- > Windows: isValid "foo " == False
+-- > Windows: isValid "foo./bar" == False
+-- > Windows: isValid "foo /bar" == False
 -- > Windows: isValid "nul .txt" == False
 -- > Windows: isValid " nul.txt" == True
 isValid :: FilePath -> Bool
@@ -929,11 +933,15 @@ isValid _ | isPosix = True
 isValid path =
         not (any isBadCharacter x2) &&
         not (any f $ splitDirectories x2) &&
+        not (any g $ splitDirectories x2) &&
         not (isJust (readDriveShare x1) && all isPathSeparator x1) &&
         not (isJust (readDriveUNC x1) && not (hasTrailingPathSeparator x1))
     where
         (x1,x2) = splitDrive path
         f x = map toUpper (dropWhileEnd (== ' ') $ dropExtensions x) `elem` badElements
+        g "." = False
+        g ".." = False
+        g x = head (reverse $ '@' : x) `elem` ". "
 
 
 -- | Take a FilePath and make it valid; does not change already valid FilePaths.
@@ -945,6 +953,8 @@ isValid path =
 -- > Windows: makeValid "c:\\already\\/valid" == "c:\\already\\/valid"
 -- > Windows: makeValid "c:\\test:of_test" == "c:\\test_of_test"
 -- > Windows: makeValid "test*" == "test_"
+-- > Windows: makeValid "test." == "test._"
+-- > Windows: makeValid "test " == "test _"
 -- > Windows: makeValid "c:\\test\\nul" == "c:\\test\\nul_"
 -- > Windows: makeValid "c:\\test\\prn.txt" == "c:\\test\\prn_.txt"
 -- > Windows: makeValid "c:\\test/prn.txt" == "c:\\test/prn_.txt"
@@ -967,10 +977,13 @@ makeValid path
         f x = if isBadCharacter x then '_' else x
 
         validElements x = joinPath $ map g $ splitPath x
-        g x = h a ++ b
+        g x = i (h a) ++ b
             where (a,b) = break isPathSeparator x
         h x = if map toUpper (dropWhileEnd (== ' ') a) `elem` badElements then a ++ "_" <.> b else x
             where (a,b) = splitExtensions x
+        i "." = "."
+        i ".." = ".."
+        i x = if head (reverse $ '@' : x) `elem` ". " then x ++ "_" else x
 
 
 -- | Is a path relative, or is it fixed to the root?
