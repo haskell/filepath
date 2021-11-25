@@ -1,5 +1,5 @@
 
-module Test(main) where
+module Main where
 
 import System.Environment
 import TestGen
