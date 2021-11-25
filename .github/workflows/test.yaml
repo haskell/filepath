@@ -61,6 +61,10 @@ jobs:
         git diff --exit-code
       shell: bash
 
+    - name: check
+      run: cabal check
+      shell: bash
+
     - name: sdist
       run: cabal sdist
       shell: bash
