@@ -22,7 +22,7 @@ jobs:
 
     - if: matrix.os == 'windows-latest'
       name: Install ghcup on windows
-      run: Set-ExecutionPolicy Bypass -Scope Process -Force;[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;Invoke-Command -ScriptBlock ([ScriptBlock]::Create((Invoke-WebRequest https://www.haskell.org/ghcup/sh/bootstrap-haskell.ps1 -UseBasicParsing))) -ArgumentList $false,$true,$true,$false,$false,$false,$false,"C:\"
+      run: Set-ExecutionPolicy Bypass -Scope Process -Force;[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;Invoke-Command -ScriptBlock ([ScriptBlock]::Create((Invoke-WebRequest https://www.haskell.org/ghcup/sh/bootstrap-haskell.ps1 -UseBasicParsing))) -ArgumentList $false,$true,$true,$false,$false,$false,$false,"C:\","", "C:\msys64"
 
     - if: matrix.os == 'windows-latest'
       name: Add ghcup to PATH
@@ -47,10 +47,20 @@ jobs:
       run: cabal build --enable-tests --enable-benchmarks
       shell: bash
 
+    - name: Run tests
+      run: cabal test
+      shell: bash
+
     - name: Haddock
       run: cabal haddock
       shell: bash
 
-    - name: Run tests
-      run: cabal test
+    - name: Generate.hs
+      run: |
+        runhaskell Generate.hs
+        git diff --exit-code
+      shell: bash
+
+    - name: sdist
+      run: cabal sdist
       shell: bash
