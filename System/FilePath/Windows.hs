@@ -747,6 +747,7 @@ splitDirectories = map dropTrailingPathSeparator . splitPath
 
 -- | Join path elements back together.
 --
+-- > joinPath a == foldr (</>) "" a
 -- > joinPath ["/","directory/","file.ext"] == "/directory/file.ext"
 -- > Valid x => joinPath (splitPath x) == x
 -- > joinPath [] == ""

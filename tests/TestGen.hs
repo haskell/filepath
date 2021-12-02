@@ -346,6 +346,8 @@ tests =
     ,("W.splitDirectories \"C:\\\\test\\\\\\\\\\\\file\" == [\"C:\\\\\", \"test\", \"file\"]", property $ W.splitDirectories "C:\\test\\\\\\file" == ["C:\\", "test", "file"])
     ,("P.splitDirectories \"/test///file\" == [\"/\", \"test\", \"file\"]", property $ P.splitDirectories "/test///file" == ["/", "test", "file"])
     ,("W.splitDirectories \"/test///file\" == [\"/\", \"test\", \"file\"]", property $ W.splitDirectories "/test///file" == ["/", "test", "file"])
+    ,("P.joinPath a == foldr (P.</>) \"\" a", property $ \a -> P.joinPath a == foldr (P.</>) "" a)
+    ,("W.joinPath a == foldr (W.</>) \"\" a", property $ \a -> W.joinPath a == foldr (W.</>) "" a)
     ,("P.joinPath [\"/\", \"directory/\", \"file.ext\"] == \"/directory/file.ext\"", property $ P.joinPath ["/", "directory/", "file.ext"] == "/directory/file.ext")
     ,("W.joinPath [\"/\", \"directory/\", \"file.ext\"] == \"/directory/file.ext\"", property $ W.joinPath ["/", "directory/", "file.ext"] == "/directory/file.ext")
     ,("P.joinPath (P.splitPath x) == x", property $ \(QFilePathValidP x) -> P.joinPath (P.splitPath x) == x)
