@@ -835,10 +835,13 @@ makeRelative root path
 --
 -- * .\/ -> \"\"
 --
+-- Does not remove @".."@, because of symlinks.
+--
 -- > Posix:   normalise "/file/\\test////" == "/file/\\test/"
 -- > Posix:   normalise "/file/./test" == "/file/test"
 -- > Posix:   normalise "/test/file/../bob/fred/" == "/test/file/../bob/fred/"
 -- > Posix:   normalise "../bob/fred/" == "../bob/fred/"
+-- > Posix:   normalise "/a/../c" == "/a/../c"
 -- > Posix:   normalise "./bob/fred/" == "bob/fred/"
 -- > Windows: normalise "c:\\file/bob\\" == "C:\\file\\bob\\"
 -- > Windows: normalise "c:\\" == "C:\\"

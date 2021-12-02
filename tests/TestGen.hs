@@ -388,6 +388,7 @@ tests =
     ,("P.normalise \"/file/./test\" == \"/file/test\"", property $ P.normalise "/file/./test" == "/file/test")
     ,("P.normalise \"/test/file/../bob/fred/\" == \"/test/file/../bob/fred/\"", property $ P.normalise "/test/file/../bob/fred/" == "/test/file/../bob/fred/")
     ,("P.normalise \"../bob/fred/\" == \"../bob/fred/\"", property $ P.normalise "../bob/fred/" == "../bob/fred/")
+    ,("P.normalise \"/a/../c\" == \"/a/../c\"", property $ P.normalise "/a/../c" == "/a/../c")
     ,("P.normalise \"./bob/fred/\" == \"bob/fred/\"", property $ P.normalise "./bob/fred/" == "bob/fred/")
     ,("W.normalise \"c:\\\\file/bob\\\\\" == \"C:\\\\file\\\\bob\\\\\"", property $ W.normalise "c:\\file/bob\\" == "C:\\file\\bob\\")
     ,("W.normalise \"c:\\\\\" == \"C:\\\\\"", property $ W.normalise "c:\\" == "C:\\")
