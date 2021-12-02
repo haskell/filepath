@@ -359,6 +359,8 @@ tests =
     ,("W.normalise x == W.normalise y ==> W.equalFilePath x y", property $ \(QFilePath x) (QFilePath y) -> W.normalise x == W.normalise y ==> W.equalFilePath x y)
     ,("P.equalFilePath \"foo\" \"foo/\"", property $ P.equalFilePath "foo" "foo/")
     ,("W.equalFilePath \"foo\" \"foo/\"", property $ W.equalFilePath "foo" "foo/")
+    ,("not (P.equalFilePath \"/a/../c\" \"/c\")", property $ not (P.equalFilePath "/a/../c" "/c"))
+    ,("not (W.equalFilePath \"/a/../c\" \"/c\")", property $ not (W.equalFilePath "/a/../c" "/c"))
     ,("not (P.equalFilePath \"foo\" \"/foo\")", property $ not (P.equalFilePath "foo" "/foo"))
     ,("not (W.equalFilePath \"foo\" \"/foo\")", property $ not (W.equalFilePath "foo" "/foo"))
     ,("not (P.equalFilePath \"foo\" \"FOO\")", property $ not (P.equalFilePath "foo" "FOO"))

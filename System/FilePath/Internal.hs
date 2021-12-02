@@ -768,9 +768,12 @@ joinPath = foldr combine ""
 --   first this has a much better chance of working.
 --   Note that this doesn't follow symlinks or DOSNAM~1s.
 --
+-- Similar to 'normalise', this does not expand @".."@, because of symlinks.
+--
 -- >          x == y ==> equalFilePath x y
 -- >          normalise x == normalise y ==> equalFilePath x y
 -- >          equalFilePath "foo" "foo/"
+-- >          not (equalFilePath "/a/../c" "/c")
 -- >          not (equalFilePath "foo" "/foo")
 -- > Posix:   not (equalFilePath "foo" "FOO")
 -- > Windows: equalFilePath "foo" "FOO"
