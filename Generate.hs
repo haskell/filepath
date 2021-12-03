@@ -87,7 +87,7 @@ qualify pw str
     where
         prelude = ["elem","uncurry","snd","fst","not","null","if","then","else"
                   ,"True","False","Just","Nothing","fromJust","concat","isPrefixOf","isSuffixOf","any","foldr"]
-        fpops = ["</>","<.>","-<.>"]
+        fpops = ["<\\>", "</>","<.>","-<.>"]
 
 
 ---------------------------------------------------------------------

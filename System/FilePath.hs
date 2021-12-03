@@ -85,11 +85,17 @@ module System.FilePath(
     takeBaseName, replaceBaseName,
     takeDirectory, replaceDirectory,
     combine, (</>),
+    combineAlways, (<\>),
     splitPath, joinPath, splitDirectories,
 
     -- * Drive functions
     splitDrive, joinDrive,
     takeDrive, hasDrive, dropDrive, isDrive,
+
+    -- * Leading slash functions
+    hasLeadingPathSeparator,
+    addLeadingPathSeparator,
+    dropLeadingPathSeparator,
 
     -- * Trailing slash functions
     hasTrailingPathSeparator,
@@ -126,11 +132,17 @@ module System.FilePath(
     takeBaseName, replaceBaseName,
     takeDirectory, replaceDirectory,
     combine, (</>),
+    combineAlways, (<\>),
     splitPath, joinPath, splitDirectories,
 
     -- * Drive functions
     splitDrive, joinDrive,
     takeDrive, hasDrive, dropDrive, isDrive,
+
+    -- * Leading slash functions
+    hasLeadingPathSeparator,
+    addLeadingPathSeparator,
+    dropLeadingPathSeparator,
 
     -- * Trailing slash functions
     hasTrailingPathSeparator,
