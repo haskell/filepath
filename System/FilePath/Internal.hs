@@ -84,6 +84,7 @@ module System.FilePath.MODULE_NAME
     takeBaseName, replaceBaseName,
     takeDirectory, replaceDirectory,
     combine, (</>),
+    combineAlways, (<\>),
     splitPath, joinPath, splitDirectories,
 
     -- * Drive functions
@@ -117,6 +118,7 @@ import System.Environment(getEnv)
 
 infixr 7  <.>, -<.>
 infixr 5  </>
+infixr 5  <\>
 
 
 
@@ -742,6 +744,24 @@ combineAlways a b | null a = b
 -- > Windows: "C:\\foo" </> "C:bar" == "C:bar"
 (</>) :: FilePath -> FilePath -> FilePath
 (</>) = combine
+
+
+-- | Combine two paths, assuming rhs is NOT absolute.
+--
+-- > Posix:   "/directory" <\> "file.ext" == "/directory/file.ext"
+-- > Windows: "/directory" <\> "file.ext" == "/directory\\file.ext"
+-- > Valid x => (takeDirectory x <\> takeFileName x) `equalFilePath` x
+-- > Posix:   "/" <\> "test" == "/test"
+-- > Posix:   "home" <\> "bob" == "home/bob"
+-- > Posix:   "x:" <\> "foo" == "x:/foo"
+-- > Windows: "C:\\foo" <\> "bar" == "C:\\foo\\bar"
+-- > Windows: "home" <\> "bob" == "home\\bob"
+-- > Posix:   "home" <\> "/bob" == "home//bob"
+-- > Windows: "home" <\> "C:\\bob" == "home\\C:\\bob"
+-- > Windows: "D:\\foo" <\> "C:bar" == "D:\\foo\\C:bar"
+-- > Windows: "C:\\foo" <\> "C:bar" == "C:\\foo\\C:bar"
+(<\>) :: FilePath -> FilePath -> FilePath
+(<\>) = combineAlways
 
 
 -- | Split a path by the directory separator.

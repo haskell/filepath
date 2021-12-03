@@ -85,6 +85,7 @@ module System.FilePath(
     takeBaseName, replaceBaseName,
     takeDirectory, replaceDirectory,
     combine, (</>),
+    combineAlways, (<\>),
     splitPath, joinPath, splitDirectories,
 
     -- * Drive functions
@@ -131,6 +132,7 @@ module System.FilePath(
     takeBaseName, replaceBaseName,
     takeDirectory, replaceDirectory,
     combine, (</>),
+    combineAlways, (<\>),
     splitPath, joinPath, splitDirectories,
 
     -- * Drive functions
