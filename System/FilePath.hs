@@ -91,6 +91,11 @@ module System.FilePath(
     splitDrive, joinDrive,
     takeDrive, hasDrive, dropDrive, isDrive,
 
+    -- * Leading slash functions
+    hasLeadingPathSeparator,
+    addLeadingPathSeparator,
+    dropLeadingPathSeparator,
+
     -- * Trailing slash functions
     hasTrailingPathSeparator,
     addTrailingPathSeparator,
@@ -131,6 +136,11 @@ module System.FilePath(
     -- * Drive functions
     splitDrive, joinDrive,
     takeDrive, hasDrive, dropDrive, isDrive,
+
+    -- * Leading slash functions
+    hasLeadingPathSeparator,
+    addLeadingPathSeparator,
+    dropLeadingPathSeparator,
 
     -- * Trailing slash functions
     hasTrailingPathSeparator,

@@ -90,6 +90,11 @@ module System.FilePath.Windows
     splitDrive, joinDrive,
     takeDrive, hasDrive, dropDrive, isDrive,
 
+    -- * Leading slash functions
+    hasLeadingPathSeparator,
+    addLeadingPathSeparator,
+    dropLeadingPathSeparator,
+
     -- * Trailing slash functions
     hasTrailingPathSeparator,
     addTrailingPathSeparator,
@@ -599,9 +604,37 @@ hasTrailingPathSeparator "" = False
 hasTrailingPathSeparator x = isPathSeparator (last x)
 
 
+-- | Does the item have a leading path separator?
+--
+-- On unix, this is equivalent to 'isAbsolute', on Windows it isn't.
+--
+-- > Posix:    hasLeadingPathSeparator x == isAbsolute x
+-- > hasLeadingPathSeparator "test" == False
+-- > hasLeadingPathSeparator "/test" == True
 hasLeadingPathSeparator :: FilePath -> Bool
 hasLeadingPathSeparator "" = False
 hasLeadingPathSeparator x = isPathSeparator (head x)
+
+-- | Add a leading file path separator if one is not already present.
+--
+-- > hasLeadingPathSeparator (addLeadingPathSeparator x)
+-- > hasLeadingPathSeparator x ==> addLeadingPathSeparator x == x
+-- > Posix:    addLeadingPathSeparator "test/rest" == "/test/rest"
+addLeadingPathSeparator :: FilePath -> FilePath
+addLeadingPathSeparator x = if hasLeadingPathSeparator x then x else pathSeparator:x
+
+-- | Remove any leading path separators
+--
+-- > dropLeadingPathSeparator "//file/test/" == "file/test/"
+-- >           dropLeadingPathSeparator "/" == "/"
+-- > Windows:  dropLeadingPathSeparator "\\" == "\\"
+-- > Posix:    not (hasLeadingPathSeparator (dropLeadingPathSeparator x)) || isDrive x
+dropLeadingPathSeparator :: FilePath -> FilePath
+dropLeadingPathSeparator x =
+    if hasLeadingPathSeparator x && not (isDrive x)
+    then let x' = dropWhile isPathSeparator x
+         in if null x' then [last x] else x'
+    else x
 
 
 -- | Add a trailing file path separator if one is not already present.
