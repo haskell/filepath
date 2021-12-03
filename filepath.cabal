@@ -28,6 +28,7 @@ extra-source-files:
     System/FilePath/Internal.hs
 extra-doc-files:
     README.md
+    HACKING.md
     changelog.md
 
 source-repository head
