@@ -17,8 +17,8 @@ All three modules provide the same API, and the same documentation (calling out 
 In Haskell, the definition is `type FilePath = String` as of now. A Haskell `String` is a list of Unicode code points.
 
 On unix, filenames don't have a predefined encoding as per the
-<https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_170 POSIX specification>
-and are passed as @char[]@ to syscalls.
+[POSIX specification](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_170)
+and are passed as `char[]` to syscalls.
 
 On windows (at least the API used by `Win32`) filepaths are UTF-16 strings.
 
