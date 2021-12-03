@@ -2,6 +2,11 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+## 1.5.0.0 *WIP*
+
+* breaking changes:
+	- Make `Windows.isValid` reject paths ending in a dot or space wrt [#94](https://github.com/haskell/filepath/pull/94)
+
 ## 1.4.2.2 *WIP*
 
 * Document relation between `joinPath` and `(</>)` wrt [#82](https://github.com/haskell/filepath/issues/82), [#82](https://github.com/haskell/filepath/issues/86)
