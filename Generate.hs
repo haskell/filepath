@@ -1,9 +1,10 @@
-{-# LANGUAGE RecordWildCards, ViewPatterns #-}
+{-# LANGUAGE CPP, RecordWildCards, ViewPatterns #-}
 
 module Generate(main) where
 
 import Control.Exception
 import Control.Monad
+import Data.Semigroup
 import Data.Char
 import Data.List
 import System.Directory
@@ -16,11 +17,28 @@ main = do
     let tests = map renderTest $ concatMap parseTest $ lines src
     writeFileBinaryChanged "tests/TestGen.hs" $ unlines $
         ["-- GENERATED CODE: See ../Generate.hs"
+#ifndef GHC_MAKE
+        , "{-# LANGUAGE OverloadedStrings #-}"
+        , "{-# LANGUAGE ViewPatterns #-}"
+#endif
         ,"module TestGen(tests) where"
         ,"import TestUtil"
+        ,"import Prelude as P"
+        ,"import Data.Semigroup"
+        ,"import qualified Data.Char as C"
+        ,"import qualified System.AbstractFilePath.Data.ByteString.Short as SBS"
+        ,"import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as SBS16"
         ,"import qualified System.FilePath.Windows as W"
         ,"import qualified System.FilePath.Posix as P"
-        ,"{-# ANN module \"HLint: ignore\" #-}"
+#ifdef GHC_MAKE
+        ,"import qualified System.AbstractFilePath.Windows.Internal as AFP_W"
+        ,"import qualified System.AbstractFilePath.Posix.Internal as AFP_P"
+#else
+        ,"import System.AbstractFilePath.Types"
+        ,"import qualified System.AbstractFilePath.Windows as AFP_W"
+        ,"import qualified System.AbstractFilePath.Posix as AFP_P"
+#endif
+        , "import System.AbstractFilePath.Data.ByteString.Short.Encode"
         ,"tests :: [(String, Property)]"
         ,"tests ="] ++
         ["    " ++ c ++ "(" ++ show t1 ++ ", " ++ t2 ++ ")" | (c,(t1,t2)) <- zip ("[":repeat ",") tests] ++
@@ -28,7 +46,12 @@ main = do
 
 
 
-data PW = P | W deriving Show -- Posix or Windows
+data PW = P      -- legacy posix
+        | W      -- legacy windows
+        | AFP_P  -- abstract-filepath posix
+        | AFP_W  -- abstract-filepath windows
+  deriving Show
+
 data Test = Test
     {testPlatform :: PW
     ,testVars :: [(String,String)]   -- generator constructor, variable
@@ -39,9 +62,9 @@ data Test = Test
 parseTest :: String -> [Test]
 parseTest (stripPrefix "-- > " -> Just x) = platform $ toLexemes x
     where
-        platform ("Windows":":":x) = [valid W x]
-        platform ("Posix"  :":":x) = [valid P x]
-        platform x                 = [valid P x, valid W x]
+        platform ("Windows":":":x) = [valid W x, valid AFP_W x]
+        platform ("Posix"  :":":x) = [valid P x, valid AFP_P x]
+        platform x                 = [valid P x, valid W x, valid AFP_P x, valid AFP_W x]
 
         valid p ("Valid":x) = free p a $ drop 1 b
             where (a,b) = break (== "=>") x
@@ -49,9 +72,12 @@ parseTest (stripPrefix "-- > " -> Just x) = platform $ toLexemes x
 
         free p val x = Test p [(ctor v, v) | v <- vars] x
             where vars = nub $ sort [v | v@[c] <- x, isAlpha c]
-                  ctor v | v < "x" = ""
+                  ctor v | v < "x"  = ""
                          | v `elem` val = "QFilePathValid" ++ show p
-                         | otherwise = "QFilePath"
+                         | otherwise = case p of
+                                         AFP_P -> if v == "z" then "QFilePathsAFP_P" else "QFilePathAFP_P"
+                                         AFP_W -> if v == "z" then "QFilePathsAFP_W" else "QFilePathAFP_W"
+                                         _ -> if v == "z" then "" else "QFilePath"
 parseTest _ = []
 
 
@@ -80,14 +106,67 @@ renderTest Test{..} = (body, code)
         body = fromLexemes $ map (qualify testPlatform) testBody
 
 
+
 qualify :: PW -> String -> String
 qualify pw str
-    | str `elem` fpops || (all isAlpha str && length str > 1 && str `notElem` prelude) = show pw ++ "." ++ str
-    | otherwise = str
+    | str `elem` fpops || (all isAlpha str && length str > 1 && str `notElem` prelude)
+      = if str `elem` bs then qualifyBS str  else show pw ++ "." ++ str
+    | otherwise = encode str
     where
-        prelude = ["elem","uncurry","snd","fst","not","null","if","then","else"
-                  ,"True","False","Just","Nothing","fromJust","concat","isPrefixOf","isSuffixOf","any","foldr"]
+        bs = ["null", "concat", "isPrefixOf", "isSuffixOf", "any"]
+        prelude = ["elem","uncurry","snd","fst","not","if","then","else"
+                  ,"True","False","Just","Nothing","fromJust","foldr"]
         fpops = ["</>","<.>","-<.>"]
+#ifdef GHC_MAKE
+        encode v
+          | isString' v = case pw of
+                            AFP_P -> "(encodeUtf8 " <> v <> ")"
+                            AFP_W -> "(encodeUtf16LE " <> v <> ")"
+                            _ -> v
+          | isChar' v = case pw of
+                            AFP_P -> "(fromIntegral . C.ord $ " <> v <> ")"
+                            AFP_W -> "(fromIntegral . C.ord $ " <> v <> ")"
+                            _ -> v
+          | otherwise = v
+        isString' xs@('"':_:_) = last xs == '"'
+        isString' _ = False
+        isChar' xs@('\'':_:_) = last xs == '\''
+        isChar' _ = False
+        qualifyBS v = case pw of
+                        AFP_P -> "SBS." <> v
+                        AFP_W -> "SBS16." <> v
+                        _ -> v
+#else
+        encode v
+          | isString' v = case pw of
+                            AFP_P -> "(" <> v <> ")"
+                            AFP_W -> "(" <> v <> ")"
+                            _ -> v
+          | isChar' v = case pw of
+                            AFP_P -> "(PW . fromIntegral . C.ord $ " <> v <> ")"
+                            AFP_W -> "(WW . fromIntegral . C.ord $ " <> v <> ")"
+                            _ -> v
+          | otherwise = v
+        isString' xs@('"':_:_) = last xs == '"'
+        isString' _ = False
+        isChar' xs@('\'':_:_) = last xs == '\''
+        isChar' _ = False
+        qualifyBS v = case pw of
+                        AFP_P
+                          | v == "concat" -> "(PS . SBS." <> v <> " . fmap unPFP)"
+                          | v == "any" -> "(\\f (unPFP -> x) -> SBS." <> v <> " (f . PW) x)"
+                          | v == "isPrefixOf" -> "(\\(unPFP -> x) (unPFP -> y) -> SBS." <> v <> " x y)"
+                          | v == "isSuffixOf" -> "(\\(unPFP -> x) (unPFP -> y) -> SBS." <> v <> " x y)"
+                          | otherwise -> "(SBS." <> v <> " . unPFP)"
+                        AFP_W
+                          | v == "concat" -> "(WS . SBS16." <> v <> " . fmap unWFP)"
+                          | v == "any" -> "(\\f (unWFP -> x) -> SBS16." <> v <> " (f . WW) x)"
+                          | v == "isPrefixOf" -> "(\\(unWFP -> x) (unWFP -> y) -> SBS16." <> v <> " x y)"
+                          | v == "isSuffixOf" -> "(\\(unWFP -> x) (unWFP -> y) -> SBS16." <> v <> " x y)"
+                          | otherwise -> "(SBS16." <> v <> " . unWFP)"
+                        _ -> v
+#endif
+
 
 
 ---------------------------------------------------------------------
