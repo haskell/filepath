@@ -26,6 +26,7 @@ description:
 
 extra-source-files:
     System/FilePath/Internal.hs
+    Makefile
 extra-doc-files:
     README.md
     HACKING.md
