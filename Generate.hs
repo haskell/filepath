@@ -12,12 +12,15 @@ import System.IO
 
 main :: IO ()
 main = do
-    src <- readFile "System/FilePath/Internal.hs"
-    let tests = map renderTest $ concatMap parseTest $ lines src
+    src1 <- fmap lines $ readFile "System/FilePath/Internal.hs"
+    src2 <- fmap lines $ readFile "System/FilePath/Internal/Parser.hs"
+    let tests = map renderTest $ concatMap parseTest $ (src1++src2)
     writeFileBinaryChanged "tests/TestGen.hs" $ unlines $
         ["-- GENERATED CODE: See ../Generate.hs"
         ,"module TestGen(tests) where"
         ,"import TestUtil"
+        ,"import Data.List.NonEmpty (fromList)"
+        ,"import System.FilePath.Internal.Parser"
         ,"import qualified System.FilePath.Windows as W"
         ,"import qualified System.FilePath.Posix as P"
         ,"{-# ANN module \"HLint: ignore\" #-}"
@@ -82,11 +85,26 @@ renderTest Test{..} = (body, code)
 
 qualify :: PW -> String -> String
 qualify pw str
-    | str `elem` fpops || (all isAlpha str && length str > 1 && str `notElem` prelude) = show pw ++ "." ++ str
+    | str `elem` fpops || (all isAlphaNum str && length str > 1 && str `notElem` prelude) = show pw ++ "." ++ str
     | otherwise = str
     where
         prelude = ["elem","uncurry","snd","fst","not","null","if","then","else"
-                  ,"True","False","Just","Nothing","fromJust","concat","isPrefixOf","isSuffixOf","any","foldr"]
+                  ,"True","False","Just","Nothing","fromJust","concat","isPrefixOf","isSuffixOf","any","foldr","fromList"
+                  ,"parseDatastream"
+                  ,"getParse"
+                  ,"FileName"
+                  ,"parseFileName"
+                  ,"parseRelFilePath"
+                  ,"parseUNCShare"
+                  ,"endOfInput"
+                  ,"DS1"
+                  ,"DS2"
+                  ,"Rel1"
+                  ,"Rel2"
+                  ,"UnixSep"
+                  ,"WindowsSep"
+                  ,"UNCShare"
+                  ]
         fpops = ["</>","<.>","-<.>"]
 
 

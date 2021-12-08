@@ -1,0 +1,75 @@
+file namespace:
+
+\\?\UNC\localhost\c$\foo\bar                       -> \\localhost\c$\foo\bar
+\\?\GLOBALROOT\GLOBAL??\UNC\localhost\c$\foo\bar   -> \\localhost\c$\foo\bar
+\\?\HarddiskVolume2\foo\bar                        -> C:\foo\bar (if HarddiskVolume2 is C:)
+\\?\GLOBALROOT\GLOBAL??\HarddiskVolume2\foo\bar    -> C:\foo\bar (if HarddiskVolume2 is C:)
+\\?\GLOBALROOT\Device\Harddisk0\Partition2\foo\bar -> C:\foo\bar (if Harddisk0\Partition2 is C:)
+\\?\C:\foo/bar                                     -> file 'foo/bar' on drive C:
+\\?\C:\foo\bar                                     -> C:\foo\bar
+\\?\C:bar                                          -> unknown device 'C:bar'
+\\?\COM1                                           -> COM1 port
+\\?\COM1\lol                                       -> COM1 port
+
+
+device namespace:
+
+\\.\UNC\localhost\c$\foo\bar                       -> \\localhost\c$\foo\bar
+\\.\GLOBALROOT\GLOBAL??\UNC\localhost\c$\foo\bar   -> \\localhost\c$\foo\bar
+\\.\HarddiskVolume2\foo\bar                        -> C:\foo\bar (if HarddiskVolume2 is C:)
+\\.\GLOBALROOT\GLOBAL??\HarddiskVolume2\foo\bar    -> C:\foo\bar (if HarddiskVolume2 is C:)
+\\.\GLOBALROOT\Device\Harddisk0\Partition2\foo\bar -> C:\foo\bar (if Harddisk0\Partition2 is C:)
+\\.\C:\foo/bar                                     -> C:\foo\bar
+\\.\C:\foo\bar                                     -> C:\foo\bar
+\\.\C:bar                                          -> unknown device 'C:bar'
+\\.\COM1                                           -> COM1 port
+\\.\COM1\lol                                       -> COM1 port
+
+
+shares:
+
+\\.\UNC\localhost\c$\foo\bar      -> \\localhost\c$\foo\bar
+\\?\UNC\localhost\c$\foo\bar      -> \\localhost\c$\foo\bar
+\\localhost\c$\foo\bar            -> \\localhost\c$\foo\bar
+
+
+relative paths:
+
+foo\bar                           -> foo\bar
+foo/bar                           -> foo\bar
+/foo\bar                          -> relative path foo\bar from current device root
+\foo\bar                          -> relative path foo\bar from current device root
+C:bar                             -> file 'bar' on the current directory on drive C:
+C:foo\bar                         -> file 'foo\bar' on the current directory on drive C:
+
+
+absolute paths:
+
+C:\foo\bar                        -> C:\foo\bar
+C:/foo/bar                        -> C:\foo\bar
+\\localhost\c$\foo\bar            -> \\localhost\c$\foo\bar
+\\?\C:\foo\bar                    -> C:\foo\bar
+\\.\C:\foo\bar                    -> C:\foo\bar
+
+
+
+----
+
+-- Comparison with other stdlibs --
+
+python:
+  "\\localhost\c$\foo\bar"       -> ("\\localhost\c$", "\foo\bar")
+  "\\?\C:\foo\bar"               -> ("\\?\C:", "\foo\bar")
+  "\\.\C:\foo\bar"               -> ("\\.\C:", "\foo\bar")
+  "\\.\UNC\localhost\c$\foo\bar" -> ("\\.\UNC:", "\localhost\c$\foo\bar")
+
+Haskell:
+  "\\localhost\c$\foo\bar"       -> ("\\localhost\", "c$\foo\bar")
+  "\\?\C:\foo\bar"               -> ("\\?\C:\", "foo\bar")
+  "\\.\C:\foo\bar"               -> ("\\.\C:\", "foo\bar")
+  "\\.\UNC\localhost\c$\foo\bar" -> ("\\.\","UNC\localhost\c$\foo\bar")
+
+
+----
+
+length for isValid
