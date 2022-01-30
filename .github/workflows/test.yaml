@@ -7,78 +7,128 @@ on:
     branches: [ master ]
 
 jobs:
-  build-cabal:
+  build:
 
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        ghc: ['8.0.2', '8.2.2', '8.4.4', '8.6.5', '8.8.4', '8.10.7', '9.0.1', '9.2.1']
+        ghc: ['8.0.2', '8.2.2', '8.4.4', '8.6.5', '8.8.4', '8.10.7', '9.0.2', '9.2.1']
         cabal: ['3.6.2.0']
+        include:
+          - os: ubuntu-latest
+            ghc: 'HEAD'
+            experimental: true
+          - os: ubuntu-latest
+            ghc: 'recommended'
+            experimental: true
+          - os: ubuntu-latest
+            ghc: 'latest'
+            experimental: true
+        exclude:
+          - os: macOS-latest
+            ghc: '8.0.2'
+          - os: macOS-latest
+            ghc: '8.2.2'
+          - os: macOS-latest
+            ghc: '8.4.4'
+          - os: macOS-latest
+            ghc: '8.6.5'
+          - os: macOS-latest
+            ghc: '8.8.4'
+          - os: macOS-latest
+            ghc: '9.0.2'
+          - os: windows-latest
+            ghc: '8.0.2'
+          - os: windows-latest
+            ghc: '8.2.2'
+          - os: windows-latest
+            ghc: '8.4.4'
+          - os: windows-latest
+            ghc: '8.6.5'
+          - os: windows-latest
+            ghc: '8.8.4'
+          - os: windows-latest
+            ghc: '9.0.2'
 
     steps:
     - uses: actions/checkout@v2
 
-    - if: matrix.os == 'windows-latest'
-      name: Install ghcup on windows
-      run: Set-ExecutionPolicy Bypass -Scope Process -Force;[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;Invoke-Command -ScriptBlock ([ScriptBlock]::Create((Invoke-WebRequest https://www.haskell.org/ghcup/sh/bootstrap-haskell.ps1 -UseBasicParsing))) -ArgumentList $false,$true,$true,$false,$false,$false,$false,"C:\","", "C:\msys64"
-
-    - if: matrix.os == 'windows-latest'
-      name: Install make on windows
-      run: C:\msys64\usr\bin\bash -lc "pacman -S --noconfirm make"
-
-    - if: matrix.os == 'windows-latest'
-      name: Add ghcup to PATH
-      run: echo "C:\ghcup\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-    - if: matrix.os != 'windows-latest'
-      name: Install ghcup on non-windows
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_MINIMAL=1 sh
-        echo "$HOME/.cabal/bin" >> $GITHUB_PATH
-
     - name: Install ghc/cabal
       run: |
-        ghcup install ghc ${{ matrix.ghc }}
+        set -eux
+        if [ "${{ matrix.ghc }}" == 'HEAD' ] ; then
+          ghcup install ghc -u 'https://gitlab.haskell.org/api/v4/projects/1/jobs/artifacts/master/raw/ghc-x86_64-deb10-linux.tar.xz?job=validate-x86_64-linux-deb10-hadrian' head
+          ghcup set ghc head
+        else
+          ghcup install ghc ${{ matrix.ghc }}
+          ghcup set ghc ${{ matrix.ghc }}
+        fi
         ghcup install cabal ${{ matrix.cabal }}
       shell: bash
 
-    - name: Update cabal index
-      run: cabal update
-      shell: bash
-
-    - if: matrix.os == 'windows-latest'
-      name: Install cpphs
-      run: cabal install --installdir="C:\ghcup\bin" --overwrite-policy=always --install-method=copy cpphs
-
-    - if: matrix.os != 'windows-latest'
-      name: Install cpphs
-      run: cabal install --overwrite-policy=always --install-method=copy cpphs
-      shell: bash
-
     - name: Build
-      run: cabal build --enable-tests --enable-benchmarks
-      shell: bash
-
-    - name: Run tests
-      run: cabal test
-      shell: bash
-
-    - name: Haddock
-      run: cabal haddock
-      shell: bash
-
-    - name: Check generation
       run: |
+        set -eux
+        [ "${{ matrix.ghc }}" == 'HEAD' ] ||
+          [ "${{ matrix.ghc }}" == 'recommended' ] ||
+          [ "${{ matrix.ghc }}" == 'latest' ] ||
+          [ "$(ghc --numeric-version)" = "${{ matrix.ghc }}" ] 
+        cabal update
+        cabal build --enable-tests --enable-benchmarks
+        cabal test
+        cabal haddock
+        cabal check
+        cabal sdist
+      shell: bash
+
+    - if: matrix.os == 'ubuntu-latest'
+      name: make all
+      run: |
+        set -eux
+        export "PATH=$HOME/.cabal/bin:$PATH"
+        cabal install --overwrite-policy=always --install-method=copy cpphs
         make all
         git diff --exit-code
-      shell: bash
 
-    - name: check
-      run: cabal check
-      shell: bash
+  emulated:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        arch: ['s390x', 'ppc64le', 'armv7', 'aarch64']
+    steps:
+    - uses: actions/checkout@v2
+    - uses: uraimo/run-on-arch-action@v2.1.1
+      timeout-minutes: 60
+      with:
+        arch: ${{ matrix.arch }}
+        distro: ubuntu20.04
+        githubToken: ${{ github.token }}
+        install: |
+          apt-get update -y
+          apt-get install -y ghc libghc-quickcheck2-dev cpphs git make
+        run: |
+          ghc --version
+          ghc --make -o Main tests/Test.hs -itests/ +RTS -s
+          ./Main +RTS -s
 
-    - name: sdist
-      run: cabal sdist
+  emulated-i386:
+    runs-on: ubuntu-latest
+    container:
+      image: i386/ubuntu:bionic
+    steps:
+    - name: install
+      run: |
+          apt-get update -y
+          apt-get install -y ghc libghc-quickcheck2-dev cpphs git make
+      shell: bash
+    - uses: actions/checkout@v1
+    - name: test
+      run: |
+          ghc --version
+          ghc --make -o Main tests/Test.hs -itests/ +RTS -s
+          ./Main +RTS -s
       shell: bash
