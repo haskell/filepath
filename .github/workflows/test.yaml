@@ -82,3 +82,28 @@ jobs:
     - name: sdist
       run: cabal sdist
       shell: bash
+
+  emulated:
+    needs: build-cabal
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        arch: ['s390x', 'ppc64le']
+    steps:
+    - uses: actions/checkout@v2
+    - uses: uraimo/run-on-arch-action@v2.1.1
+      timeout-minutes: 60
+      with:
+        arch: ${{ matrix.arch }}
+        distro: ubuntu20.04
+        githubToken: ${{ github.token }}
+        install: |
+          apt-get update -y
+          apt-get install -y ghc libghc-quickcheck2-dev cpphs git make
+        run: |
+          ghc --version
+          make all
+          git diff --exit-code
+          ghc --make -o Main tests/Test.hs -itests/ +RTS -s
+          ./Main +RTS -s
