@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build-cabal:
+  build:
 
     runs-on: ${{ matrix.os }}
     strategy:
@@ -84,12 +84,12 @@ jobs:
       shell: bash
 
   emulated:
-    needs: build-cabal
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
-        arch: ['s390x', 'ppc64le']
+        arch: ['s390x', 'ppc64le', 'armv7', 'aarch64']
     steps:
     - uses: actions/checkout@v2
     - uses: uraimo/run-on-arch-action@v2.1.1
@@ -103,7 +103,5 @@ jobs:
           apt-get install -y ghc libghc-quickcheck2-dev cpphs git make
         run: |
           ghc --version
-          make all
-          git diff --exit-code
           ghc --make -o Main tests/Test.hs -itests/ +RTS -s
           ./Main +RTS -s
