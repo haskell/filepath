@@ -45,12 +45,18 @@ library
         other-extensions: Safe
 
     exposed-modules:
+        System.FilePath.Data.ByteString.Short.Decode
+        System.FilePath.Data.ByteString.Short.Encode
+        System.FilePath.Data.ByteString.Short.Internal
+        System.FilePath.Data.ByteString.Short.Word16
         System.FilePath
         System.FilePath.Posix
         System.FilePath.Windows
 
     build-depends:
         base >= 4.9 && < 4.17
+        , bytestring >= 0.11.3.0
+        , text           
 
     ghc-options: -Wall
 
@@ -66,3 +72,18 @@ test-suite filepath-tests
         filepath,
         base,
         QuickCheck >= 2.7 && < 2.15
+
+test-suite bytestring-tests
+    type: exitcode-stdio-1.0
+    default-language: Haskell2010
+    main-is: Main.hs
+    hs-source-dirs: tests
+    other-modules:
+        Properties
+        Properties.ShortByteString
+  build-depends:    base,
+                    bytestring >= 0.11.3.0,
+                    filepath,
+                    QuickCheck >= 2.7 && < 2.15,
+                    tasty,
+                    tasty-quickcheck
