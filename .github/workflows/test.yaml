@@ -59,7 +59,7 @@ jobs:
       run: |
         set -eux
         if [ "${{ matrix.ghc }}" == 'HEAD' ] ; then
-          ghcup install ghc -u 'https://gitlab.haskell.org/api/v4/projects/1/jobs/artifacts/master/raw/ghc-x86_64-deb10-linux.tar.xz?job=validate-x86_64-linux-deb10-hadrian' head
+          ghcup install ghc -u 'https://gitlab.haskell.org/api/v4/projects/1/jobs/artifacts/master/raw/ghc-x86_64-linux-deb10-unreg-validate.tar.xz?job=x86_64-linux-deb10-unreg-validate' head
           ghcup set ghc head
         else
           ghcup install ghc ${{ matrix.ghc }}
