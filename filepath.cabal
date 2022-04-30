@@ -123,6 +123,23 @@ test-suite filepath-tests
     , filepath
     , QuickCheck  >=2.7 && <2.15
 
+test-suite filepath-equivalent-tests
+  type:             exitcode-stdio-1.0
+  default-language: Haskell2010
+  main-is:          TestEquiv.hs
+  hs-source-dirs:   tests
+  other-modules:
+    TestUtil
+    Legacy.System.FilePath
+    Legacy.System.FilePath.Posix
+    Legacy.System.FilePath.Windows
+
+  build-depends:
+      base
+    , bytestring
+    , filepath
+    , QuickCheck  >=2.7 && <2.15
+
 test-suite bytestring-tests
   type:             exitcode-stdio-1.0
   default-language: Haskell2010
