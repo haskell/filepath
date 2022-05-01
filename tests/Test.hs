@@ -11,11 +11,19 @@ import Test.QuickCheck
 main :: IO ()
 main = do
     args <- getArgs
-    let count = case args of i:_ -> read i; _ -> 10000
+    let count   = case args of i:_   -> read i; _ -> 10000
+    let testNum = case args of
+                    _:i:_
+                      | let num = read i
+                      , num < 0    -> drop (negate num) tests
+                      | let num = read i
+                      , num > 0    -> take num          tests
+                      | otherwise  -> []
+                    _ -> tests
     putStrLn $ "Testing with " ++ show count ++ " repetitions"
-    let total = length tests
+    let total = length testNum
     let showOutput x = show x{output=""} ++ "\n" ++ output x
-    bad <- fmap catMaybes $ forM (zip [1..] tests) $ \(i,(msg,prop)) -> do
+    bad <- fmap catMaybes $ forM (zip [1..] testNum) $ \(i,(msg,prop)) -> do
         putStrLn $ "Test " ++ show i ++ " of " ++ show total ++ ": " ++ msg
         res <- quickCheckWithResult stdArgs{chatty=False, maxSuccess=count} prop
         case res of

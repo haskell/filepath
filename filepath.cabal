@@ -1,68 +1,177 @@
-cabal-version:  1.18
-name:           filepath
-version:        1.4.2.2
+cabal-version:      2.0
+name:               filepath
+version:            2.0.0.0
+
 -- NOTE: Don't forget to update ./changelog.md
-license:        BSD3
-license-file:   LICENSE
-author:         Neil Mitchell <ndmitchell@gmail.com>
-maintainer:     Julian Ospald <hasufell@posteo.de>
-copyright:      Neil Mitchell 2005-2020
-bug-reports:    https://github.com/haskell/filepath/issues
-homepage:       https://github.com/haskell/filepath#readme
-category:       System
-build-type:     Simple
-synopsis:       Library for manipulating FilePaths in a cross platform way.
-tested-with:    GHC==9.2.1, GHC==9.0.1, GHC==8.10.7, GHC==8.8.4, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2, GHC==8.0.2
+license:            BSD3
+license-file:       LICENSE
+author:             Neil Mitchell <ndmitchell@gmail.com>
+maintainer:         Julian Ospald <hasufell@posteo.de>
+copyright:          Neil Mitchell 2005-2020
+bug-reports:        https://github.com/haskell/filepath/issues
+homepage:           https://github.com/haskell/filepath#readme
+category:           System
+build-type:         Simple
+synopsis:           Library for manipulating FilePaths in a cross platform way.
+tested-with:
+  GHC ==8.0.2
+   || ==8.2.2
+   || ==8.4.4
+   || ==8.6.5
+   || ==8.8.4
+   || ==8.10.7
+   || ==9.0.2
+   || ==9.2.2
+
 description:
-    This package provides functionality for manipulating @FilePath@ values, and is shipped with both <https://www.haskell.org/ghc/ GHC> and the <https://www.haskell.org/platform/ Haskell Platform>. It provides three modules:
-    .
-    * "System.FilePath.Posix" manipulates POSIX\/Linux style @FilePath@ values (with @\/@ as the path separator).
-    .
-    * "System.FilePath.Windows" manipulates Windows style @FilePath@ values (with either @\\@ or @\/@ as the path separator, and deals with drives).
-    .
-    * "System.FilePath" is an alias for the module appropriate to your platform.
-    .
-    All three modules provide the same API, and the same documentation (calling out differences in the different variants).
+  This package provides functionality for manipulating @FilePath@ values, and is shipped with <https://www.haskell.org/ghc/ GHC>. It provides two variants for filepaths:
+  .
+  1. legacy filepaths: @type FilePath = String@
+  .
+  2. abstract filepaths: internally unpinned @ShortByteString@ (platform-dependent encoding)
+  .
+  It is recommended to use @AbstractFilePath@ when possible, because it is more correct.
+  .
+  For each variant there are three main modules:
+  .
+  * "System.FilePath.Posix" / "System.AbstractFilePath.Posix" manipulates POSIX\/Linux style @FilePath@ values (with @\/@ as the path separator).
+  .
+  * "System.FilePath.Windows" / "System.AbstractFilePath.Windows" manipulates Windows style @FilePath@ values (with either @\\@ or @\/@ as the path separator, and deals with drives).
+  .
+  * "System.FilePath" / "System.AbstractFilePath" for dealing with current platform-specific filepath
+  .
+  "System.OsString" is like "System.AbstractFilePath", but more general purpose. Refer to the documentation of
+  those modules for more information.
 
 extra-source-files:
-    System/FilePath/Internal.hs
-    Makefile
+  Makefile
+  System/AbstractFilePath/Common.hs
+  System/FilePath/Internal.hs
+  System/OsString/Common.hs
+  tests/Properties/Common.hs
+
 extra-doc-files:
-    README.md
-    HACKING.md
-    changelog.md
+  changelog.md
+  HACKING.md
+  README.md
+
+flag cpphs
+  description: Use cpphs (fixes haddock source links)
+  default:     False
+  manual:      True
 
 source-repository head
-    type:     git
-    location: https://github.com/haskell/filepath.git
+  type:     git
+  location: https://github.com/haskell/filepath.git
 
 library
-    default-language: Haskell2010
-    other-extensions:
-        CPP
-        PatternGuards
-    if impl(GHC >= 7.2)
-        other-extensions: Safe
+  default-language: Haskell2010
+  other-extensions:
+    CPP
+    PatternGuards
 
-    exposed-modules:
-        System.FilePath
-        System.FilePath.Posix
-        System.FilePath.Windows
+  if impl(ghc >=7.2)
+    other-extensions: Safe
 
-    build-depends:
-        base >= 4.9 && < 4.18
+  exposed-modules:
+    System.AbstractFilePath
+    System.AbstractFilePath.Data.ByteString.Short
+    System.AbstractFilePath.Data.ByteString.Short.Decode
+    System.AbstractFilePath.Data.ByteString.Short.Encode
+    System.AbstractFilePath.Data.ByteString.Short.Internal
+    System.AbstractFilePath.Data.ByteString.Short.Word16
+    System.AbstractFilePath.Internal
+    System.AbstractFilePath.Posix
+    System.AbstractFilePath.Posix.Internal
+    System.AbstractFilePath.Types
+    System.AbstractFilePath.Windows
+    System.AbstractFilePath.Windows.Internal
+    System.FilePath
+    System.FilePath.Posix
+    System.FilePath.Windows
+    System.OsString
+    System.OsString.Internal
+    System.OsString.Internal.Types
+    System.OsString.Posix
+    System.OsString.Windows
 
-    ghc-options: -Wall
+  build-depends:
+      base              >=4.9 && <4.18
+    , bytestring
+    , deepseq
+    , exceptions
+    , template-haskell
+
+  ghc-options:      -Wall
+
+  if flag(cpphs)
+    ghc-options:        -pgmPcpphs -optP--cpp
+    build-tool-depends: cpphs:cpphs -any
 
 test-suite filepath-tests
-    type: exitcode-stdio-1.0
-    default-language: Haskell2010
-    main-is: Test.hs
-    hs-source-dirs: tests
-    other-modules:
-        TestGen
-        TestUtil
-    build-depends:
-        filepath,
-        base,
-        QuickCheck >= 2.7 && < 2.15
+  type:             exitcode-stdio-1.0
+  default-language: Haskell2010
+  main-is:          Test.hs
+  hs-source-dirs:   tests
+  other-modules:
+    TestGen
+    TestUtil
+
+  build-depends:
+      base
+    , bytestring
+    , filepath
+    , QuickCheck  >=2.7 && <2.15
+
+test-suite filepath-equivalent-tests
+  type:             exitcode-stdio-1.0
+  default-language: Haskell2010
+  main-is:          TestEquiv.hs
+  hs-source-dirs:   tests
+  other-modules:
+    TestUtil
+    Legacy.System.FilePath
+    Legacy.System.FilePath.Posix
+    Legacy.System.FilePath.Windows
+
+  build-depends:
+      base
+    , bytestring
+    , filepath
+    , QuickCheck  >=2.7 && <2.15
+
+test-suite bytestring-tests
+  type:             exitcode-stdio-1.0
+  default-language: Haskell2010
+  main-is:          Main.hs
+  hs-source-dirs:   tests
+  other-modules:
+    Properties
+    Properties.ShortByteString
+    Properties.ShortByteString.Word16
+
+  build-depends:
+      base
+    , bytestring
+    , filepath
+    , QuickCheck        >=2.7 && <2.15
+    , tasty
+    , tasty-quickcheck
+
+test-suite abstract-filepath
+  type:               exitcode-stdio-1.0
+  main-is:            Test.hs
+  build-tool-depends: hspec-discover:hspec-discover -any
+  hs-source-dirs:     tests/afpp
+  other-modules:
+    AbstractFilePathSpec
+    Arbitrary
+
+  default-language:   Haskell2010
+  build-depends:
+      base
+    , checkers          ^>=0.5.6
+    , filepath
+    , QuickCheck        >=2.7   && <2.15
+    , tasty
+    , tasty-quickcheck

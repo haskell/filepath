@@ -14,7 +14,11 @@ All three modules provide the same API, and the same documentation (calling out 
 
 ### What is a `FilePath`?
 
-In Haskell, the definition is `type FilePath = String` as of now. A Haskell `String` is a list of Unicode code points.
+In Haskell, the legacy definition (used in `base` and Prelude) is `type FilePath = String`,
+where a Haskell `String` is a list of Unicode code points.
+
+The new definition is (simplified) `newtype AbstractFilePath = AFP ShortByteString`, where
+`ShortByteString` is an unpinned byte array and follows syscall conventions, preserving the encoding.
 
 On unix, filenames don't have a predefined encoding as per the
 [POSIX specification](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_170)
@@ -22,11 +26,9 @@ and are passed as `char[]` to syscalls.
 
 On windows (at least the API used by `Win32`) filepaths are UTF-16 strings.
 
-This means that Haskell filepaths have to be converted to C-strings on unix
-(utilizing the current filesystem encoding) and to UTF-16 strings
-on windows.
+You are encouraged to use `AbstractFilePath` whenever possible, because it is more correct.
 
-Further, this is a low-level library and it makes no attempt at providing a more
+Also note that this is a low-level library and it makes no attempt at providing a more
 type safe variant for filepaths (e.g. by distinguishing between absolute and relative
 paths) and ensures no invariants (such as filepath validity).
 
