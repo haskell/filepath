@@ -97,7 +97,7 @@ library
 
   build-depends:
       base              >=4.9 && <4.18
-    , bytestring
+    , bytestring        >=0.11.3.0
     , deepseq
     , exceptions
     , template-haskell
@@ -119,7 +119,7 @@ test-suite filepath-tests
 
   build-depends:
       base
-    , bytestring
+    , bytestring        >=0.11.3.0
     , filepath
     , QuickCheck  >=2.7 && <2.15
 
@@ -136,7 +136,7 @@ test-suite filepath-equivalent-tests
 
   build-depends:
       base
-    , bytestring
+    , bytestring        >=0.11.3.0
     , filepath
     , QuickCheck  >=2.7 && <2.15
 
@@ -152,7 +152,7 @@ test-suite bytestring-tests
 
   build-depends:
       base
-    , bytestring
+    , bytestring        >=0.11.3.0
     , filepath
     , QuickCheck        >=2.7 && <2.15
     , tasty
