@@ -1,15 +1,3 @@
-# HLint configuration file
-# https://github.com/ndmitchell/hlint
-##########################
-
-# Use fmap instead of <$> to make cross-version compatibility easier
-- ignore: {name: "Use <$>"}
-
-# We use [Char] because sometimes we really are talking about a set of Char.
-- ignore: {name: "Use String"}
-
-# We don't use the extra library
-- ignore: {name: "Use drop1"}
-- ignore: {name: "Use upper"}
-- ignore: {name: "Use lower"}
-- ignore: {name: "Use zipFrom"}
+- ignore: {name: "Redundant lambda"}
+- ignore: {name: "Redundant multi-way if"}
+- ignore: {name: "Use if"}
