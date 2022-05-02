@@ -109,6 +109,7 @@ module System.AbstractFilePath.MODULE_NAME.Internal
     )
     where
 
+{- HLINT ignore "Use fewer imports" -}
 import Prelude (Char, Bool(..), Maybe(..), (.), (&&), (<=), not, fst, maybe, (||), (==), ($), otherwise, fmap, mempty, (>=), (/=), (++), snd)
 import Data.Semigroup ((<>))
 import qualified Prelude as P
@@ -118,7 +119,7 @@ import qualified Data.List as L
 #ifndef ABSTRACT_FILEPATH
 import Data.String (fromString)
 import System.Environment(getEnv)
-import Prelude (String, map, FilePath, Eq, IO, id, last, init, reverse, dropWhile, null, break, takeWhile, take, all, elem, any, head, length, tail, span)
+import Prelude (String, map, FilePath, Eq, IO, id, last, init, reverse, dropWhile, null, break, takeWhile, take, all, elem, any, head, tail, span)
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.List(stripPrefix, isSuffixOf, uncons)
 #define CHAR Char
@@ -488,7 +489,7 @@ readDriveUNC bs = case unpack bs of
               in Just (pack (s1:s2:_question:s3:L.take 4 xs) <> a, b)
           _ -> case readDriveLetter (pack xs) of
                    -- Extended-length path.
-                   Just (a,b) -> Just (pack (s1:s2:_question:s3:[]) <> a, b)
+                   Just (a,b) -> Just (pack [s1,s2,_question,s3] <> a, b)
                    Nothing -> Nothing
   _ -> Nothing
 
@@ -889,10 +890,10 @@ makeRelative root path
       where (a, b) = break isPathSeparator $ dropWhile isPathSeparator x
 
     -- on windows, need to drop '/' which is kind of absolute, but not a drive
-    dropAbs x | length x >= 1 && isPathSeparator (head x) && not (hasDrive x) = tail x
+    dropAbs x | not (null x) && isPathSeparator (head x) && not (hasDrive x) = tail x
     dropAbs x = dropDrive x
 
-    takeAbs x | length x >= 1 && isPathSeparator (head x) && not (hasDrive x) = singleton pathSeparator
+    takeAbs x | not (null x) && isPathSeparator (head x) && not (hasDrive x) = singleton pathSeparator
     takeAbs x = map (\y -> if isPathSeparator y then pathSeparator else toLower y) $ takeDrive x
 
 -- | Normalise a file
@@ -1046,7 +1047,7 @@ makeValid :: FILEPATH -> FILEPATH
 makeValid path
   | null path = singleton _underscore
   | isPosix = map (\x -> if x == _nul then _underscore else x) path
-  | isJust (readDriveShare drv) && all isPathSeparator drv = take 2 drv <> (fromString "drive")
+  | isJust (readDriveShare drv) && all isPathSeparator drv = take 2 drv <> fromString "drive"
   | isJust (readDriveUNC drv) && not (hasTrailingPathSeparator drv) =
       makeValid (drv <> singleton pathSeparator <> pth)
   | otherwise = joinDrive drv $ validElements $ validCHARs pth
@@ -1060,7 +1061,7 @@ makeValid path
     validElements = joinPath . fmap g . splitPath
     g x = h a <> b
         where (a,b) = break isPathSeparator x
-    h x = if map toUpper (dropWhileEnd (== _space) a) `L.elem` badElements then (snoc a _underscore ) <.> b else x
+    h x = if map toUpper (dropWhileEnd (== _space) a) `L.elem` badElements then snoc a _underscore  <.> b else x
         where (a,b) = splitExtensions x
 
 
@@ -1130,7 +1131,7 @@ breakEnd p = spanEnd (not . p)
 -- Nothing if the list did not end with the suffix given, or Just the list
 -- before the suffix, if it does.
 stripSuffix :: Eq a => [a] -> [a] -> Maybe [a]
-stripSuffix xs ys = fmap reverse $ stripPrefix (reverse xs) (reverse ys)
+stripSuffix xs ys = reverse P.<$> stripPrefix (reverse xs) (reverse ys)
 
 
 unsnoc :: [a] -> Maybe ([a], a)
@@ -1170,6 +1171,7 @@ unpack = id
 
 
 snoc :: String -> Char -> String
+{- HLINT ignore "Redundant lambda" -}
 snoc str = \c -> str <> [c]
 
 #else

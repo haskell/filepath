@@ -1,6 +1,5 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE MagicHash #-}
-{-# LANGUAGE PackageImports #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE BangPatterns #-}
@@ -257,7 +256,7 @@ unpackWord16 sbs = go len []
                     in go (i - 2) (w:acc)
 
 packWord16Rev :: [Word16] -> ShortByteString
-packWord16Rev cs = packLenWord16Rev ((List.length cs) * 2) cs
+packWord16Rev cs = packLenWord16Rev (List.length cs * 2) cs
 
 packLenWord16Rev :: Int -> [Word16] -> ShortByteString
 packLenWord16Rev len ws0 =
@@ -280,9 +279,9 @@ writeWord16Array :: MBA s
 writeWord16Array (MBA# mba#) (I# i#) (W16# w#) =
   case encodeWord16LE# w# of
     (# lsb#, msb# #) ->
-      (ST $ \s -> case writeWord8Array# mba# i# lsb# s of
+      ST (\s -> case writeWord8Array# mba# i# lsb# s of
           s' -> (# s', () #)) >>
-      (ST $ \s -> case writeWord8Array# mba# (i# +# 1#) msb# s of
+      ST (\s -> case writeWord8Array# mba# (i# +# 1#) msb# s of
           s' -> (# s', () #))
 
 -- | This isn't strictly Word16 array read. Instead it's two Word8 array reads
@@ -291,20 +290,20 @@ writeWord16Array (MBA# mba#) (I# i#) (W16# w#) =
 indexWord16Array :: BA
                  -> Int      -- ^ Word8 index (not Word16)
                  -> Word16
-indexWord16Array (BA# ba#) (I# i#) = 
+indexWord16Array (BA# ba#) (I# i#) =
   case (# indexWord8Array# ba# i#, indexWord8Array# ba# (i# +# 1#) #) of
-    (# lsb#, msb# #) -> W16# ((decodeWord16LE# (# lsb#, msb# #)))
+    (# lsb#, msb# #) -> W16# (decodeWord16LE# (# lsb#, msb# #))
 
 #if !MIN_VERSION_base(4,16,0)
 
 encodeWord16LE# :: Word#              -- ^ Word16
                 -> (# Word#, Word# #) -- ^ Word8 (LSB, MSB)
-encodeWord16LE# x# = (# (x# `and#` int2Word# 0xff#)
-                     ,  ((x# `and#` int2Word# 0xff00#) `shiftRL#` 8#) #)
+encodeWord16LE# x# = (# x# `and#` int2Word# 0xff#
+                     ,  x# `and#` int2Word# 0xff00# `shiftRL#` 8# #)
 
 decodeWord16LE# :: (# Word#, Word# #) -- ^ Word8 (LSB, MSB)
                 -> Word#              -- ^ Word16
-decodeWord16LE# (# lsb#, msb# #) = ((msb# `shiftL#` 8#) `or#` lsb#)
+decodeWord16LE# (# lsb#, msb# #) = msb# `shiftL#` 8# `or#` lsb#
 
 #else
 
