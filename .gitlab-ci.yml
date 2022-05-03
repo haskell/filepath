@@ -60,6 +60,12 @@ variables:
   stage: build
   script:
     - bash .gitlab/ci.sh
+  needs: []
+
+.s390x-linux:
+  tags:
+    - s390x-linux
+  image: s390x/ubuntu:22.04
 
 .aarch64-linux:
   tags:
@@ -101,6 +107,26 @@ variables:
   tags:
     - x86_64-linux
 
+
+
+######################
+# s390x linux
+######################
+
+build-s390x-linux:
+  stage: build
+  needs: []
+  extends:
+    - .artifacts:short
+    - .s390x-linux
+  before_script:
+    - apt-get update -y
+    - apt-get install -y ghc cabal-install libghc-quickcheck2-dev libghc-tasty-dev libghc-tasty-quickcheck-dev git make curl
+  script:
+    - ghc --version
+    - cabal --version
+    - cabal update
+    - cabal v2-test --constraint='text<2' --test-show-details=direct all
 
 
 ######################
@@ -266,6 +292,7 @@ build-x86_64-darwin:
 
 build-aarch64-darwin:
   extends: .artifacts:short
+  needs: []
   stage: build
   tags:
     - aarch64-darwin-m1
