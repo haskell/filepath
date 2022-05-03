@@ -8,8 +8,8 @@ license-file:       LICENSE
 author:             Neil Mitchell <ndmitchell@gmail.com>
 maintainer:         Julian Ospald <hasufell@posteo.de>
 copyright:          Neil Mitchell 2005-2020
-bug-reports:        https://github.com/haskell/filepath/issues
-homepage:           https://github.com/haskell/filepath#readme
+bug-reports:        https://gitlab.haskell.org/haskell/filepath/-/issues
+homepage:           https://gitlab.haskell.org/haskell/filepath/-/blob/master/README.md
 category:           System
 build-type:         Simple
 synopsis:           Library for manipulating FilePaths in a cross platform way.
@@ -62,7 +62,7 @@ flag cpphs
 
 source-repository head
   type:     git
-  location: https://github.com/haskell/filepath.git
+  location: https://gitlab.haskell.org/haskell/filepath
 
 library
   default-language: Haskell2010
@@ -97,7 +97,7 @@ library
 
   build-depends:
       base              >=4.9 && <4.18
-    , bytestring
+    , bytestring        >=0.11.3.0
     , deepseq
     , exceptions
     , template-haskell
@@ -119,7 +119,7 @@ test-suite filepath-tests
 
   build-depends:
       base
-    , bytestring
+    , bytestring        >=0.11.3.0
     , filepath
     , QuickCheck  >=2.7 && <2.15
 
@@ -136,7 +136,7 @@ test-suite filepath-equivalent-tests
 
   build-depends:
       base
-    , bytestring
+    , bytestring        >=0.11.3.0
     , filepath
     , QuickCheck  >=2.7 && <2.15
 
@@ -152,7 +152,7 @@ test-suite bytestring-tests
 
   build-depends:
       base
-    , bytestring
+    , bytestring        >=0.11.3.0
     , filepath
     , QuickCheck        >=2.7 && <2.15
     , tasty

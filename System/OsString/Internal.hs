@@ -1,6 +1,5 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UnliftedFFITypes #-}
 
 module System.OsString.Internal where
@@ -106,7 +105,7 @@ qq :: (ByteString -> Q Exp) -> QuasiQuoter
 qq quoteExp' =
   QuasiQuoter
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-  { quoteExp  = (\s -> quoteExp' . fromShort . encodeUtf16LE $ s)
+  { quoteExp  = quoteExp' . fromShort . encodeUtf16LE
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -115,7 +114,7 @@ qq quoteExp' =
       fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
   }
 #else
-  { quoteExp  = (\s -> quoteExp' . fromShort . encodeUtf8 $ s)
+  { quoteExp  = quoteExp' . fromShort . encodeUtf8
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -138,7 +137,7 @@ osstr = qq mkOsString
 
 
 unpackOsString :: OsString -> [OsChar]
-unpackOsString (OsString x) = fmap OsChar $ unpackPlatformString x
+unpackOsString (OsString x) = OsChar <$> unpackPlatformString x
 
 
 packOsString :: [OsChar] -> OsString

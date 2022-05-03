@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 -- This template expects CPP definitions for:
 --     WINDOWS
 --     POSIX
@@ -126,7 +125,6 @@ import System.OsString.Windows
     )
 import Data.Bifunctor ( bimap )
 import qualified System.AbstractFilePath.Windows.Internal as C
-import System.AbstractFilePath.Types ()
 
 #elif defined(POSIX)
 
@@ -146,7 +144,6 @@ import System.OsString.Posix
     )
 import Data.Bifunctor ( bimap )
 import qualified System.AbstractFilePath.Posix.Internal as C
-import System.AbstractFilePath.Types ()
 
 #else
 
@@ -368,7 +365,7 @@ isExtensionOf (CTOR x) (CTOR y) = C.isExtensionOf x y
 -- > stripExtension "bar"  "foobar"   == Nothing
 -- > stripExtension ""     x          == Just x
 stripExtension :: OSSTRING_NAME -> FILEPATH_NAME -> Maybe FILEPATH_NAME
-stripExtension (CTOR bs) (CTOR x) = fmap CTOR $ C.stripExtension bs x
+stripExtension (CTOR bs) (CTOR x) = CTOR <$> C.stripExtension bs x
 
 -- | Split on all extensions.
 --
@@ -666,7 +663,7 @@ combine (CTOR a) (CTOR b) = CTOR $ C.combine a b
 -- > Windows: splitPath "c:\\test\\path" == ["c:\\","test\\","path"]
 -- > Posix:   splitPath "/file/test" == ["/","file/","test"]
 splitPath :: FILEPATH_NAME -> [FILEPATH_NAME]
-splitPath (CTOR bs) = fmap CTOR $ C.splitPath bs
+splitPath (CTOR bs) = CTOR <$> C.splitPath bs
 
 -- | Just as 'splitPath', but don't add the trailing slashes to each element.
 --
@@ -679,7 +676,7 @@ splitPath (CTOR bs) = fmap CTOR $ C.splitPath bs
 -- > Windows: splitDirectories "C:\\test\\\\\\file" == ["C:\\", "test", "file"]
 -- >          splitDirectories "/test///file" == ["/","test","file"]
 splitDirectories :: FILEPATH_NAME -> [FILEPATH_NAME]
-splitDirectories (CTOR x) = fmap CTOR $ C.splitDirectories x
+splitDirectories (CTOR x) = CTOR <$> C.splitDirectories x
 
 -- | Join path elements back together.
 --

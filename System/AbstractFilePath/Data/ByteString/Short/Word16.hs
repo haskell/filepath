@@ -1,10 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE MagicHash #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -369,7 +366,7 @@ replicate :: Int -> Word16 -> ShortByteString
 replicate w c
     | w <= 0    = empty
     -- can't use setByteArray here, because we write UTF-16LE
-    | otherwise = create (w * 2) (\mba -> go mba 0)
+    | otherwise = create (w * 2) (`go` 0)
   where
     go mba ix
       | ix < 0 || ix >= w * 2 = pure ()
@@ -445,7 +442,7 @@ unfoldrN i f = \x0 ->
 take :: Int  -- ^ number of Word16
      -> ShortByteString
      -> ShortByteString
-take = \n -> \(assertEven -> sbs) ->
+take = \n (assertEven -> sbs) ->
                      let sl   = numWord16 sbs
                          len8 = n * 2
                      in if | n >= sl   -> sbs
@@ -493,7 +490,7 @@ takeWhileEnd f ps = drop (findFromEndUntil (not . f) ps) ps
 drop  :: Int  -- ^ number of 'Word16'
       -> ShortByteString
       -> ShortByteString
-drop = \n' -> \(assertEven -> sbs) ->
+drop = \n' (assertEven -> sbs) ->
   let len = BS.length sbs
       n   = n' * 2
   in if | n <= 0    -> sbs
@@ -553,7 +550,7 @@ breakEnd p = \(assertEven -> sbs) -> splitAt (findFromEndUntil p sbs) sbs
 --
 -- 'break' @p@ is equivalent to @'span' (not . p)@ and to @('takeWhile' (not . p) &&& 'dropWhile' (not . p))@.
 break :: (Word16 -> Bool) -> ShortByteString -> (ShortByteString, ShortByteString)
-break = \p -> \(assertEven -> ps) -> case findIndexOrLength p ps of n -> (take n ps, drop n ps)
+break = \p (assertEven -> ps) -> case findIndexOrLength p ps of n -> splitAt n ps
 
 -- | Similar to 'P.span',
 -- returns the longest (possibly empty) prefix of elements
@@ -562,6 +559,7 @@ break = \p -> \(assertEven -> ps) -> case findIndexOrLength p ps of n -> (take n
 -- 'span' @p@ is equivalent to @'break' (not . p)@ and to @('takeWhile' p &&& 'dropWhile' p)@.
 --
 span :: (Word16 -> Bool) -> ShortByteString -> (ShortByteString, ShortByteString)
+{- HLINT ignore "Use span" -}
 span p = break (not . p) . assertEven
 
 -- | Returns the longest (possibly empty) suffix of elements
@@ -824,11 +822,13 @@ partition k = \(assertEven -> sbs) ->
 elemIndex :: Word16
           -> ShortByteString
           -> Maybe Int  -- ^ number of 'Word16'
+{- HLINT ignore "Use elemIndex" -}
 elemIndex k = findIndex (==k) . assertEven
 
 -- | /O(n)/ The 'elemIndices' function extends 'elemIndex', by returning
 -- the indices of all elements equal to the query element, in ascending order.
 elemIndices :: Word16 -> ShortByteString -> [Int]
+{- HLINT ignore "Use elemIndices" -}
 elemIndices k = findIndices (==k) . assertEven
 
 -- | count returns the number of times its argument appears in the ShortByteString

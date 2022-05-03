@@ -50,10 +50,10 @@ streamUtf8 onErr bs = go 0
       l = BS.length bs
       go i
           | i >= l = []
-          | validate1_8 x1 = (unsafeChr8 x1) : go (i+1)
-          | i+1 < l && validate2_8 x1 x2 = (chr2 x1 x2) : go (i+2)
-          | i+2 < l && validate3_8 x1 x2 x3 = (chr3 x1 x2 x3) : go (i+3)
-          | i+3 < l && validate4_8 x1 x2 x3 x4 = (chr4 x1 x2 x3 x4) : go (i+4)
+          | validate1_8 x1 = unsafeChr8 x1 : go (i+1)
+          | i+1 < l && validate2_8 x1 x2 = chr2 x1 x2 : go (i+2)
+          | i+2 < l && validate3_8 x1 x2 x3 = chr3 x1 x2 x3 : go (i+3)
+          | i+3 < l && validate4_8 x1 x2 x3 x4 = chr4 x1 x2 x3 x4 : go (i+4)
           | otherwise = decodeError "streamUtf8" "UTF-8" onErr (Just x1) ++ go (i+1)
           where
             x1 = idx i
@@ -72,8 +72,8 @@ streamUtf16LE onErr bs = go 0
       {-# INLINE go #-}
       go i
           | i >= l                         = []
-          | i+1 < l && validate1_16 x1    = (unsafeChr16 x1) : go (i+2)
-          | i+3 < l && validate2_16 x1 x2 = (chr2_16 x1 x2) : go (i+4)
+          | i+1 < l && validate1_16 x1    = unsafeChr16 x1 : go (i+2)
+          | i+3 < l && validate2_16 x1 x2 = chr2_16 x1 x2 : go (i+4)
           | otherwise = decodeError "streamUtf16LE" "UTF-16LE" onErr Nothing ++ go (i+1)
           where
             x1    = idx i       + (idx (i + 1) `shiftL` 8)
@@ -83,7 +83,7 @@ streamUtf16LE onErr bs = go 0
 
 -- | Decode text from little endian UTF-16 encoding.
 decodeUtf16LEWith :: OnDecodeError -> ShortByteString -> String
-decodeUtf16LEWith onErr bs = streamUtf16LE onErr bs
+decodeUtf16LEWith = streamUtf16LE
 {-# INLINE decodeUtf16LEWith #-}
 
 -- | Decode text from little endian UTF-16 encoding.
@@ -97,7 +97,7 @@ decodeUtf16LE = decodeUtf16LEWith strictDecode
 
 -- | Decode text from little endian UTF-16 encoding.
 decodeUtf8With :: OnDecodeError -> ShortByteString -> String
-decodeUtf8With onErr bs = streamUtf8 onErr bs
+decodeUtf8With = streamUtf8
 {-# INLINE decodeUtf8With #-}
 
 -- | Decode text from little endian UTF-16 encoding.
@@ -283,4 +283,4 @@ instance Show UnicodeException where
 instance Exception UnicodeException
 
 instance NFData UnicodeException where
-    rnf (DecodeError desc w) = rnf desc `seq` rnf w `seq` ()
+    rnf (DecodeError desc w) = rnf desc `seq` rnf w

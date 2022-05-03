@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE PackageImports #-}
+{- HLINT ignore "Unused LANGUAGE pragma" -}
 {-# LANGUAGE TypeApplications #-}
 -- This template expects CPP definitions for:
 --     MODULE_NAME = Posix | Windows
@@ -40,19 +39,9 @@ module System.OsString.MODULE_NAME
 where
 
 
-import System.OsString.Internal.Types
-#ifdef WINDOWS
-  ( WindowsString
-  , WindowsChar
-  )
-#else
-  ( PosixString
-  , PosixChar
-  )
-#endif
 
 import System.AbstractFilePath.Data.ByteString.Short.Encode
-  ( 
+  (
 #ifdef WINDOWS
     encodeUtf16LE
 #else
@@ -66,6 +55,7 @@ import System.AbstractFilePath.Data.ByteString.Short.Decode
     , decodeUtf16LE''
 #else
       decodeUtf8'
+  , UnicodeException (..)
 #endif
     )
 import System.OsString.Internal.Types (
@@ -77,15 +67,13 @@ import System.OsString.Internal.Types (
   )
 
 import Data.Char
-import Control.Exception
-    ( throwIO )
 import Control.Monad.Catch
     ( MonadThrow, throwM )
 import Data.ByteString.Internal
     ( ByteString )
 #ifndef WINDOWS
 import Control.Exception
-    ( SomeException, try, displayException )
+    ( SomeException, try, displayException, throwIO )
 import Control.DeepSeq ( force )
 import Data.Bifunctor ( first )
 import GHC.IO
@@ -97,10 +85,9 @@ import System.IO.Error
     ( catchIOError )
 import System.IO
     ( TextEncoding )
-import System.AbstractFilePath.Data.ByteString.Short.Decode
-    (
-      UnicodeException (..)
-    )
+#else
+import Control.Exception
+    ( throwIO )
 #endif
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
@@ -164,8 +151,7 @@ fromPlatformString (PS ba) = either throwM pure $ decodeUtf8' ba
 fromPlatformStringEnc :: PLATFORM_STRING -> TextEncoding -> Either UnicodeException String
 fromPlatformStringEnc (PS ba) enc = unsafePerformIO $ do
   r <- try @SomeException $ BS.useAsCString ba $ \fp -> GHC.peekCString enc fp
-  r' <- evaluate $ force $ first (flip DecodeError Nothing . displayException) $ r
-  pure r'
+  evaluate $ force $ first (flip DecodeError Nothing . displayException) r
 #endif
 
 
@@ -206,7 +192,7 @@ qq :: (ByteString -> Q Exp) -> QuasiQuoter
 qq quoteExp' =
   QuasiQuoter
 #ifdef WINDOWS
-  { quoteExp  = (\s -> quoteExp' . fromShort . encodeUtf16LE $ s)
+  { quoteExp  = quoteExp' . fromShort . encodeUtf16LE
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -215,7 +201,7 @@ qq quoteExp' =
       fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
   }
 #else
-  { quoteExp  = (\s -> quoteExp' . fromShort . encodeUtf8 $ s)
+  { quoteExp  = quoteExp' . fromShort . encodeUtf8
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -244,17 +230,17 @@ pstr = qq mkPlatformString
 
 unpackPlatformString :: PLATFORM_STRING -> [PLATFORM_WORD]
 #ifdef WINDOWS
-unpackPlatformString (WS ba) = fmap WW $ BS.unpack ba
+unpackPlatformString (WS ba) = WW <$> BS.unpack ba
 #else
-unpackPlatformString (PS ba) = fmap PW $ BS.unpack ba
+unpackPlatformString (PS ba) = PW <$> BS.unpack ba
 #endif
 
 
 packPlatformString :: [PLATFORM_WORD] -> PLATFORM_STRING
 #ifdef WINDOWS
-packPlatformString ws = WS . BS.pack . fmap (\(WW w) -> w) $ ws
+packPlatformString = WS . BS.pack . fmap (\(WW w) -> w)
 #else
-packPlatformString ws = PS . BS.pack . fmap (\(PW w) -> w) $ ws
+packPlatformString = PS . BS.pack . fmap (\(PW w) -> w)
 #endif
 
 

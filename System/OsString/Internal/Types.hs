@@ -53,7 +53,7 @@ newtype WindowsString = WS { unWFP :: BS.ShortByteString }
 
 instance Lift WindowsString where
   lift (WS bs)
-    = [| (WS (BS.pack $(lift $ BS.unpack bs))) :: WindowsString |]
+    = [| WS (BS.pack $(lift $ BS.unpack bs)) :: WindowsString |]
 #if MIN_VERSION_template_haskell(2,17,0)
   liftTyped = TH.unsafeCodeCoerce . TH.lift
 #elif MIN_VERSION_template_haskell(2,16,0)
@@ -67,7 +67,7 @@ newtype PosixString   = PS { unPFP :: BS.ShortByteString }
 
 instance Lift PosixString where
   lift (PS bs)
-    = [| (PS (BS.pack $(lift $ BS.unpack bs))) :: PosixString |]
+    = [| PS (BS.pack $(lift $ BS.unpack bs)) :: PosixString |]
 #if MIN_VERSION_template_haskell(2,17,0)
   liftTyped = TH.unsafeCodeCoerce . TH.lift
 #elif MIN_VERSION_template_haskell(2,16,0)
