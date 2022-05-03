@@ -72,11 +72,20 @@ args=(
     "${ADD_CABAL_ARGS}"
 )
 
+case "$(uname -s)" in
+	"Linux"|"linux")
+		run make all
+		run git diff --exit-code
+		;;
+	*)
+		;;
+esac
+
 run rm cabal.project
 run cabal check
 run cabal sdist
 run tar xf dist-newstyle/sdist/filepath-*.tar.gz
-cd filepath-*
+run cd filepath-*
 run cabal v2-build ${args[@]}
 run cabal v2-test ${args[@]} --test-show-details=direct all
 run cabal v2-haddock
