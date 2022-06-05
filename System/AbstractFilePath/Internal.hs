@@ -38,6 +38,12 @@ import System.AbstractFilePath.Data.ByteString.Short.Decode
 toAbstractFilePath :: String -> AbstractFilePath
 toAbstractFilePath = toOsString
 
+-- | Like 'toAbstractFilePath', except allows to provide encodings.
+toAbstractFilePathEnc :: String
+                      -> TextEncoding  -- ^ unix text encoding
+                      -> TextEncoding  -- ^ windows text encoding
+                      -> Either UnicodeException AbstractFilePath
+toAbstractFilePathEnc = toOsStringEnc
 
 -- | Like 'toAbstractFilePath', except on unix this uses the current
 -- locale for encoding instead of always UTF8.
@@ -72,7 +78,7 @@ fromAbstractFilePathEnc :: AbstractFilePath
 fromAbstractFilePathEnc = fromOsStringEnc
 
 -- | Like 'fromAbstractFilePath', except on unix this uses the current
--- locale for decoding instead of always UTF8.
+-- locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.

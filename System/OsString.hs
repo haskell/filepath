@@ -21,6 +21,7 @@ module System.OsString
 
   -- * String construction
   , toOsString
+  , toOsStringEnc
   , toOsStringIO
   , bsToOsString
   , osstr
@@ -53,6 +54,7 @@ import System.OsString.Internal
     , osstr
     , packOsString
     , toOsString
+    , toOsStringEnc
     , toOsStringIO
     , unpackOsString
     )

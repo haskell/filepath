@@ -29,27 +29,27 @@ module System.AbstractFilePath
   , OsString
   , OsChar
 #endif
-  -- * String construction
+  -- * Filepath construction
 #if defined(WINDOWS) || defined(POSIX)
   , toPlatformString
+  , toPlatformStringEnc
   , toPlatformStringIO
   , bsToPlatformString
   , pstr
   , packPlatformString
 #else
   , toAbstractFilePath
+  , toAbstractFilePathEnc
   , toAbstractFilePathIO
   , bsToAFP
   , afp
   , packAFP
 #endif
 
-  -- * String deconstruction
+  -- * Filepath deconstruction
 #if defined(WINDOWS) || defined(POSIX)
   , fromPlatformString
-#if defined(POSIX)
   , fromPlatformStringEnc
-#endif
   , fromPlatformStringIO
   , unpackPlatformString
 #else
@@ -116,10 +116,12 @@ import System.OsString.Windows
     , unsafeFromChar
     , toChar
     , fromPlatformString
+    , fromPlatformStringEnc
     , fromPlatformStringIO
     , packPlatformString
     , pstr
     , toPlatformString
+    , toPlatformStringEnc
     , toPlatformStringIO
     , unpackPlatformString
     )
@@ -139,6 +141,7 @@ import System.OsString.Posix
     , packPlatformString
     , pstr
     , toPlatformString
+    , toPlatformStringEnc
     , toPlatformStringIO
     , unpackPlatformString
     )
@@ -155,6 +158,7 @@ import System.AbstractFilePath.Internal
     , fromAbstractFilePathIO
     , packAFP
     , toAbstractFilePath
+    , toAbstractFilePathEnc
     , toAbstractFilePathIO
     , unpackAFP
     )

@@ -46,6 +46,17 @@ import qualified System.OsString.Posix as PF
 toOsString :: String -> OsString
 toOsString = OsString . toPlatformString
 
+-- | Like 'toOsString', except allows to provide encodings.
+toOsStringEnc :: String
+              -> TextEncoding  -- ^ unix text encoding
+              -> TextEncoding  -- ^ windows text encoding
+              -> Either UnicodeException OsString
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+toOsStringEnc str _ winEnc = OsString <$> toPlatformStringEnc str winEnc
+#else
+toOsStringEnc str unixEnc _ = OsString <$> toPlatformStringEnc str unixEnc
+#endif
+
 -- | Like 'toOsString', except on unix this uses the current
 -- locale for encoding instead of always UTF8.
 --
@@ -80,7 +91,7 @@ fromOsStringEnc (OsString x) unixEnc _ = fromPlatformStringEnc x unixEnc
 
 
 -- | Like 'fromOsString', except on unix this uses the current
--- locale for decoding instead of always UTF8.
+-- locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.

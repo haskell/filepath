@@ -17,6 +17,7 @@ module System.OsString.MODULE_NAME
 
   -- * String construction
   , toPlatformString
+  , toPlatformStringEnc
   , toPlatformStringIO
   , bsToPlatformString
   , pstr
@@ -64,7 +65,7 @@ import Control.Monad.Catch
 import Data.ByteString.Internal
     ( ByteString )
 import Control.Exception
-    ( SomeException, try, displayException, throwIO )
+    ( SomeException, try, displayException )
 import Control.DeepSeq ( force )
 import Data.Bifunctor ( first )
 import GHC.IO
@@ -99,10 +100,24 @@ import GHC.IO.Encoding
 -- On windows this encodes as UTF16, which is expected.
 -- On unix this encodes as UTF8, which is a good guess.
 toPlatformString :: String -> PLATFORM_STRING
+toPlatformString str = unsafePerformIO $ do
 #ifdef WINDOWS
-toPlatformString = WS . encodeUtf16LE
+  GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
 #else
-toPlatformString = PS . encodeUtf8
+  GHC.withCStringLen utf8 str $ \cstr -> PS <$> BS.packCStringLen cstr
+#endif
+
+-- | Like 'toPlatformString', except allows to provide an encoding.
+toPlatformStringEnc :: String
+                    -> TextEncoding
+                    -> Either UnicodeException PLATFORM_STRING
+toPlatformStringEnc str enc = unsafePerformIO $ do
+#ifdef WINDOWS
+  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WS <$> BS8.packCStringLen cstr
+  evaluate $ force $ first (flip DecodeError Nothing . displayException) r
+#else
+  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> PS <$> BS.packCStringLen cstr
+  evaluate $ force $ first (flip DecodeError Nothing . displayException) r
 #endif
 
 -- | Like 'toPlatformString', except on unix this uses the current
@@ -112,12 +127,11 @@ toPlatformString = PS . encodeUtf8
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
 toPlatformStringIO :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformStringIO = pure . WS . encodeUtf16LE
+toPlatformStringIO str = GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
 #else
 toPlatformStringIO str = do
   enc <- getFileSystemEncoding
-  cstr <- GHC.newCString enc str
-  PS <$> BS.packCString cstr
+  GHC.withCStringLen enc str $ \cstr -> PS <$> BS.packCStringLen cstr
 #endif
 
 
@@ -153,7 +167,7 @@ fromPlatformStringEnc (PS ba) unixEnc = unsafePerformIO $ do
 
 
 -- | Like 'fromPlatformString', except on unix this uses the current
--- locale for decoding instead of always UTF8.
+-- locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
@@ -161,11 +175,12 @@ fromPlatformStringEnc (PS ba) unixEnc = unsafePerformIO $ do
 -- Throws 'UnicodeException' if decoding fails.
 fromPlatformStringIO :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
-fromPlatformStringIO ps = either throwIO pure (fromPlatformStringEnc ps utf16le)
+fromPlatformStringIO (WS ba) =
+  BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen utf16le fp
 #else
-fromPlatformStringIO ps = do
+fromPlatformStringIO (PS ba) = do
   enc <- getFileSystemEncoding
-  either throwIO pure (fromPlatformStringEnc ps enc)
+  BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
 #endif
 
 
