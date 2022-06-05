@@ -80,6 +80,7 @@ library
     System.AbstractFilePath.Data.ByteString.Short.Encode
     System.AbstractFilePath.Data.ByteString.Short.Internal
     System.AbstractFilePath.Data.ByteString.Short.Word16
+    System.AbstractFilePath.Encoding
     System.AbstractFilePath.Internal
     System.AbstractFilePath.Posix
     System.AbstractFilePath.Posix.Internal
