@@ -8,6 +8,8 @@ import System.AbstractFilePath.Data.ByteString.Short.Decode
     ( decodeUtf16LE, decodeUtf8 )
 import System.AbstractFilePath.Data.ByteString.Short.Encode
     ( encodeUtf16LE, encodeUtf8 )
+import System.AbstractFilePath.Posix as Posix
+import System.AbstractFilePath.Windows as Windows
 
 import Arbitrary
 import Test.Tasty
@@ -27,6 +29,10 @@ tests =
     \str -> (decodeUtf16LE . encodeUtf16LE) str == str
   , testProperty "fromAbstractFilePath . toAbstractFilePath == id" $
     \(NonNullString str) -> (fromAbstractFilePath . toAbstractFilePath) str == Just str
+  , testProperty "fromPlatformString . toPlatformString == id (Posix)" $
+    \(NonNullString str) -> (Posix.fromPlatformString . Posix.toPlatformString) str == Just str
+  , testProperty "fromPlatformString . toPlatformString == id (Windows)" $
+    \(NonNullString str) -> (Windows.fromPlatformString . Windows.toPlatformString) str == Just str
 
   ] ++ testBatch (ord (\(a :: AbstractFilePath) -> pure a))
     ++ testBatch (monoid (undefined :: AbstractFilePath))
