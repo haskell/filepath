@@ -24,9 +24,7 @@ module System.OsString.MODULE_NAME
 
   -- * String deconstruction
   , fromPlatformString
-#ifndef WINDOWS
   , fromPlatformStringEnc
-#endif
   , fromPlatformStringIO
   , unpackPlatformString
 
@@ -50,13 +48,7 @@ import System.AbstractFilePath.Data.ByteString.Short.Encode
   )
 import System.AbstractFilePath.Data.ByteString.Short.Decode
     (
-#ifdef WINDOWS
-      decodeUtf16LE'
-    , decodeUtf16LE''
-#else
-      decodeUtf8'
-  , UnicodeException (..)
-#endif
+      UnicodeException (..)
     )
 import System.OsString.Internal.Types (
 #ifdef WINDOWS
@@ -71,24 +63,15 @@ import Control.Monad.Catch
     ( MonadThrow, throwM )
 import Data.ByteString.Internal
     ( ByteString )
-#ifndef WINDOWS
 import Control.Exception
     ( SomeException, try, displayException, throwIO )
 import Control.DeepSeq ( force )
 import Data.Bifunctor ( first )
 import GHC.IO
     ( evaluate, unsafePerformIO )
-import GHC.IO.Encoding
-    ( getFileSystemEncoding )
 import qualified GHC.Foreign as GHC
-import System.IO.Error
-    ( catchIOError )
 import System.IO
     ( TextEncoding )
-#else
-import Control.Exception
-    ( throwIO )
-#endif
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
@@ -97,9 +80,16 @@ import Language.Haskell.TH.Syntax
 
 
 #ifdef WINDOWS
+import System.IO
+    ( utf16le )
 import System.AbstractFilePath.Data.ByteString.Short.Word16 as BS
+import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
 #else
+import System.IO
+    ( utf8 )
 import System.AbstractFilePath.Data.ByteString.Short as BS
+import GHC.IO.Encoding
+    ( getFileSystemEncoding )
 #endif
 
 
@@ -140,17 +130,24 @@ toPlatformStringIO str = do
 -- Throws a 'UnicodeException' if decoding fails.
 fromPlatformString :: MonadThrow m => PLATFORM_STRING -> m String
 #ifdef WINDOWS
-fromPlatformString (WS ba) = either throwM pure $ decodeUtf16LE' ba
+fromPlatformString ps = either throwM pure (fromPlatformStringEnc ps utf16le)
 #else
-fromPlatformString (PS ba) = either throwM pure $ decodeUtf8' ba
+fromPlatformString ps = either throwM pure (fromPlatformStringEnc ps utf8)
 #endif
 
-#ifndef WINDOWS
--- | Like 'fromPlatformString', except on unix this uses the provided
--- 'TextEncoding' for decoding.
-fromPlatformStringEnc :: PLATFORM_STRING -> TextEncoding -> Either UnicodeException String
-fromPlatformStringEnc (PS ba) enc = unsafePerformIO $ do
-  r <- try @SomeException $ BS.useAsCString ba $ \fp -> GHC.peekCString enc fp
+-- | Like 'fromPlatformString', except allows to provide a text encoding.
+--
+-- The String is forced into memory to catch all exceptions.
+fromPlatformStringEnc :: PLATFORM_STRING
+                      -> TextEncoding
+                      -> Either UnicodeException String
+#ifdef WINDOWS
+fromPlatformStringEnc (WS ba) winEnc = unsafePerformIO $ do
+  r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen winEnc fp
+  evaluate $ force $ first (flip DecodeError Nothing . displayException) r
+#else
+fromPlatformStringEnc (PS ba) unixEnc = unsafePerformIO $ do
+  r <- try @SomeException $ BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
   evaluate $ force $ first (flip DecodeError Nothing . displayException) r
 #endif
 
@@ -164,11 +161,11 @@ fromPlatformStringEnc (PS ba) enc = unsafePerformIO $ do
 -- Throws 'UnicodeException' if decoding fails.
 fromPlatformStringIO :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
-
-fromPlatformStringIO (WS ba) = either throwIO pure $ decodeUtf16LE' ba
+fromPlatformStringIO ps = either throwIO pure (fromPlatformStringEnc ps utf16le)
 #else
-fromPlatformStringIO (PS ba) = flip catchIOError (\_ -> throwIO (DecodeError "fromAbstractFilePath' failed" Nothing))
-  $ BS.useAsCString ba $ \fp -> getFileSystemEncoding >>= \enc -> GHC.peekCString enc fp
+fromPlatformStringIO ps = do
+  enc <- getFileSystemEncoding
+  either throwIO pure (fromPlatformStringEnc ps enc)
 #endif
 
 
@@ -182,7 +179,8 @@ bsToPlatformString :: MonadThrow m
              -> m PLATFORM_STRING
 #ifdef WINDOWS
 bsToPlatformString bs =
-  either throwM (const . pure . WS . toShort $ bs) $ decodeUtf16LE'' bs
+  let ws = WS . toShort $ bs
+  in either throwM (const . pure $ ws) $ fromPlatformStringEnc ws utf16le
 #else
 bsToPlatformString = pure . PS . toShort
 #endif

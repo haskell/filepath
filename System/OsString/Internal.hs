@@ -29,8 +29,6 @@ import System.AbstractFilePath.Data.ByteString.Short.Decode
 #endif
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-import System.AbstractFilePath.Data.ByteString.Short.Decode
-    ( decodeUtf16LE' )
 import System.OsString.Windows
 import qualified System.OsString.Windows as PF
 #else
@@ -67,15 +65,17 @@ toOsStringIO = fmap OsString . toPlatformStringIO
 fromOsString :: MonadThrow m => OsString -> m String
 fromOsString (OsString x) = fromPlatformString x
 
--- | Like 'fromOsString', except on unix this uses the provided
--- 'TextEncoding' for decoding.
+-- | Like 'fromOsString', except allows to provide encodings.
 --
--- On windows, the TextEncoding parameter is ignored.
-fromOsStringEnc :: OsString -> TextEncoding -> Either UnicodeException String
+-- The String is forced into memory to catch all exceptions.
+fromOsStringEnc :: OsString
+                -> TextEncoding  -- ^ unix text encoding
+                -> TextEncoding  -- ^ windows text encoding
+                -> Either UnicodeException String
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-fromOsStringEnc (OsString (WS ba)) _ = decodeUtf16LE' ba
+fromOsStringEnc (OsString x) _ winEnc = fromPlatformStringEnc x winEnc
 #else
-fromOsStringEnc (OsString x) = fromPlatformStringEnc x
+fromOsStringEnc (OsString x) unixEnc _ = fromPlatformStringEnc x unixEnc
 #endif
 
 

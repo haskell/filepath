@@ -65,7 +65,10 @@ fromAbstractFilePath = fromOsString
 -- 'TextEncoding' for decoding.
 --
 -- On windows, the TextEncoding parameter is ignored.
-fromAbstractFilePathEnc :: AbstractFilePath -> TextEncoding -> Either UnicodeException String
+fromAbstractFilePathEnc :: AbstractFilePath
+                        -> TextEncoding  -- ^ unix text encoding
+                        -> TextEncoding  -- ^ windows text encoding
+                        -> Either UnicodeException String
 fromAbstractFilePathEnc = fromOsStringEnc
 
 -- | Like 'fromAbstractFilePath', except on unix this uses the current
