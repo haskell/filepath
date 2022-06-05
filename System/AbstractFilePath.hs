@@ -24,9 +24,9 @@
 --
 -- It is important to know that filenames\/filepaths have different representations across platforms:
 --
--- - On /Windows/, filepaths are expected to be in UTF16 as passed to
---   syscalls (although there are other APIs, the <https://hackage.haskell.org/package/Win32 Win32> package uses the wide character one).
---   This invariant is maintained by 'AbstractFilePath'.
+-- - On /Windows/, filepaths are expected to be encoded as UTF16-LE <https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/76f10dd8-699d-45e6-a53c-5aefc586da20 as per the documentation>, but
+--   may also include invalid surrogate pairs, in which case UCS-2 can be used. They are passed as @wchar_t*@ to syscalls.
+--   'AbstractFilePath' only maintains the wide character invariant.
 -- - On /Unix/, filepaths don't have a predefined encoding (although they
 --   are often interpreted as UTF8) as per the
 --   <https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_170 POSIX specification>
