@@ -9,7 +9,7 @@ import System.AbstractFilePath.Data.ByteString.Short.Decode
 import System.AbstractFilePath.Data.ByteString.Short.Encode
     ( encodeUtf16LE, encodeUtf8 )
 
-import Arbitrary ()
+import Arbitrary
 import Test.Tasty
 import Test.Tasty.QuickCheck
 import Test.QuickCheck.Monadic
@@ -26,7 +26,7 @@ tests =
   , testProperty "decodeUtf16LE . encodeUtf16LE == id" $
     \str -> (decodeUtf16LE . encodeUtf16LE) str == str
   , testProperty "fromAbstractFilePath . toAbstractFilePath == id" $
-    \str -> (fromAbstractFilePath . toAbstractFilePath) str == Just str
+    \(NonNullString str) -> (fromAbstractFilePath . toAbstractFilePath) str == Just str
 
   ] ++ testBatch (ord (\(a :: AbstractFilePath) -> pure a))
     ++ testBatch (monoid (undefined :: AbstractFilePath))
