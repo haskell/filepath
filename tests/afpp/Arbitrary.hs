@@ -3,6 +3,7 @@
 module Arbitrary where
 
 import Data.Char
+import Data.Maybe
 import System.OsString
 import System.OsString.Internal.Types
 import qualified System.OsString.Posix as Posix
@@ -17,19 +18,19 @@ newtype NonNullString = NonNullString { nonNullString :: String }
   deriving Show
 
 instance Arbitrary OsString where
-  arbitrary = toOsString <$> listOf filepathChar
+  arbitrary = fmap fromJust $ toOsString <$> listOf filepathChar
 
 instance EqProp OsString where
   (=-=) = eq
 
 instance Arbitrary PosixString where
-  arbitrary = Posix.toPlatformString <$> listOf filepathChar
+  arbitrary = fmap fromJust $ Posix.toPlatformString <$> listOf filepathChar
 
 instance EqProp PosixString where
   (=-=) = eq
 
 instance Arbitrary WindowsString where
-  arbitrary = Windows.toPlatformString <$> listOf filepathChar
+  arbitrary = fmap fromJust $ Windows.toPlatformString <$> listOf filepathChar
 
 instance EqProp WindowsString where
   (=-=) = eq

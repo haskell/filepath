@@ -39,12 +39,14 @@ import qualified System.OsString.Posix as PF
 
 
 
--- | Total Unicode-friendly encoding.
+-- | Convert a String.
 --
--- On windows this encodes as UTF16, which is expected.
+-- On windows this encodes as UTF16, which is a pretty good guess.
 -- On unix this encodes as UTF8, which is a good guess.
-toOsString :: String -> OsString
-toOsString = OsString . toPlatformString
+--
+-- Throws a 'UnicodeException' if encoding fails.
+toOsString :: MonadThrow m => String -> m OsString
+toOsString = fmap OsString . toPlatformString
 
 -- | Like 'toOsString', except allows to provide encodings.
 toOsStringEnc :: String
@@ -103,9 +105,9 @@ fromOsStringIO (OsString x) = fromPlatformStringIO x
 
 -- | Constructs an @OsString@ from a ByteString.
 --
--- On windows, this ensures valid UTF16, on unix it is passed unchanged/unchecked.
+-- On windows, this ensures valid UCS-2LE, on unix it is passed unchanged/unchecked.
 --
--- Throws 'UnicodeException' on invalid UTF16 on windows.
+-- Throws 'UnicodeException' on invalid  on windows.
 bsToOsString :: MonadThrow m
              => ByteString
              -> m OsString

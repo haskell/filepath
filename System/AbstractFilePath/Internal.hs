@@ -31,11 +31,13 @@ import System.AbstractFilePath.Data.ByteString.Short.Decode
 
 
 
--- | Total Unicode-friendly encoding.
+-- | Convert a String.
 --
--- On windows this encodes as UTF16, which is expected.
+-- On windows this encodes as UTF16, which is a pretty good guess.
 -- On unix this encodes as UTF8, which is a good guess.
-toAbstractFilePath :: String -> AbstractFilePath
+--
+-- Throws a 'UnicodeException' if encoding fails.
+toAbstractFilePath :: MonadThrow m => String -> m AbstractFilePath
 toAbstractFilePath = toOsString
 
 -- | Like 'toAbstractFilePath', except allows to provide encodings.
@@ -90,9 +92,9 @@ fromAbstractFilePathIO = fromOsStringIO
 
 -- | Constructs an @AbstractFilePath@ from a ByteString.
 --
--- On windows, this ensures valid UTF16, on unix it is passed unchanged/unchecked.
+-- On windows, this ensures valid UCS-2LE, on unix it is passed unchanged/unchecked.
 --
--- Throws 'UnicodeException' on invalid UTF16 on windows.
+-- Throws 'UnicodeException' on invalid UCS-2LE on windows.
 bsToAFP :: MonadThrow m
         => ByteString
         -> m AbstractFilePath

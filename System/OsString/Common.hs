@@ -81,6 +81,9 @@ import Language.Haskell.TH.Syntax
 
 
 #ifdef WINDOWS
+import System.AbstractFilePath.Encoding
+import GHC.IO.Encoding.Failure
+    ( CodingFailureMode(..) )
 import System.IO
     ( utf16le )
 import System.AbstractFilePath.Data.ByteString.Short.Word16 as BS
@@ -95,16 +98,17 @@ import GHC.IO.Encoding
 
 
 
--- | Total Unicode-friendly encoding.
+-- | Convert a String.
 --
--- On windows this encodes as UTF16, which is expected.
+-- On windows this encodes as UTF16, which is a pretty good guess.
 -- On unix this encodes as UTF8, which is a good guess.
-toPlatformString :: String -> PLATFORM_STRING
-toPlatformString str = unsafePerformIO $ do
+--
+-- Throws a 'UnicodeException' if encoding fails.
+toPlatformString :: MonadThrow m => String -> m PLATFORM_STRING
 #ifdef WINDOWS
-  GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
+toPlatformString str = either throwM pure $ toPlatformStringEnc str utf16le
 #else
-  GHC.withCStringLen utf8 str $ \cstr -> PS <$> BS.packCStringLen cstr
+toPlatformString str = either throwM pure $ toPlatformStringEnc str utf8
 #endif
 
 -- | Like 'toPlatformString', except allows to provide an encoding.
@@ -125,6 +129,8 @@ toPlatformStringEnc str enc = unsafePerformIO $ do
 --
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
+--
+-- Throws a 'UnicodeException' if encoding fails.
 toPlatformStringIO :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
 toPlatformStringIO str = GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
@@ -186,16 +192,16 @@ fromPlatformStringIO (PS ba) = do
 
 -- | Constructs an platform string from a ByteString.
 --
--- On windows, this ensures valid UTF16, on unix it is passed unchanged/unchecked.
+-- On windows, this ensures valid UCS-2LE, on unix it is passed unchanged/unchecked.
 --
--- Throws 'UnicodeException' on invalid UTF16 on windows.
+-- Throws 'UnicodeException' on invalid UCS-2LE on windows.
 bsToPlatformString :: MonadThrow m
-             => ByteString
-             -> m PLATFORM_STRING
+                   => ByteString
+                   -> m PLATFORM_STRING
 #ifdef WINDOWS
 bsToPlatformString bs =
   let ws = WS . toShort $ bs
-  in either throwM (const . pure $ ws) $ fromPlatformStringEnc ws utf16le
+  in either throwM (const . pure $ ws) $ fromPlatformStringEnc ws ucs2le
 #else
 bsToPlatformString = pure . PS . toShort
 #endif
