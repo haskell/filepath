@@ -24,8 +24,8 @@ ucs2le = mkUcs2le ErrorOnCodingFailure
 
 mkUcs2le :: CodingFailureMode -> TextEncoding
 mkUcs2le cfm = TextEncoding { textEncodingName = "UCS-2LE",
-                             mkTextDecoder = ucs2le_DF cfm,
-                             mkTextEncoder = ucs2le_EF cfm }
+                              mkTextDecoder = ucs2le_DF cfm,
+                              mkTextEncoder = ucs2le_EF cfm }
 
 ucs2le_DF :: CodingFailureMode -> IO (TextDecoder ())
 ucs2le_DF cfm =

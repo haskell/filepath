@@ -31,7 +31,7 @@
 --   are often interpreted as UTF8) as per the
 --   <https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_170 POSIX specification>
 --   and are passed as @char[]@ to syscalls. 'AbstractFilePath' maintains no invariant
---   here. Some functions however, such as 'toAbstractFilePath', may expect
+--   here. Some functions however, such as 'toAbstractFilePathUtf', may expect
 --   or produce UTF8.
 --
 -- Apart from encoding, filepaths have additional restrictions per platform:
@@ -61,9 +61,9 @@
 --    mentions that it requires a UTF8 compatible system. These things should be documented.
 -- 3. When dealing with user input (e.g. on the command line) on /unix/ as e.g. @String@ the input
 --    encoding is lost. The output encoding (e.g. how we write a filename to disk) can then
---    either follow the current locale again ('toAbstractFilePathIO') or a fixed encoding
---    ('toAbstractFilePath'). The decision should be clearly documented. If the input is in the
---    form of a @ByteString@, then 'bsToAFP' may be of interest, unless the input needs further
+--    either follow the current locale again ('toAbstractFilePathFS') or a fixed encoding
+--    ('toAbstractFilePathUtf'/'toAbstractFilePathEnc'). The decision should be clearly documented. If the input is in the
+--    form of a @ByteString@, then 'bytesToAFP' may be of interest, unless the input needs further
 --    interpretation.
 
 #include "AbstractFilePath/Common.hs"

@@ -16,17 +16,17 @@ module System.OsString.MODULE_NAME
 #endif
 
   -- * String construction
-  , toPlatformString
+  , toPlatformStringUtf
   , toPlatformStringEnc
-  , toPlatformStringIO
-  , bsToPlatformString
+  , toPlatformStringFS
+  , bytesToPlatformString
   , pstr
   , packPlatformString
 
   -- * String deconstruction
-  , fromPlatformString
+  , fromPlatformStringUtf
   , fromPlatformStringEnc
-  , fromPlatformStringIO
+  , fromPlatformStringFS
   , unpackPlatformString
 
   -- * Word construction
@@ -82,8 +82,6 @@ import Language.Haskell.TH.Syntax
 
 #ifdef WINDOWS
 import System.AbstractFilePath.Encoding
-import GHC.IO.Encoding.Failure
-    ( CodingFailureMode(..) )
 import System.IO
     ( utf16le )
 import System.AbstractFilePath.Data.ByteString.Short.Word16 as BS
@@ -104,14 +102,14 @@ import GHC.IO.Encoding
 -- On unix this encodes as UTF8, which is a good guess.
 --
 -- Throws a 'UnicodeException' if encoding fails.
-toPlatformString :: MonadThrow m => String -> m PLATFORM_STRING
+toPlatformStringUtf :: MonadThrow m => String -> m PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformString str = either throwM pure $ toPlatformStringEnc str utf16le
+toPlatformStringUtf str = either throwM pure $ toPlatformStringEnc str utf16le
 #else
-toPlatformString str = either throwM pure $ toPlatformStringEnc str utf8
+toPlatformStringUtf str = either throwM pure $ toPlatformStringEnc str utf8
 #endif
 
--- | Like 'toPlatformString', except allows to provide an encoding.
+-- | Like 'toPlatformStringUtf', except allows to provide an encoding.
 toPlatformStringEnc :: String
                     -> TextEncoding
                     -> Either UnicodeException PLATFORM_STRING
@@ -124,18 +122,19 @@ toPlatformStringEnc str enc = unsafePerformIO $ do
   evaluate $ force $ first (flip DecodeError Nothing . displayException) r
 #endif
 
--- | Like 'toPlatformString', except on unix this uses the current
--- locale for encoding instead of always UTF8.
+-- | Like 'toPlatformStringUtf', except on unix this uses the current
+-- filesystem locale for encoding instead of always UTF8.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
--- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
+-- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
+-- to deeply evaluate the result to catch exceptions).
 --
 -- Throws a 'UnicodeException' if encoding fails.
-toPlatformStringIO :: String -> IO PLATFORM_STRING
+toPlatformStringFS :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformStringIO str = GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
+toPlatformStringFS str = GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
 #else
-toPlatformStringIO str = do
+toPlatformStringFS str = do
   enc <- getFileSystemEncoding
   GHC.withCStringLen enc str $ \cstr -> PS <$> BS.packCStringLen cstr
 #endif
@@ -143,19 +142,19 @@ toPlatformStringIO str = do
 
 -- | Partial unicode friendly decoding.
 --
--- On windows this decodes as UTF16 (which is the expected filename encoding).
+-- On windows this decodes as UTF16-LE (which is the expected filename encoding).
 -- On unix this decodes as UTF8 (which is a good guess). Note that
 -- filenames on unix are encoding agnostic char arrays.
 --
 -- Throws a 'UnicodeException' if decoding fails.
-fromPlatformString :: MonadThrow m => PLATFORM_STRING -> m String
+fromPlatformStringUtf :: MonadThrow m => PLATFORM_STRING -> m String
 #ifdef WINDOWS
-fromPlatformString ps = either throwM pure (fromPlatformStringEnc ps utf16le)
+fromPlatformStringUtf ps = either throwM pure (fromPlatformStringEnc ps utf16le)
 #else
-fromPlatformString ps = either throwM pure (fromPlatformStringEnc ps utf8)
+fromPlatformStringUtf ps = either throwM pure (fromPlatformStringEnc ps utf8)
 #endif
 
--- | Like 'fromPlatformString', except allows to provide a text encoding.
+-- | Like 'fromPlatformStringUtf', except allows to provide a text encoding.
 --
 -- The String is forced into memory to catch all exceptions.
 fromPlatformStringEnc :: PLATFORM_STRING
@@ -172,38 +171,40 @@ fromPlatformStringEnc (PS ba) unixEnc = unsafePerformIO $ do
 #endif
 
 
--- | Like 'fromPlatformString', except on unix this uses the current
--- locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
+-- | Like 'fromPlatformStringUt', except on unix this uses the current
+-- filesystem locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
--- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
+-- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
+-- to deeply evaluate the result to catch exceptions).
 --
 -- Throws 'UnicodeException' if decoding fails.
-fromPlatformStringIO :: PLATFORM_STRING -> IO String
+fromPlatformStringFS :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
-fromPlatformStringIO (WS ba) =
+fromPlatformStringFS (WS ba) =
   BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen utf16le fp
 #else
-fromPlatformStringIO (PS ba) = do
+fromPlatformStringFS (PS ba) = do
   enc <- getFileSystemEncoding
   BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
 #endif
 
 
--- | Constructs an platform string from a ByteString.
+-- | Constructs a platform string from a ByteString.
 --
--- On windows, this ensures valid UCS-2LE, on unix it is passed unchanged/unchecked.
+-- On windows, this ensures valid UCS-2LE, on unix it is passed unchecked.
+-- Note that this doesn't expand Word8 to Word16 on windows, so you may get invalid UTF-16.
 --
--- Throws 'UnicodeException' on invalid UCS-2LE on windows.
-bsToPlatformString :: MonadThrow m
-                   => ByteString
-                   -> m PLATFORM_STRING
+-- Throws 'UnicodeException' on invalid UCS-2LE on windows (although unlikely).
+bytesToPlatformString :: MonadThrow m
+                      => ByteString
+                      -> m PLATFORM_STRING
 #ifdef WINDOWS
-bsToPlatformString bs =
+bytesToPlatformString bs =
   let ws = WS . toShort $ bs
   in either throwM (const . pure $ ws) $ fromPlatformStringEnc ws ucs2le
 #else
-bsToPlatformString = pure . PS . toShort
+bytesToPlatformString = pure . PS . toShort
 #endif
 
 
@@ -231,8 +232,8 @@ qq quoteExp' =
 #endif
 
 mkPlatformString :: ByteString -> Q Exp
-mkPlatformString bs = 
-  case bsToPlatformString bs of
+mkPlatformString bs =
+  case bytesToPlatformString bs of
     Just afp -> lift afp
     Nothing -> error "invalid encoding"
 
@@ -247,6 +248,7 @@ pstr :: QuasiQuoter
 pstr = qq mkPlatformString
 
 
+-- | Unpack a platform string to a list of platform words.
 unpackPlatformString :: PLATFORM_STRING -> [PLATFORM_WORD]
 #ifdef WINDOWS
 unpackPlatformString (WS ba) = WW <$> BS.unpack ba
@@ -255,6 +257,11 @@ unpackPlatformString (PS ba) = PW <$> BS.unpack ba
 #endif
 
 
+-- | Pack a list of platform words to a platform string.
+--
+-- Note that using this in conjunction with 'unsafeFromChar' to
+-- convert from @[Char]@ to platform string is probably not what
+-- you want, because it will truncate unicode code points.
 packPlatformString :: [PLATFORM_WORD] -> PLATFORM_STRING
 #ifdef WINDOWS
 packPlatformString = WS . BS.pack . fmap (\(WW w) -> w)

@@ -24,6 +24,7 @@ import System.AbstractFilePath.Types
 #endif
 import System.AbstractFilePath.Data.ByteString.Short.Decode
 import System.AbstractFilePath.Data.ByteString.Short.Encode
+import System.OsString.Internal.Types
 
 
 infixr 0 ==>

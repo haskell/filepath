@@ -18,19 +18,19 @@ newtype NonNullString = NonNullString { nonNullString :: String }
   deriving Show
 
 instance Arbitrary OsString where
-  arbitrary = fmap fromJust $ toOsString <$> listOf filepathChar
+  arbitrary = fmap fromJust $ toOsStringUtf <$> listOf filepathChar
 
 instance EqProp OsString where
   (=-=) = eq
 
 instance Arbitrary PosixString where
-  arbitrary = fmap fromJust $ Posix.toPlatformString <$> listOf filepathChar
+  arbitrary = fmap fromJust $ Posix.toPlatformStringUtf <$> listOf filepathChar
 
 instance EqProp PosixString where
   (=-=) = eq
 
 instance Arbitrary WindowsString where
-  arbitrary = fmap fromJust $ Windows.toPlatformString <$> listOf filepathChar
+  arbitrary = fmap fromJust $ Windows.toPlatformStringUtf <$> listOf filepathChar
 
 instance EqProp WindowsString where
   (=-=) = eq

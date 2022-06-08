@@ -37,28 +37,31 @@ import System.AbstractFilePath.Data.ByteString.Short.Decode
 -- On unix this encodes as UTF8, which is a good guess.
 --
 -- Throws a 'UnicodeException' if encoding fails.
-toAbstractFilePath :: MonadThrow m => String -> m AbstractFilePath
-toAbstractFilePath = toOsString
+toAbstractFilePathUtf :: MonadThrow m => String -> m AbstractFilePath
+toAbstractFilePathUtf = toOsStringUtf
 
--- | Like 'toAbstractFilePath', except allows to provide encodings.
+-- | Like 'toAbstractFilePathUtf', except allows to provide encodings.
 toAbstractFilePathEnc :: String
                       -> TextEncoding  -- ^ unix text encoding
                       -> TextEncoding  -- ^ windows text encoding
                       -> Either UnicodeException AbstractFilePath
 toAbstractFilePathEnc = toOsStringEnc
 
--- | Like 'toAbstractFilePath', except on unix this uses the current
--- locale for encoding instead of always UTF8.
+-- | Like 'toAbstractFilePathUtf', except on unix this uses the current
+-- filesystem locale for encoding instead of always UTF8.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
--- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
-toAbstractFilePathIO :: String -> IO AbstractFilePath
-toAbstractFilePathIO = toOsStringIO
+-- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
+-- to deeply evaluate the result to catch exceptions).
+--
+-- Throws 'UnicodeException' if decoding fails.
+toAbstractFilePathFS :: String -> IO AbstractFilePath
+toAbstractFilePathFS = toOsStringFS
 
 
 -- | Partial unicode friendly decoding.
 --
--- On windows this decodes as UTF16 (which is the expected filename encoding).
+-- On windows this decodes as UTF16-LE (which is the expected filename encoding).
 -- On unix this decodes as UTF8 (which is a good guess). Note that
 -- filenames on unix are encoding agnostic char arrays.
 --
@@ -66,10 +69,10 @@ toAbstractFilePathIO = toOsStringIO
 --
 -- Note that filenames of different encodings may have the same @String@
 -- representation, although they're not the same byte-wise.
-fromAbstractFilePath :: MonadThrow m => AbstractFilePath -> m String
-fromAbstractFilePath = fromOsString
+fromAbstractFilePathUtf :: MonadThrow m => AbstractFilePath -> m String
+fromAbstractFilePathUtf = fromOsStringUtf
 
--- | Like 'fromAbstractFilePath', except on unix this uses the provided
+-- | Like 'fromAbstractFilePathUtf', except on unix this uses the provided
 -- 'TextEncoding' for decoding.
 --
 -- On windows, the TextEncoding parameter is ignored.
@@ -79,31 +82,32 @@ fromAbstractFilePathEnc :: AbstractFilePath
                         -> Either UnicodeException String
 fromAbstractFilePathEnc = fromOsStringEnc
 
--- | Like 'fromAbstractFilePath', except on unix this uses the current
+-- | Like 'fromAbstractFilePathUtf', except on unix this uses the current
 -- locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
--- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
+-- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
+-- to deeply evaluate the result to catch exceptions).
 --
 -- Throws 'UnicodeException' if decoding fails.
-fromAbstractFilePathIO :: AbstractFilePath -> IO String
-fromAbstractFilePathIO = fromOsStringIO
+fromAbstractFilePathFS :: AbstractFilePath -> IO String
+fromAbstractFilePathFS = fromOsStringFS
 
 
 -- | Constructs an @AbstractFilePath@ from a ByteString.
 --
 -- On windows, this ensures valid UCS-2LE, on unix it is passed unchanged/unchecked.
 --
--- Throws 'UnicodeException' on invalid UCS-2LE on windows.
-bsToAFP :: MonadThrow m
-        => ByteString
-        -> m AbstractFilePath
-bsToAFP = OS.bsToOsString
+-- Throws 'UnicodeException' on invalid UCS-2LE on windows (although unlikely).
+bytesToAFP :: MonadThrow m
+           => ByteString
+           -> m AbstractFilePath
+bytesToAFP = OS.bytesToOsString
 
 
 mkAbstractFilePath :: ByteString -> Q Exp
 mkAbstractFilePath bs = 
-  case bsToAFP bs of
+  case bytesToAFP bs of
     Just afp' ->
       if isValid afp'
       then lift afp'
@@ -117,10 +121,16 @@ afp :: QuasiQuoter
 afp = qq mkAbstractFilePath
 
 
+-- | Unpack an 'AbstractFilePath to a list of 'OsChar'.
 unpackAFP :: AbstractFilePath -> [OsChar]
 unpackAFP = unpackOsString
 
 
+-- | Pack a list of 'OsChar' to an 'AbstractFilePath'.
+--
+-- Note that using this in conjunction with 'unsafeFromChar' to
+-- convert from @[Char]@ to 'AbstractFilePath' is probably not what
+-- you want, because it will truncate unicode code points.
 packAFP :: [OsChar] -> AbstractFilePath
 packAFP = packOsString
 

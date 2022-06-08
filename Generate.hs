@@ -25,6 +25,7 @@ main = do
         ,"import TestUtil"
         ,"import Prelude as P"
         ,"import Data.Semigroup"
+        ,"import System.OsString.Internal.Types"
         ,"import qualified Data.Char as C"
         ,"import qualified System.AbstractFilePath.Data.ByteString.Short as SBS"
         ,"import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as SBS16"

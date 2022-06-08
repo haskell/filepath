@@ -29,12 +29,12 @@ tests =
     \str -> (decodeUtf8 . encodeUtf8) str == str
   , testProperty "decodeUtf16LE . encodeUtf16LE == id" $
     \str -> (decodeUtf16LE . encodeUtf16LE) str == str
-  , testProperty "fromAbstractFilePath . toAbstractFilePath == id" $
-    \(NonNullString str) -> (fromAbstractFilePath . fromJust . toAbstractFilePath) str == Just str
-  , testProperty "fromPlatformString . toPlatformString == id (Posix)" $
-    \(NonNullString str) -> (Posix.fromPlatformString . fromJust . Posix.toPlatformString) str == Just str
-  , testProperty "fromPlatformString . toPlatformString == id (Windows)" $
-    \(NonNullString str) -> (Windows.fromPlatformString . fromJust . Windows.toPlatformString) str == Just str
+  , testProperty "fromAbstractFilePathUtf . toAbstractFilePathUtf == id" $
+    \(NonNullString str) -> (fromAbstractFilePathUtf . fromJust . toAbstractFilePathUtf) str == Just str
+  , testProperty "fromPlatformStringUtf . toPlatformStringUtf == id (Posix)" $
+    \(NonNullString str) -> (Posix.fromPlatformStringUtf . fromJust . Posix.toPlatformStringUtf) str == Just str
+  , testProperty "fromPlatformStringUtf . toPlatformStringUtf == id (Windows)" $
+    \(NonNullString str) -> (Windows.fromPlatformStringUtf . fromJust . Windows.toPlatformStringUtf) str == Just str
 
   ] ++ testBatch (ord (\(a :: AbstractFilePath) -> pure a))
     ++ testBatch (monoid (undefined :: AbstractFilePath))

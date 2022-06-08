@@ -20,17 +20,16 @@ module System.OsString
     OsString
 
   -- * String construction
-  , toOsString
+  , toOsStringUtf
   , toOsStringEnc
-  , toOsStringIO
-  , bsToOsString
+  , toOsStringFS
   , osstr
   , packOsString
 
   -- * String deconstruction
-  , fromOsString
+  , fromOsStringUtf
   , fromOsStringEnc
-  , fromOsStringIO
+  , fromOsStringFS
   , unpackOsString
 
   -- * Word types
@@ -45,17 +44,16 @@ module System.OsString
 where
 
 import System.OsString.Internal
-    ( bsToOsString
-    , unsafeFromChar
+    ( unsafeFromChar
     , toChar
-    , fromOsString
+    , fromOsStringUtf
     , fromOsStringEnc
-    , fromOsStringIO
+    , fromOsStringFS
     , osstr
     , packOsString
-    , toOsString
+    , toOsStringUtf
     , toOsStringEnc
-    , toOsStringIO
+    , toOsStringFS
     , unpackOsString
     )
 import System.OsString.Internal.Types

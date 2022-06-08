@@ -31,31 +31,29 @@ module System.AbstractFilePath
 #endif
   -- * Filepath construction
 #if defined(WINDOWS) || defined(POSIX)
-  , toPlatformString
+  , toPlatformStringUtf
   , toPlatformStringEnc
-  , toPlatformStringIO
-  , bsToPlatformString
+  , toPlatformStringFS
   , pstr
   , packPlatformString
 #else
-  , toAbstractFilePath
+  , toAbstractFilePathUtf
   , toAbstractFilePathEnc
-  , toAbstractFilePathIO
-  , bsToAFP
+  , toAbstractFilePathFS
   , afp
   , packAFP
 #endif
 
   -- * Filepath deconstruction
 #if defined(WINDOWS) || defined(POSIX)
-  , fromPlatformString
+  , fromPlatformStringUtf
   , fromPlatformStringEnc
-  , fromPlatformStringIO
+  , fromPlatformStringFS
   , unpackPlatformString
 #else
-  , fromAbstractFilePath
+  , fromAbstractFilePathUtf
   , fromAbstractFilePathEnc
-  , fromAbstractFilePathIO
+  , fromAbstractFilePathFS
   , unpackAFP
 #endif
 
@@ -112,17 +110,16 @@ where
 #ifdef WINDOWS
 import System.AbstractFilePath.Types
 import System.OsString.Windows
-    ( bsToPlatformString
-    , unsafeFromChar
+    ( unsafeFromChar
     , toChar
-    , fromPlatformString
+    , fromPlatformStringUtf
     , fromPlatformStringEnc
-    , fromPlatformStringIO
+    , fromPlatformStringFS
     , packPlatformString
     , pstr
-    , toPlatformString
+    , toPlatformStringUtf
     , toPlatformStringEnc
-    , toPlatformStringIO
+    , toPlatformStringFS
     , unpackPlatformString
     )
 import Data.Bifunctor ( bimap )
@@ -132,17 +129,16 @@ import qualified System.AbstractFilePath.Windows.Internal as C
 
 import System.AbstractFilePath.Types
 import System.OsString.Posix
-    ( bsToPlatformString
-    , unsafeFromChar
+    ( unsafeFromChar
     , toChar
-    , fromPlatformString
+    , fromPlatformStringUtf
     , fromPlatformStringEnc
-    , fromPlatformStringIO
+    , fromPlatformStringFS
     , packPlatformString
     , pstr
-    , toPlatformString
+    , toPlatformStringUtf
     , toPlatformStringEnc
-    , toPlatformStringIO
+    , toPlatformStringFS
     , unpackPlatformString
     )
 import Data.Bifunctor ( bimap )
@@ -152,20 +148,18 @@ import qualified System.AbstractFilePath.Posix.Internal as C
 
 import System.AbstractFilePath.Internal
     ( afp
-    , bsToAFP
-    , fromAbstractFilePath
+    , fromAbstractFilePathUtf
     , fromAbstractFilePathEnc
-    , fromAbstractFilePathIO
+    , fromAbstractFilePathFS
     , packAFP
-    , toAbstractFilePath
+    , toAbstractFilePathUtf
     , toAbstractFilePathEnc
-    , toAbstractFilePathIO
+    , toAbstractFilePathFS
     , unpackAFP
     )
 import System.AbstractFilePath.Types
     ( AbstractFilePath )
 import System.OsString
-import System.OsString.Internal.Types
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import qualified System.AbstractFilePath.Windows as C
@@ -176,6 +170,7 @@ import qualified System.AbstractFilePath.Posix as C
 import Data.Bifunctor
     ( bimap )
 #endif
+import System.OsString.Internal.Types
 
 
 ------------------------

@@ -5,10 +5,12 @@ module System.AbstractFilePath.Types
   , unPFP
   , unWW
   , unPW
-  , WindowsString(WS)
-  , PosixString(PS)
-  , WindowsChar(WW)
-  , PosixChar(PW)
+  , WindowsString
+  , PosixString
+  , WindowsChar
+  , PosixChar
+  , OsString
+  , OsChar
   )
 where
 

@@ -41,14 +41,14 @@ import qualified System.OsString.Posix as PF
 
 -- | Convert a String.
 --
--- On windows this encodes as UTF16, which is a pretty good guess.
+-- On windows this encodes as UTF16-LE, which is a pretty good guess.
 -- On unix this encodes as UTF8, which is a good guess.
 --
 -- Throws a 'UnicodeException' if encoding fails.
-toOsString :: MonadThrow m => String -> m OsString
-toOsString = fmap OsString . toPlatformString
+toOsStringUtf :: MonadThrow m => String -> m OsString
+toOsStringUtf = fmap OsString . toPlatformStringUtf
 
--- | Like 'toOsString', except allows to provide encodings.
+-- | Like 'toOsStringUtf', except allows to provide encodings.
 toOsStringEnc :: String
               -> TextEncoding  -- ^ unix text encoding
               -> TextEncoding  -- ^ windows text encoding
@@ -59,26 +59,29 @@ toOsStringEnc str _ winEnc = OsString <$> toPlatformStringEnc str winEnc
 toOsStringEnc str unixEnc _ = OsString <$> toPlatformStringEnc str unixEnc
 #endif
 
--- | Like 'toOsString', except on unix this uses the current
--- locale for encoding instead of always UTF8.
+-- | Like 'toOsStringUtf', except on unix this uses the current
+-- filesystem locale for encoding instead of always UTF8.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
--- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
-toOsStringIO :: String -> IO OsString
-toOsStringIO = fmap OsString . toPlatformStringIO
+-- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
+-- to deeply evaluate the result to catch exceptions).
+--
+-- Throws a 'UnicodeException' if decoding fails.
+toOsStringFS :: String -> IO OsString
+toOsStringFS = fmap OsString . toPlatformStringFS
 
 
 -- | Partial unicode friendly decoding.
 --
--- On windows this decodes as UTF16 (which is the expected filename encoding).
+-- On windows this decodes as UTF16-LE (which is the expected filename encoding).
 -- On unix this decodes as UTF8 (which is a good guess). Note that
 -- filenames on unix are encoding agnostic char arrays.
 --
 -- Throws a 'UnicodeException' if decoding fails.
-fromOsString :: MonadThrow m => OsString -> m String
-fromOsString (OsString x) = fromPlatformString x
+fromOsStringUtf :: MonadThrow m => OsString -> m String
+fromOsStringUtf (OsString x) = fromPlatformStringUtf x
 
--- | Like 'fromOsString', except allows to provide encodings.
+-- | Like 'fromOsStringUtf', except allows to provide encodings.
 --
 -- The String is forced into memory to catch all exceptions.
 fromOsStringEnc :: OsString
@@ -92,26 +95,27 @@ fromOsStringEnc (OsString x) unixEnc _ = fromPlatformStringEnc x unixEnc
 #endif
 
 
--- | Like 'fromOsString', except on unix this uses the current
--- locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
+-- | Like 'fromOsStringUtf', except on unix this uses the current
+-- filesystem locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
--- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
+-- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
+-- to deeply evaluate the result to catch exceptions).
 --
 -- Throws 'UnicodeException' if decoding fails.
-fromOsStringIO :: OsString -> IO String
-fromOsStringIO (OsString x) = fromPlatformStringIO x
+fromOsStringFS :: OsString -> IO String
+fromOsStringFS (OsString x) = fromPlatformStringFS x
 
 
 -- | Constructs an @OsString@ from a ByteString.
 --
 -- On windows, this ensures valid UCS-2LE, on unix it is passed unchanged/unchecked.
 --
--- Throws 'UnicodeException' on invalid  on windows.
-bsToOsString :: MonadThrow m
-             => ByteString
-             -> m OsString
-bsToOsString = fmap OsString . bsToPlatformString
+-- Throws 'UnicodeException' on invalid UCS-2LE on windows (although unlikely).
+bytesToOsString :: MonadThrow m
+                => ByteString
+                -> m OsString
+bytesToOsString = fmap OsString . bytesToPlatformString
 
 
 qq :: (ByteString -> Q Exp) -> QuasiQuoter
@@ -138,8 +142,8 @@ qq quoteExp' =
 #endif
 
 mkOsString :: ByteString -> Q Exp
-mkOsString bs = 
-  case bsToOsString bs of
+mkOsString bs =
+  case bytesToOsString bs of
     Just afp -> lift afp
     Nothing -> error "invalid encoding"
 
@@ -149,10 +153,16 @@ osstr :: QuasiQuoter
 osstr = qq mkOsString
 
 
+-- | Unpack an 'OsString' to a list of 'OsChar'.
 unpackOsString :: OsString -> [OsChar]
 unpackOsString (OsString x) = OsChar <$> unpackPlatformString x
 
 
+-- | Pack a list of 'OsChar' to an 'OsString'
+--
+-- Note that using this in conjunction with 'unsafeFromChar' to
+-- convert from @[Char]@ to 'OsString' is probably not what
+-- you want, because it will truncate unicode code points.
 packOsString :: [OsChar] -> OsString
 packOsString = OsString . packPlatformString . fmap (\(OsChar x) -> x)
 
