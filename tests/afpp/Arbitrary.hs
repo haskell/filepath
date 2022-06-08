@@ -8,6 +8,10 @@ import System.OsString
 import System.OsString.Internal.Types
 import qualified System.OsString.Posix as Posix
 import qualified System.OsString.Windows as Windows
+import Control.Applicative
+import Data.ByteString ( ByteString )
+import qualified Data.ByteString as ByteString
+import Test.QuickCheck
 
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Checkers
@@ -47,4 +51,7 @@ filepathChar = arbitraryBoundedEnum `suchThat` (\c -> not (isNull c) && isValidU
       Surrogate -> False
       NotAssigned -> False
       _ -> True
+
+instance Arbitrary ByteString where arbitrary = ByteString.pack <$> arbitrary
+instance CoArbitrary ByteString where coarbitrary = coarbitrary . ByteString.unpack
 
