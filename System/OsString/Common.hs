@@ -71,8 +71,6 @@ import Data.Bifunctor ( first )
 import GHC.IO
     ( evaluate, unsafePerformIO )
 import qualified GHC.Foreign as GHC
-import System.IO
-    ( TextEncoding )
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
@@ -83,12 +81,12 @@ import Language.Haskell.TH.Syntax
 #ifdef WINDOWS
 import System.AbstractFilePath.Encoding
 import System.IO
-    ( utf16le )
+    ( TextEncoding, utf16le )
 import System.AbstractFilePath.Data.ByteString.Short.Word16 as BS
 import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
 #else
 import System.IO
-    ( utf8 )
+    ( TextEncoding, utf8 )
 import System.AbstractFilePath.Data.ByteString.Short as BS
 import GHC.IO.Encoding
     ( getFileSystemEncoding )

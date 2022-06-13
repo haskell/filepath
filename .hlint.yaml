@@ -1,3 +1,4 @@
 - ignore: {name: "Redundant lambda"}
 - ignore: {name: "Redundant multi-way if"}
 - ignore: {name: "Use if"}
+- ignore: {name: "Use fmap"}
