@@ -9,7 +9,6 @@ import {-# SOURCE #-} System.AbstractFilePath
 import System.AbstractFilePath.Types
 import System.OsString.Internal
 import qualified System.OsString.Internal as OS
-import System.OsString.Internal.Types
 
 import Control.Monad.Catch
     ( MonadThrow )
