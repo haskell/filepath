@@ -78,4 +78,4 @@ testBatch (batchName, tests) =
 padEven :: ByteString -> ByteString
 padEven bs
   | even (BS.length bs) = bs
-  | otherwise = bs `BS.append` BS.pack [fromIntegral 70]
+  | otherwise = bs `BS.append` BS.pack [70]
