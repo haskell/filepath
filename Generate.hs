@@ -39,7 +39,6 @@ main = do
         ,"import qualified System.AbstractFilePath.Windows as AFP_W"
         ,"import qualified System.AbstractFilePath.Posix as AFP_P"
 #endif
-        , "import System.AbstractFilePath.Data.ByteString.Short.Encode"
         ,"tests :: [(String, Property)]"
         ,"tests ="] ++
         ["    " ++ c ++ "(" ++ show t1 ++ ", " ++ t2 ++ ")" | (c,(t1,t2)) <- zip ("[":repeat ",") tests] ++

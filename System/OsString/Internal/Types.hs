@@ -31,13 +31,14 @@ import Data.Semigroup
 #endif
 import GHC.Generics (Generic)
 
-import System.AbstractFilePath.Data.ByteString.Short.Decode
-import System.AbstractFilePath.Data.ByteString.Short.Encode
-
 import qualified Data.ByteString.Short as BS
 #if MIN_VERSION_template_haskell(2,16,0)
 import qualified Language.Haskell.TH.Syntax as TH
 #endif
+import System.AbstractFilePath.Encoding ( encodeWith, decodeWith )
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
+import GHC.IO.Encoding.UTF16 ( mkUTF16le )
+import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 
 -- Using unpinned bytearrays to avoid Heap fragmentation and
 -- which are reasonably cheap to pass to FFI calls
@@ -76,26 +77,26 @@ instance Lift PosixString where
 
 -- | Decodes as UTF-16LE.
 instance Show WindowsString where
-  show (WS bs) = ('\"': decodeUtf16LEWith lenientDecode bs) <> "\""
+  show (WS bs) = ('\"': either (error . show) id (decodeWith (mkUTF16le TransliterateCodingFailure) bs)) <> "\""
 
 -- | Encodes as UTF-16LE.
 instance Read WindowsString where
-  readsPrec p str = [ (WS $ encodeUtf16LE x, y) | (x, y) <- readsPrec p str ]
+  readsPrec p str = [ (WS $ either (error . show) id $ encodeWith (mkUTF16le TransliterateCodingFailure) x, y) | (x, y) <- readsPrec p str ]
 
 -- | Decodes as UTF-8 and replaces invalid chars with unicode replacement
 -- char U+FFFD.
 instance Show PosixString where
-  show (PS bs) = ('\"': decodeUtf8With lenientDecode bs) <> "\""
+  show (PS bs) = ('\"': either (error . show) id (decodeWith (mkUTF8 TransliterateCodingFailure) bs)) <> "\""
 
 -- | Encodes as UTF-8.
 instance Read PosixString where
-  readsPrec p str = [ (PS $ encodeUtf8 x, y) | (x, y) <- readsPrec p str ]
+  readsPrec p str = [ (PS $ either (error . show) id $ encodeWith (mkUTF8 TransliterateCodingFailure) x, y) | (x, y) <- readsPrec p str ]
 
-instance IsString WindowsString where 
-    fromString = WS . encodeUtf16LE
+instance IsString WindowsString where
+    fromString = WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
 
-instance IsString PosixString where 
-    fromString = PS . encodeUtf8
+instance IsString PosixString where
+    fromString = PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 type PlatformString = WindowsString
@@ -138,9 +139,9 @@ instance Ord OsString where
 -- | Encodes as UTF16 on windows and UTF8 on unix.
 instance IsString OsString where 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-    fromString = OsString . WS . encodeUtf16LE
+    fromString = OsString . WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
 #else
-    fromString = OsString . PS . encodeUtf8
+    fromString = OsString . PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
 #endif
 
 
@@ -200,17 +201,17 @@ instance Lift OsString where
 -- char U+FFFD.
 instance Show OsString where
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-  show (OsString (WS bs)) = ('\"': decodeUtf16LEWith lenientDecode bs) <> "\""
+  show (OsString (WS bs)) = ('\"': either (error . show) id (decodeWith (mkUTF16le TransliterateCodingFailure) bs)) <> "\""
 #else
-  show (OsString (PS bs)) = ('\"': decodeUtf8With lenientDecode bs) <> "\""
+  show (OsString (PS bs)) = ('\"': either (error . show) id (decodeWith (mkUTF8 TransliterateCodingFailure) bs)) <> "\""
 #endif
 
 -- | Encodes as UTF-8 on unix and UTF-16LE on windows.
 instance Read OsString where
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-  readsPrec p str = [ (OsString $ WS $ encodeUtf16LE x, y) | (x, y) <- readsPrec p str ]
+  readsPrec p str = [ (OsString $ WS $ either (error . show) id $ encodeWith (mkUTF16le TransliterateCodingFailure) x, y) | (x, y) <- readsPrec p str ]
 #else
-  readsPrec p str = [ (OsString $ PS $ encodeUtf8 x, y) | (x, y) <- readsPrec p str ]
+  readsPrec p str = [ (OsString $ PS $ either (error . show) id $ encodeWith (mkUTF8 TransliterateCodingFailure) x, y) | (x, y) <- readsPrec p str ]
 #endif
 
 

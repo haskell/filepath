@@ -39,18 +39,6 @@ where
 
 
 
-import System.AbstractFilePath.Data.ByteString.Short.Encode
-  (
-#ifdef WINDOWS
-    encodeUtf16LE
-#else
-    encodeUtf8
-#endif
-  )
-import System.AbstractFilePath.Data.ByteString.Short.Decode
-    (
-      UnicodeException (..)
-    )
 import System.OsString.Internal.Types (
 #ifdef WINDOWS
   WindowsString(..), WindowsChar(..)
@@ -78,15 +66,19 @@ import Language.Haskell.TH.Syntax
     ( Lift (..), lift )
 
 
+import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..) )
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #ifdef WINDOWS
 import System.AbstractFilePath.Encoding
 import System.IO
     ( TextEncoding, utf16le )
+import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import System.AbstractFilePath.Data.ByteString.Short.Word16 as BS
 import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
 #else
 import System.IO
     ( TextEncoding, utf8 )
+import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.AbstractFilePath.Data.ByteString.Short as BS
 import GHC.IO.Encoding
     ( getFileSystemEncoding )
@@ -99,7 +91,7 @@ import GHC.IO.Encoding
 -- On windows this encodes as UTF16, which is a pretty good guess.
 -- On unix this encodes as UTF8, which is a good guess.
 --
--- Throws a 'UnicodeException' if encoding fails.
+-- Throws a 'EncodingException' if encoding fails.
 toPlatformStringUtf :: MonadThrow m => String -> m PLATFORM_STRING
 #ifdef WINDOWS
 toPlatformStringUtf str = either throwM pure $ toPlatformStringEnc str utf16le
@@ -110,14 +102,14 @@ toPlatformStringUtf str = either throwM pure $ toPlatformStringEnc str utf8
 -- | Like 'toPlatformStringUtf', except allows to provide an encoding.
 toPlatformStringEnc :: String
                     -> TextEncoding
-                    -> Either UnicodeException PLATFORM_STRING
+                    -> Either EncodingException PLATFORM_STRING
 toPlatformStringEnc str enc = unsafePerformIO $ do
 #ifdef WINDOWS
   r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WS <$> BS8.packCStringLen cstr
-  evaluate $ force $ first (flip DecodeError Nothing . displayException) r
+  evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
   r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> PS <$> BS.packCStringLen cstr
-  evaluate $ force $ first (flip DecodeError Nothing . displayException) r
+  evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
 
 -- | Like 'toPlatformStringUtf', except on unix this uses the current
@@ -127,7 +119,7 @@ toPlatformStringEnc str enc = unsafePerformIO $ do
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
 --
--- Throws a 'UnicodeException' if encoding fails.
+-- Throws a 'EncodingException' if encoding fails.
 toPlatformStringFS :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
 toPlatformStringFS str = GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
@@ -144,7 +136,7 @@ toPlatformStringFS str = do
 -- On unix this decodes as UTF8 (which is a good guess). Note that
 -- filenames on unix are encoding agnostic char arrays.
 --
--- Throws a 'UnicodeException' if decoding fails.
+-- Throws a 'EncodingException' if decoding fails.
 fromPlatformStringUtf :: MonadThrow m => PLATFORM_STRING -> m String
 #ifdef WINDOWS
 fromPlatformStringUtf ps = either throwM pure (fromPlatformStringEnc ps utf16le)
@@ -157,15 +149,15 @@ fromPlatformStringUtf ps = either throwM pure (fromPlatformStringEnc ps utf8)
 -- The String is forced into memory to catch all exceptions.
 fromPlatformStringEnc :: PLATFORM_STRING
                       -> TextEncoding
-                      -> Either UnicodeException String
+                      -> Either EncodingException String
 #ifdef WINDOWS
 fromPlatformStringEnc (WS ba) winEnc = unsafePerformIO $ do
   r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen winEnc fp
-  evaluate $ force $ first (flip DecodeError Nothing . displayException) r
+  evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
 fromPlatformStringEnc (PS ba) unixEnc = unsafePerformIO $ do
   r <- try @SomeException $ BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
-  evaluate $ force $ first (flip DecodeError Nothing . displayException) r
+  evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
 
 
@@ -176,7 +168,7 @@ fromPlatformStringEnc (PS ba) unixEnc = unsafePerformIO $ do
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
 --
--- Throws 'UnicodeException' if decoding fails.
+-- Throws 'EncodingException' if decoding fails.
 fromPlatformStringFS :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
 fromPlatformStringFS (WS ba) =
@@ -193,7 +185,7 @@ fromPlatformStringFS (PS ba) = do
 -- On windows, this ensures valid UCS-2LE, on unix it is passed unchecked.
 -- Note that this doesn't expand Word8 to Word16 on windows, so you may get invalid UTF-16.
 --
--- Throws 'UnicodeException' on invalid UCS-2LE on windows (although unlikely).
+-- Throws 'EncodingException' on invalid UCS-2LE on windows (although unlikely).
 bytesToPlatformString :: MonadThrow m
                       => ByteString
                       -> m PLATFORM_STRING
@@ -210,7 +202,7 @@ qq :: (ByteString -> Q Exp) -> QuasiQuoter
 qq quoteExp' =
   QuasiQuoter
 #ifdef WINDOWS
-  { quoteExp  = quoteExp' . fromShort . encodeUtf16LE
+  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -219,7 +211,7 @@ qq quoteExp' =
       fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
   }
 #else
-  { quoteExp  = quoteExp' . fromShort . encodeUtf8
+  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->

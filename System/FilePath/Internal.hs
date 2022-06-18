@@ -127,15 +127,18 @@ import Data.List(stripPrefix, isSuffixOf, uncons)
 #define FILEPATH FilePath
 #else
 import Prelude (fromIntegral)
-import System.AbstractFilePath.Data.ByteString.Short.Encode
+import System.AbstractFilePath.Encoding ( encodeWith )
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import qualified Data.Char as C
 #ifdef WINDOWS
+import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import Data.Word ( Word16 )
 import System.AbstractFilePath.Data.ByteString.Short.Word16
 #define CHAR Word16
 #define STRING ShortByteString
 #define FILEPATH ShortByteString
 #else
+import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import Data.Word ( Word8 )
 import System.AbstractFilePath.Data.ByteString.Short
 #define CHAR Word8
@@ -1177,10 +1180,10 @@ snoc str = \c -> str <> [c]
 #else
 #ifdef WINDOWS
 fromString :: P.String -> STRING
-fromString = encodeUtf16LE
+fromString = P.either (P.error . P.show) P.id . encodeWith (mkUTF16le ErrorOnCodingFailure)
 #else
 fromString :: P.String -> STRING
-fromString = encodeUtf8
+fromString = P.either (P.error . P.show) P.id . encodeWith (mkUTF8 ErrorOnCodingFailure)
 #endif
 
 _a, _z, _A, _Z, _period, _quotedbl, _backslash, _slash, _question, _U, _N, _C, _colon, _semicolon, _US, _less, _greater, _bar, _asterisk, _nul, _space, _underscore :: CHAR

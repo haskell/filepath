@@ -8,4 +8,4 @@ import qualified EncodingSpec
 main :: IO ()
 main = defaultMain $ do
   testGroup "All" $
-    AbstractFilePathSpec.tests <> EncodingSpec.tests
+    AbstractFilePathSpec.tests ++ EncodingSpec.tests

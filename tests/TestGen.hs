@@ -14,7 +14,6 @@ import qualified System.FilePath.Posix as P
 import System.AbstractFilePath.Types
 import qualified System.AbstractFilePath.Windows as AFP_W
 import qualified System.AbstractFilePath.Posix as AFP_P
-import System.AbstractFilePath.Data.ByteString.Short.Encode
 tests :: [(String, Property)]
 tests =
     [("W.pathSeparator == '\\\\'", property $ W.pathSeparator == '\\')

@@ -22,9 +22,11 @@ import qualified System.AbstractFilePath.Windows as AFP_W
 import qualified System.AbstractFilePath.Posix as AFP_P
 import System.AbstractFilePath.Types
 #endif
-import System.AbstractFilePath.Data.ByteString.Short.Decode
-import System.AbstractFilePath.Data.ByteString.Short.Encode
 import System.OsString.Internal.Types
+import System.AbstractFilePath.Encoding
+import GHC.IO.Encoding.UTF16 ( mkUTF16le )
+import GHC.IO.Encoding.UTF8 ( mkUTF8 )
+import GHC.IO.Encoding.Failure
 
 
 infixr 0 ==>
@@ -64,6 +66,18 @@ shrinkValid wrap valid o =
     | y <- map valid $ shrinkList (\x -> ['a' | x /= 'a']) o
     , length y < length o || (length y == length o && countA y > countA o)]
     where countA = length . filter (== 'a')
+
+encodeUtf16LE :: String -> ShortByteString
+encodeUtf16LE = either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
+
+encodeUtf8 :: String -> ShortByteString
+encodeUtf8 = either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
+
+decodeUtf16LE :: ShortByteString -> String
+decodeUtf16LE = either (error . show) id . decodeWith (mkUTF16le TransliterateCodingFailure)
+
+decodeUtf8 :: ShortByteString -> String
+decodeUtf8 = either (error . show) id . decodeWith (mkUTF8 TransliterateCodingFailure)
 
 #ifdef GHC_MAKE
 newtype QFilePathValidAFP_W = QFilePathValidAFP_W ShortByteString deriving Show

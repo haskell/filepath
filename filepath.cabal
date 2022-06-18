@@ -76,8 +76,6 @@ library
   exposed-modules:
     System.AbstractFilePath
     System.AbstractFilePath.Data.ByteString.Short
-    System.AbstractFilePath.Data.ByteString.Short.Decode
-    System.AbstractFilePath.Data.ByteString.Short.Encode
     System.AbstractFilePath.Data.ByteString.Short.Internal
     System.AbstractFilePath.Data.ByteString.Short.Word16
     System.AbstractFilePath.Encoding

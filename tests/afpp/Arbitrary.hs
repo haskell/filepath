@@ -8,14 +8,11 @@ import System.OsString
 import System.OsString.Internal.Types
 import qualified System.OsString.Posix as Posix
 import qualified System.OsString.Windows as Windows
-import Control.Applicative
 import Data.ByteString ( ByteString )
 import qualified Data.ByteString as ByteString
 import Test.QuickCheck
 
-import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Checkers
-import Test.QuickCheck.Gen
 
 
 newtype NonNullString = NonNullString { nonNullString :: String }

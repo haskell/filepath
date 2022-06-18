@@ -1,10 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude
            , BangPatterns
+           , TypeApplications
   #-}
 {-# OPTIONS_GHC  -funbox-strict-fields #-}
 
 
 module System.AbstractFilePath.Encoding where
+
+import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
 
 import GHC.Base
 import GHC.Real
@@ -14,6 +17,16 @@ import GHC.IO.Buffer
 import GHC.IO.Encoding.Failure
 import GHC.IO.Encoding.Types
 import Data.Bits
+import Control.Exception (SomeException, try, Exception (displayException), evaluate)
+import qualified GHC.Foreign as GHC
+import Data.Either (Either)
+import GHC.IO (unsafePerformIO)
+import Control.DeepSeq (force, NFData (rnf))
+import Data.Bifunctor (first)
+import Data.Word (Word8)
+import Data.Data (Typeable)
+import GHC.Show (Show (show))
+import Numeric (showHex)
 
 -- -----------------------------------------------------------------------------
 -- UCS-2 LE
@@ -95,4 +108,41 @@ ucs2le_encode
                | otherwise -> done InvalidSequence ir ow
     in
     loop ir0 ow0
+
+
+-- -----------------------------------------------------------------------------
+-- Utils
+--
+
+decodeWith :: TextEncoding -> BS8.ShortByteString -> Either EncodingException String
+decodeWith enc ba = unsafePerformIO $ do
+  r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
+  evaluate $ force $ first (flip EncodingError Nothing . displayException) r
+
+encodeWith :: TextEncoding -> String -> Either EncodingException BS8.ShortByteString
+encodeWith enc str = unsafePerformIO $ do
+  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> BS8.packCStringLen cstr
+  evaluate $ force $ first (flip EncodingError Nothing . displayException) r
+
+data EncodingException =
+    EncodingError String (Maybe Word8)
+    -- ^ Could not decode a byte sequence because it was invalid under
+    -- the given encoding, or ran out of input in mid-decode.
+    deriving (Eq, Typeable)
+
+
+showEncodingException :: EncodingException -> String
+showEncodingException (EncodingError desc (Just w))
+    = "Cannot decode byte '\\x" ++ showHex w ("': " ++ desc)
+showEncodingException (EncodingError desc Nothing)
+    = "Cannot decode input: " ++ desc
+
+instance Show EncodingException where
+    show = showEncodingException
+
+instance Exception EncodingException
+
+instance NFData EncodingException where
+    rnf (EncodingError desc w) = rnf desc `seq` rnf w
+
 

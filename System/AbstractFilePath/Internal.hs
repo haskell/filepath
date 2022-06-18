@@ -21,12 +21,7 @@ import Language.Haskell.TH.Syntax
     ( Lift (..), lift )
 import System.IO
     ( TextEncoding )
-#ifndef WINDOWS
-import System.AbstractFilePath.Data.ByteString.Short.Decode
-    (
-      UnicodeException (..)
-    )
-#endif
+import System.AbstractFilePath.Encoding ( EncodingException(..) )
 
 
 
@@ -35,7 +30,7 @@ import System.AbstractFilePath.Data.ByteString.Short.Decode
 -- On windows this encodes as UTF16, which is a pretty good guess.
 -- On unix this encodes as UTF8, which is a good guess.
 --
--- Throws a 'UnicodeException' if encoding fails.
+-- Throws a 'EncodingException' if encoding fails.
 toAbstractFilePathUtf :: MonadThrow m => String -> m AbstractFilePath
 toAbstractFilePathUtf = toOsStringUtf
 
@@ -43,7 +38,7 @@ toAbstractFilePathUtf = toOsStringUtf
 toAbstractFilePathEnc :: String
                       -> TextEncoding  -- ^ unix text encoding
                       -> TextEncoding  -- ^ windows text encoding
-                      -> Either UnicodeException AbstractFilePath
+                      -> Either EncodingException AbstractFilePath
 toAbstractFilePathEnc = toOsStringEnc
 
 -- | Like 'toAbstractFilePathUtf', except on unix this uses the current
@@ -53,7 +48,7 @@ toAbstractFilePathEnc = toOsStringEnc
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
 --
--- Throws 'UnicodeException' if decoding fails.
+-- Throws 'EncodingException' if decoding fails.
 toAbstractFilePathFS :: String -> IO AbstractFilePath
 toAbstractFilePathFS = toOsStringFS
 
@@ -64,7 +59,7 @@ toAbstractFilePathFS = toOsStringFS
 -- On unix this decodes as UTF8 (which is a good guess). Note that
 -- filenames on unix are encoding agnostic char arrays.
 --
--- Throws a 'UnicodeException' if decoding fails.
+-- Throws a 'EncodingException' if decoding fails.
 --
 -- Note that filenames of different encodings may have the same @String@
 -- representation, although they're not the same byte-wise.
@@ -78,7 +73,7 @@ fromAbstractFilePathUtf = fromOsStringUtf
 fromAbstractFilePathEnc :: AbstractFilePath
                         -> TextEncoding  -- ^ unix text encoding
                         -> TextEncoding  -- ^ windows text encoding
-                        -> Either UnicodeException String
+                        -> Either EncodingException String
 fromAbstractFilePathEnc = fromOsStringEnc
 
 -- | Like 'fromAbstractFilePathUtf', except on unix this uses the current
@@ -88,7 +83,7 @@ fromAbstractFilePathEnc = fromOsStringEnc
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
 --
--- Throws 'UnicodeException' if decoding fails.
+-- Throws 'EncodingException' if decoding fails.
 fromAbstractFilePathFS :: AbstractFilePath -> IO String
 fromAbstractFilePathFS = fromOsStringFS
 
@@ -97,7 +92,7 @@ fromAbstractFilePathFS = fromOsStringFS
 --
 -- On windows, this ensures valid UCS-2LE, on unix it is passed unchanged/unchecked.
 --
--- Throws 'UnicodeException' on invalid UCS-2LE on windows (although unlikely).
+-- Throws 'EncodingException' on invalid UCS-2LE on windows (although unlikely).
 bytesToAFP :: MonadThrow m
            => ByteString
            -> m AbstractFilePath
