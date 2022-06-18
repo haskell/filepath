@@ -185,7 +185,6 @@ test-suite abstract-filepath
     -- https://github.com/UnkindPartition/tasty/issues/339
     , tasty-hunit       <0.10
     , tasty-quickcheck
-    , text
 
 benchmark bench-filepath
   type:           exitcode-stdio-1.0
