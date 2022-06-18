@@ -187,3 +187,18 @@ test-suite abstract-filepath
     , tasty-quickcheck
     , text
 
+benchmark bench-filepath
+  type:           exitcode-stdio-1.0
+  main-is:        BenchFilePath.hs
+  hs-source-dirs: bench
+  build-depends:
+      base
+    , bytestring   >=0.11.3.0
+    , filepath
+    , tasty-bench
+
+  if impl(ghc >=8.10)
+    ghc-options: "-with-rtsopts=-A32m --nonmoving-gc"
+
+  else
+    ghc-options: -with-rtsopts=-A32m
