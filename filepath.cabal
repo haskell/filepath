@@ -47,6 +47,7 @@ description:
 
 extra-source-files:
   Makefile
+  Generate.hs
   System/AbstractFilePath/Common.hs
   System/FilePath/Internal.hs
   System/OsString/Common.hs
