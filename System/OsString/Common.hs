@@ -16,18 +16,17 @@ module System.OsString.MODULE_NAME
 #endif
 
   -- * String construction
-  , toPlatformString
-  , toPlatformStringIO
-  , bsToPlatformString
+  , toPlatformStringUtf
+  , toPlatformStringEnc
+  , toPlatformStringFS
+  , bytesToPlatformString
   , pstr
   , packPlatformString
 
   -- * String deconstruction
-  , fromPlatformString
-#ifndef WINDOWS
+  , fromPlatformStringUtf
   , fromPlatformStringEnc
-#endif
-  , fromPlatformStringIO
+  , fromPlatformStringFS
   , unpackPlatformString
 
   -- * Word construction
@@ -40,24 +39,6 @@ where
 
 
 
-import System.AbstractFilePath.Data.ByteString.Short.Encode
-  (
-#ifdef WINDOWS
-    encodeUtf16LE
-#else
-    encodeUtf8
-#endif
-  )
-import System.AbstractFilePath.Data.ByteString.Short.Decode
-    (
-#ifdef WINDOWS
-      decodeUtf16LE'
-    , decodeUtf16LE''
-#else
-      decodeUtf8'
-  , UnicodeException (..)
-#endif
-    )
 import System.OsString.Internal.Types (
 #ifdef WINDOWS
   WindowsString(..), WindowsChar(..)
@@ -71,24 +52,13 @@ import Control.Monad.Catch
     ( MonadThrow, throwM )
 import Data.ByteString.Internal
     ( ByteString )
-#ifndef WINDOWS
 import Control.Exception
-    ( SomeException, try, displayException, throwIO )
+    ( SomeException, try, displayException )
 import Control.DeepSeq ( force )
 import Data.Bifunctor ( first )
 import GHC.IO
     ( evaluate, unsafePerformIO )
-import GHC.IO.Encoding
-    ( getFileSystemEncoding )
 import qualified GHC.Foreign as GHC
-import System.IO.Error
-    ( catchIOError )
-import System.IO
-    ( TextEncoding )
-#else
-import Control.Exception
-    ( throwIO )
-#endif
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
@@ -96,95 +66,135 @@ import Language.Haskell.TH.Syntax
     ( Lift (..), lift )
 
 
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #ifdef WINDOWS
+import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..), ucs2le )
+import System.IO
+    ( TextEncoding, utf16le )
+import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import System.AbstractFilePath.Data.ByteString.Short.Word16 as BS
+import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
 #else
+import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..) )
+import System.IO
+    ( TextEncoding, utf8 )
+import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.AbstractFilePath.Data.ByteString.Short as BS
+import GHC.IO.Encoding
+    ( getFileSystemEncoding )
 #endif
 
 
 
--- | Total Unicode-friendly encoding.
+-- | Convert a String.
 --
--- On windows this encodes as UTF16, which is expected.
+-- On windows this encodes as UTF16, which is a pretty good guess.
 -- On unix this encodes as UTF8, which is a good guess.
-toPlatformString :: String -> PLATFORM_STRING
+--
+-- Throws a 'EncodingException' if encoding fails.
+toPlatformStringUtf :: MonadThrow m => String -> m PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformString = WS . encodeUtf16LE
+toPlatformStringUtf str = either throwM pure $ toPlatformStringEnc str utf16le
 #else
-toPlatformString = PS . encodeUtf8
+toPlatformStringUtf str = either throwM pure $ toPlatformStringEnc str utf8
 #endif
 
--- | Like 'toPlatformString', except on unix this uses the current
--- locale for encoding instead of always UTF8.
+-- | Like 'toPlatformStringUtf', except allows to provide an encoding.
+toPlatformStringEnc :: String
+                    -> TextEncoding
+                    -> Either EncodingException PLATFORM_STRING
+toPlatformStringEnc str enc = unsafePerformIO $ do
+#ifdef WINDOWS
+  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WS <$> BS8.packCStringLen cstr
+  evaluate $ force $ first (flip EncodingError Nothing . displayException) r
+#else
+  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> PS <$> BS.packCStringLen cstr
+  evaluate $ force $ first (flip EncodingError Nothing . displayException) r
+#endif
+
+-- | Like 'toPlatformStringUtf', except on unix this uses the current
+-- filesystem locale for encoding instead of always UTF8.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
--- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
-toPlatformStringIO :: String -> IO PLATFORM_STRING
+-- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
+-- to deeply evaluate the result to catch exceptions).
+--
+-- Throws a 'EncodingException' if encoding fails.
+toPlatformStringFS :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformStringIO = pure . WS . encodeUtf16LE
+toPlatformStringFS str = GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
 #else
-toPlatformStringIO str = do
+toPlatformStringFS str = do
   enc <- getFileSystemEncoding
-  cstr <- GHC.newCString enc str
-  PS <$> BS.packCString cstr
+  GHC.withCStringLen enc str $ \cstr -> PS <$> BS.packCStringLen cstr
 #endif
 
 
 -- | Partial unicode friendly decoding.
 --
--- On windows this decodes as UTF16 (which is the expected filename encoding).
+-- On windows this decodes as UTF16-LE (which is the expected filename encoding).
 -- On unix this decodes as UTF8 (which is a good guess). Note that
 -- filenames on unix are encoding agnostic char arrays.
 --
--- Throws a 'UnicodeException' if decoding fails.
-fromPlatformString :: MonadThrow m => PLATFORM_STRING -> m String
+-- Throws a 'EncodingException' if decoding fails.
+fromPlatformStringUtf :: MonadThrow m => PLATFORM_STRING -> m String
 #ifdef WINDOWS
-fromPlatformString (WS ba) = either throwM pure $ decodeUtf16LE' ba
+fromPlatformStringUtf ps = either throwM pure (fromPlatformStringEnc ps utf16le)
 #else
-fromPlatformString (PS ba) = either throwM pure $ decodeUtf8' ba
+fromPlatformStringUtf ps = either throwM pure (fromPlatformStringEnc ps utf8)
 #endif
 
-#ifndef WINDOWS
--- | Like 'fromPlatformString', except on unix this uses the provided
--- 'TextEncoding' for decoding.
-fromPlatformStringEnc :: PLATFORM_STRING -> TextEncoding -> Either UnicodeException String
-fromPlatformStringEnc (PS ba) enc = unsafePerformIO $ do
-  r <- try @SomeException $ BS.useAsCString ba $ \fp -> GHC.peekCString enc fp
-  evaluate $ force $ first (flip DecodeError Nothing . displayException) r
+-- | Like 'fromPlatformStringUtf', except allows to provide a text encoding.
+--
+-- The String is forced into memory to catch all exceptions.
+fromPlatformStringEnc :: PLATFORM_STRING
+                      -> TextEncoding
+                      -> Either EncodingException String
+#ifdef WINDOWS
+fromPlatformStringEnc (WS ba) winEnc = unsafePerformIO $ do
+  r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen winEnc fp
+  evaluate $ force $ first (flip EncodingError Nothing . displayException) r
+#else
+fromPlatformStringEnc (PS ba) unixEnc = unsafePerformIO $ do
+  r <- try @SomeException $ BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
+  evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
 
 
--- | Like 'fromPlatformString', except on unix this uses the current
--- locale for decoding instead of always UTF8.
+-- | Like 'fromPlatformStringUt', except on unix this uses the current
+-- filesystem locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
 --
 -- Looking up the locale requires IO. If you're not worried about calls
--- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible.
+-- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
+-- to deeply evaluate the result to catch exceptions).
 --
--- Throws 'UnicodeException' if decoding fails.
-fromPlatformStringIO :: PLATFORM_STRING -> IO String
+-- Throws 'EncodingException' if decoding fails.
+fromPlatformStringFS :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
-
-fromPlatformStringIO (WS ba) = either throwIO pure $ decodeUtf16LE' ba
+fromPlatformStringFS (WS ba) =
+  BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen utf16le fp
 #else
-fromPlatformStringIO (PS ba) = flip catchIOError (\_ -> throwIO (DecodeError "fromAbstractFilePath' failed" Nothing))
-  $ BS.useAsCString ba $ \fp -> getFileSystemEncoding >>= \enc -> GHC.peekCString enc fp
+fromPlatformStringFS (PS ba) = do
+  enc <- getFileSystemEncoding
+  BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
 #endif
 
 
--- | Constructs an platform string from a ByteString.
+-- | Constructs a platform string from a ByteString.
 --
--- On windows, this ensures valid UTF16, on unix it is passed unchanged/unchecked.
+-- On windows, this ensures valid UCS-2LE, on unix it is passed unchecked.
+-- Note that this doesn't expand Word8 to Word16 on windows, so you may get invalid UTF-16.
 --
--- Throws 'UnicodeException' on invalid UTF16 on windows.
-bsToPlatformString :: MonadThrow m
-             => ByteString
-             -> m PLATFORM_STRING
+-- Throws 'EncodingException' on invalid UCS-2LE on windows (although unlikely).
+bytesToPlatformString :: MonadThrow m
+                      => ByteString
+                      -> m PLATFORM_STRING
 #ifdef WINDOWS
-bsToPlatformString bs =
-  either throwM (const . pure . WS . toShort $ bs) $ decodeUtf16LE'' bs
+bytesToPlatformString bs =
+  let ws = WS . toShort $ bs
+  in either throwM (const . pure $ ws) $ fromPlatformStringEnc ws ucs2le
 #else
-bsToPlatformString = pure . PS . toShort
+bytesToPlatformString = pure . PS . toShort
 #endif
 
 
@@ -192,7 +202,7 @@ qq :: (ByteString -> Q Exp) -> QuasiQuoter
 qq quoteExp' =
   QuasiQuoter
 #ifdef WINDOWS
-  { quoteExp  = quoteExp' . fromShort . encodeUtf16LE
+  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -201,7 +211,7 @@ qq quoteExp' =
       fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
   }
 #else
-  { quoteExp  = quoteExp' . fromShort . encodeUtf8
+  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -212,8 +222,8 @@ qq quoteExp' =
 #endif
 
 mkPlatformString :: ByteString -> Q Exp
-mkPlatformString bs = 
-  case bsToPlatformString bs of
+mkPlatformString bs =
+  case bytesToPlatformString bs of
     Just afp -> lift afp
     Nothing -> error "invalid encoding"
 
@@ -228,6 +238,7 @@ pstr :: QuasiQuoter
 pstr = qq mkPlatformString
 
 
+-- | Unpack a platform string to a list of platform words.
 unpackPlatformString :: PLATFORM_STRING -> [PLATFORM_WORD]
 #ifdef WINDOWS
 unpackPlatformString (WS ba) = WW <$> BS.unpack ba
@@ -236,6 +247,11 @@ unpackPlatformString (PS ba) = PW <$> BS.unpack ba
 #endif
 
 
+-- | Pack a list of platform words to a platform string.
+--
+-- Note that using this in conjunction with 'unsafeFromChar' to
+-- convert from @[Char]@ to platform string is probably not what
+-- you want, because it will truncate unicode code points.
 packPlatformString :: [PLATFORM_WORD] -> PLATFORM_STRING
 #ifdef WINDOWS
 packPlatformString = WS . BS.pack . fmap (\(WW w) -> w)

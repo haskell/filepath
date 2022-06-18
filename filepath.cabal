@@ -1,6 +1,6 @@
 cabal-version:      2.0
 name:               filepath
-version:            2.0.0.0
+version:            2.0.0.1
 
 -- NOTE: Don't forget to update ./changelog.md
 license:            BSD3
@@ -9,7 +9,9 @@ author:             Neil Mitchell <ndmitchell@gmail.com>
 maintainer:         Julian Ospald <hasufell@posteo.de>
 copyright:          Neil Mitchell 2005-2020
 bug-reports:        https://gitlab.haskell.org/haskell/filepath/-/issues
-homepage:           https://gitlab.haskell.org/haskell/filepath/-/blob/master/README.md
+homepage:
+  https://gitlab.haskell.org/haskell/filepath/-/blob/master/README.md
+
 category:           System
 build-type:         Simple
 synopsis:           Library for manipulating FilePaths in a cross platform way.
@@ -45,6 +47,7 @@ description:
 
 extra-source-files:
   Makefile
+  Generate.hs
   System/AbstractFilePath/Common.hs
   System/FilePath/Internal.hs
   System/OsString/Common.hs
@@ -76,10 +79,9 @@ library
   exposed-modules:
     System.AbstractFilePath
     System.AbstractFilePath.Data.ByteString.Short
-    System.AbstractFilePath.Data.ByteString.Short.Decode
-    System.AbstractFilePath.Data.ByteString.Short.Encode
     System.AbstractFilePath.Data.ByteString.Short.Internal
     System.AbstractFilePath.Data.ByteString.Short.Word16
+    System.AbstractFilePath.Encoding
     System.AbstractFilePath.Internal
     System.AbstractFilePath.Posix
     System.AbstractFilePath.Posix.Internal
@@ -96,7 +98,7 @@ library
     System.OsString.Windows
 
   build-depends:
-      base              >=4.9 && <4.18
+      base              >=4.9      && <4.18
     , bytestring        >=0.11.3.0
     , deepseq
     , exceptions
@@ -113,38 +115,41 @@ test-suite filepath-tests
   default-language: Haskell2010
   main-is:          Test.hs
   hs-source-dirs:   tests
+  ghc-options:      -Wall
   other-modules:
     TestGen
     TestUtil
 
   build-depends:
       base
-    , bytestring        >=0.11.3.0
+    , bytestring  >=0.11.3.0
     , filepath
-    , QuickCheck  >=2.7 && <2.15
+    , QuickCheck  >=2.7      && <2.15
 
 test-suite filepath-equivalent-tests
   type:             exitcode-stdio-1.0
   default-language: Haskell2010
   main-is:          TestEquiv.hs
   hs-source-dirs:   tests
+  ghc-options:      -Wall
   other-modules:
-    TestUtil
     Legacy.System.FilePath
     Legacy.System.FilePath.Posix
     Legacy.System.FilePath.Windows
+    TestUtil
 
   build-depends:
       base
-    , bytestring        >=0.11.3.0
+    , bytestring  >=0.11.3.0
     , filepath
-    , QuickCheck  >=2.7 && <2.15
+    , QuickCheck  >=2.7      && <2.15
 
 test-suite bytestring-tests
   type:             exitcode-stdio-1.0
   default-language: Haskell2010
   main-is:          Main.hs
   hs-source-dirs:   tests
+  ghc-options:      -Wall
   other-modules:
     Properties
     Properties.ShortByteString
@@ -154,24 +159,51 @@ test-suite bytestring-tests
       base
     , bytestring        >=0.11.3.0
     , filepath
-    , QuickCheck        >=2.7 && <2.15
+    , QuickCheck        >=2.7      && <2.15
     , tasty
     , tasty-quickcheck
 
 test-suite abstract-filepath
-  type:               exitcode-stdio-1.0
-  main-is:            Test.hs
-  build-tool-depends: hspec-discover:hspec-discover -any
-  hs-source-dirs:     tests/afpp
+  type:             exitcode-stdio-1.0
+  main-is:          Test.hs
+  hs-source-dirs:   tests/afpp
+  ghc-options:      -Wall
   other-modules:
     AbstractFilePathSpec
     Arbitrary
+    EncodingSpec
 
-  default-language:   Haskell2010
+  default-language: Haskell2010
   build-depends:
       base
+    , bytestring        >=0.11.3.0
     , checkers          ^>=0.5.6
+    , deepseq
     , filepath
-    , QuickCheck        >=2.7   && <2.15
+    , QuickCheck        >=2.7      && <2.15
     , tasty
+    -- tasty-hunit >= 0.10 depends on call-stack, which causes cyclic import with filepath
+    -- https://github.com/UnkindPartition/tasty/issues/339
+    , tasty-hunit       <0.10
     , tasty-quickcheck
+
+benchmark bench-filepath
+  type:           exitcode-stdio-1.0
+  main-is:        BenchFilePath.hs
+  hs-source-dirs: bench
+  default-language: Haskell2010
+  if os(windows)
+      build-depends: unbuildable<0
+      buildable: False
+  else
+      build-depends:
+          base
+        , bytestring
+        , filepath
+        , tasty-bench
+
+  if impl(ghc >=8.10)
+    ghc-options: "-with-rtsopts=-A32m --nonmoving-gc"
+
+  else
+    ghc-options: -with-rtsopts=-A32m

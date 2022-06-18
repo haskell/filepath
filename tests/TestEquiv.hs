@@ -1,264 +1,447 @@
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE TypeApplications #-}
+
 module Main where
 
-import           Control.Monad
-import           Data.Maybe
-import           Data.Semigroup
-import           Prelude                       as P
-import           System.Environment
-import           Test.QuickCheck         hiding ( (==>) )
-import           TestUtil
+import System.Environment
+import Control.Monad
+import Data.Maybe
+import Test.QuickCheck hiding ((==>))
+import TestUtil
+import Prelude as P
+#if !MIN_VERSION_base(4,11,0)
+import Data.Semigroup
+#endif
 
-import qualified Data.Char                     as C
-import qualified Legacy.System.FilePath.Posix  as LP
-import qualified Legacy.System.FilePath.Windows
-                                               as LW
-import qualified System.FilePath.Posix         as P
-import qualified System.FilePath.Windows       as W
+import qualified System.FilePath.Windows as W
+import qualified System.FilePath.Posix as P
+import qualified Legacy.System.FilePath.Windows as LW
+import qualified Legacy.System.FilePath.Posix as LP
 
 
 main :: IO ()
 main = do
-  args <- getArgs
-  let count = case args of
-        i : _ -> read i
-        _     -> 10000
-  let testNum = case args of
-        _ : i : _
-          | let num = read i, num < 0 -> drop (negate num) equivalentTests
-          | let num = read i, num > 0 -> take num equivalentTests
-          | otherwise                 -> []
-        _ -> equivalentTests
-  putStrLn $ "Testing with " ++ show count ++ " repetitions"
-  let total = length testNum
-  let showOutput x = show x { output = "" } ++ "\n" ++ output x
-  bad <- fmap catMaybes $ forM (zip [1 ..] testNum) $ \(i, (msg, prop)) -> do
-    putStrLn $ "Test " ++ show i ++ " of " ++ show total ++ ": " ++ msg
-    res <- quickCheckWithResult stdArgs { chatty = False, maxSuccess = count }
-                                prop
-    case res of
-      Success{} -> pure Nothing
-      bad       -> do
-        putStrLn $ showOutput bad
-        putStrLn "TEST FAILURE!"
-        pure $ Just (msg, bad)
-  if null bad
-    then putStrLn $ "Success, " ++ show total ++ " tests passed"
-    else do
-      putStrLn $ show (length bad) ++ " FAILURES\n"
-      forM_ (zip [1 ..] bad) $ \(i, (a, b)) ->
-        putStrLn
-          $  "FAILURE "
-          ++ show i
-          ++ ": "
-          ++ a
-          ++ "\n"
-          ++ showOutput b
-          ++ "\n"
-      fail
-        $  "FAILURE, failed "
-        ++ show (length bad)
-        ++ " of "
-        ++ show total
-        ++ " tests"
+    args <- getArgs
+    let count   = case args of i:_   -> read i; _ -> 10000
+    let testNum = case args of
+                    _:i:_
+                      | let num = read i
+                      , num < 0    -> drop (negate num) equivalentTests
+                      | let num = read i
+                      , num > 0    -> take num          equivalentTests
+                      | otherwise  -> []
+                    _ -> equivalentTests
+    putStrLn $ "Testing with " ++ show count ++ " repetitions"
+    let total' = length testNum
+    let showOutput x = show x{output=""} ++ "\n" ++ output x
+    bad <- fmap catMaybes $ forM (zip @Integer [1..] testNum) $ \(i,(msg,prop)) -> do
+        putStrLn $ "Test " ++ show i ++ " of " ++ show total' ++ ": " ++ msg
+        res <- quickCheckWithResult stdArgs{chatty=False, maxSuccess=count} prop
+        case res of
+            Success{} -> pure Nothing
+            bad -> do putStrLn $ showOutput bad; putStrLn "TEST FAILURE!"; pure $ Just (msg,bad)
+    if null bad then
+        putStrLn $ "Success, " ++ show total' ++ " tests passed"
+     else do
+        putStrLn $ show (length bad) ++ " FAILURES\n"
+        forM_ (zip @Integer [1..] bad) $ \(i,(a,b)) ->
+            putStrLn $ "FAILURE " ++ show i ++ ": " ++ a ++ "\n" ++ showOutput b ++ "\n"
+        fail $ "FAILURE, failed " ++ show (length bad) ++ " of " ++ show total' ++ " tests"
 
 
 equivalentTests :: [(String, Property)]
 equivalentTests =
   [
-    ( "pathSeparator"
+    ( "pathSeparator (windows)"
     , property $ W.pathSeparator == LW.pathSeparator
     )
     ,
-    ( "pathSeparators"
+    ( "pathSeparators (windows)"
     , property $ W.pathSeparators == LW.pathSeparators
     )
     ,
-    ( "isPathSeparator"
+    ( "isPathSeparator (windows)"
     , property $ \p -> W.isPathSeparator p == LW.isPathSeparator p
     )
     ,
-    ( "searchPathSeparator"
+    ( "searchPathSeparator (windows)"
     , property $ W.searchPathSeparator == LW.searchPathSeparator
     )
     ,
-    ( "isSearchPathSeparator"
+    ( "isSearchPathSeparator (windows)"
     , property $ \p -> W.isSearchPathSeparator p == LW.isSearchPathSeparator p
     )
     ,
-    ( "extSeparator"
+    ( "extSeparator (windows)"
     , property $ W.extSeparator == LW.extSeparator
     )
     ,
-    ( "isExtSeparator"
+    ( "isExtSeparator (windows)"
     , property $ \p -> W.isExtSeparator p == LW.isExtSeparator p
     )
     ,
-    ( "splitSearchPath"
+    ( "splitSearchPath (windows)"
     , property $ \p -> W.splitSearchPath p == LW.splitSearchPath p
     )
     ,
-    ( "splitExtension"
+    ( "splitExtension (windows)"
     , property $ \p -> W.splitExtension p == LW.splitExtension p
     )
     ,
-    ( "takeExtension"
+    ( "takeExtension (windows)"
     , property $ \p -> W.takeExtension p == LW.takeExtension p
     )
     ,
-    ( "replaceExtension"
+    ( "replaceExtension (windows)"
     , property $ \p s -> W.replaceExtension p s == LW.replaceExtension p s
     )
     ,
-    ( "dropExtension"
+    ( "dropExtension (windows)"
     , property $ \p -> W.dropExtension p == LW.dropExtension p
     )
     ,
-    ( "addExtension"
+    ( "addExtension (windows)"
     , property $ \p s -> W.addExtension p s == LW.addExtension p s
     )
     ,
-    ( "hasExtension"
+    ( "hasExtension (windows)"
     , property $ \p -> W.hasExtension p == LW.hasExtension p
     )
     ,
-    ( "splitExtensions"
+    ( "splitExtensions (windows)"
     , property $ \p -> W.splitExtensions p == LW.splitExtensions p
     )
     ,
-    ( "dropExtensions"
+    ( "dropExtensions (windows)"
     , property $ \p -> W.dropExtensions p == LW.dropExtensions p
     )
     ,
-    ( "takeExtensions"
+    ( "takeExtensions (windows)"
     , property $ \p -> W.takeExtensions p == LW.takeExtensions p
     )
     ,
-    ( "replaceExtensions"
+    ( "replaceExtensions (windows)"
     , property $ \p s -> W.replaceExtensions p s == LW.replaceExtensions p s
     )
     ,
-    ( "isExtensionOf"
+    ( "isExtensionOf (windows)"
     , property $ \p s -> W.isExtensionOf p s == LW.isExtensionOf p s
     )
     ,
-    ( "stripExtension"
+    ( "stripExtension (windows)"
     , property $ \p s -> W.stripExtension p s == LW.stripExtension p s
     )
     ,
-    ( "splitFileName"
+    ( "splitFileName (windows)"
     , property $ \p -> W.splitFileName p == LW.splitFileName p
     )
     ,
-    ( "takeFileName"
+    ( "takeFileName (windows)"
     , property $ \p -> W.takeFileName p == LW.takeFileName p
     )
     ,
-    ( "replaceFileName"
+    ( "replaceFileName (windows)"
     , property $ \p s -> W.replaceFileName p s == LW.replaceFileName p s
     )
     ,
-    ( "dropFileName"
+    ( "dropFileName (windows)"
     , property $ \p -> W.dropFileName p == LW.dropFileName p
     )
     ,
-    ( "takeBaseName"
+    ( "takeBaseName (windows)"
     , property $ \p -> W.takeBaseName p == LW.takeBaseName p
     )
     ,
-    ( "replaceBaseName"
+    ( "replaceBaseName (windows)"
     , property $ \p s -> W.replaceBaseName p s == LW.replaceBaseName p s
     )
     ,
-    ( "takeDirectory"
+    ( "takeDirectory (windows)"
     , property $ \p -> W.takeDirectory p == LW.takeDirectory p
     )
     ,
-    ( "replaceDirectory"
+    ( "replaceDirectory (windows)"
     , property $ \p s -> W.replaceDirectory p s == LW.replaceDirectory p s
     )
     ,
-    ( "combine"
+    ( "combine (windows)"
     , property $ \p s -> W.combine p s == LW.combine p s
     )
     ,
-    ( "splitPath"
+    ( "splitPath (windows)"
     , property $ \p -> W.splitPath p == LW.splitPath p
     )
     ,
-    ( "joinPath"
+    ( "joinPath (windows)"
     , property $ \p -> W.joinPath p == LW.joinPath p
     )
     ,
-    ( "splitDirectories"
+    ( "splitDirectories (windows)"
     , property $ \p -> W.splitDirectories p == LW.splitDirectories p
     )
     ,
-    ( "splitDirectories"
+    ( "splitDirectories (windows)"
     , property $ \p -> W.splitDirectories p == LW.splitDirectories p
     )
     ,
-    ( "splitDrive"
+    ( "splitDrive (windows)"
     , property $ \p -> W.splitDrive p == LW.splitDrive p
     )
     ,
-    ( "joinDrive"
+    ( "joinDrive (windows)"
     , property $ \p s -> W.joinDrive p s == LW.joinDrive p s
     )
     ,
-    ( "takeDrive"
+    ( "takeDrive (windows)"
     , property $ \p -> W.takeDrive p == LW.takeDrive p
     )
     ,
-    ( "hasDrive"
+    ( "hasDrive (windows)"
     , property $ \p -> W.hasDrive p == LW.hasDrive p
     )
     ,
-    ( "dropDrive"
+    ( "dropDrive (windows)"
     , property $ \p -> W.dropDrive p == LW.dropDrive p
     )
     ,
-    ( "isDrive"
+    ( "isDrive (windows)"
     , property $ \p -> W.isDrive p == LW.isDrive p
     )
     ,
-    ( "hasTrailingPathSeparator"
+    ( "hasTrailingPathSeparator (windows)"
     , property $ \p -> W.hasTrailingPathSeparator p == LW.hasTrailingPathSeparator p
     )
     ,
-    ( "addTrailingPathSeparator"
+    ( "addTrailingPathSeparator (windows)"
     , property $ \p -> W.addTrailingPathSeparator p == LW.addTrailingPathSeparator p
     )
     ,
-    ( "dropTrailingPathSeparator"
+    ( "dropTrailingPathSeparator (windows)"
     , property $ \p -> W.dropTrailingPathSeparator p == LW.dropTrailingPathSeparator p
     )
     ,
-    ( "normalise"
+    ( "normalise (windows)"
     , property $ \p -> W.normalise p == LW.normalise p
     )
     ,
-    ( "equalFilePath"
+    ( "equalFilePath (windows)"
     , property $ \p s -> W.equalFilePath p s == LW.equalFilePath p s
     )
     ,
-    ( "makeRelative"
+    ( "makeRelative (windows)"
     , property $ \p s -> W.makeRelative p s == LW.makeRelative p s
     )
     ,
-    ( "isRelative"
+    ( "isRelative (windows)"
     , property $ \p -> W.isRelative p == LW.isRelative p
     )
     ,
-    ( "isAbsolute"
+    ( "isAbsolute (windows)"
     , property $ \p -> W.isAbsolute p == LW.isAbsolute p
     )
     ,
-    ( "isValid"
+    ( "isValid (windows)"
     , property $ \p -> W.isValid p == LW.isValid p
     )
     ,
-    ( "makeValid"
+    ( "makeValid (windows)"
     , property $ \p -> W.makeValid p == LW.makeValid p
+    )
+    ,
+    ( "pathSeparator (posix)"
+    , property $ P.pathSeparator == LP.pathSeparator
+    )
+    ,
+    ( "pathSeparators (posix)"
+    , property $ P.pathSeparators == LP.pathSeparators
+    )
+    ,
+    ( "isPathSeparator (posix)"
+    , property $ \p -> P.isPathSeparator p == LP.isPathSeparator p
+    )
+    ,
+    ( "searchPathSeparator (posix)"
+    , property $ P.searchPathSeparator == LP.searchPathSeparator
+    )
+    ,
+    ( "isSearchPathSeparator (posix)"
+    , property $ \p -> P.isSearchPathSeparator p == LP.isSearchPathSeparator p
+    )
+    ,
+    ( "extSeparator (posix)"
+    , property $ P.extSeparator == LP.extSeparator
+    )
+    ,
+    ( "isExtSeparator (posix)"
+    , property $ \p -> P.isExtSeparator p == LP.isExtSeparator p
+    )
+    ,
+    ( "splitSearchPath (posix)"
+    , property $ \p -> P.splitSearchPath p == LP.splitSearchPath p
+    )
+    ,
+    ( "splitExtension (posix)"
+    , property $ \p -> P.splitExtension p == LP.splitExtension p
+    )
+    ,
+    ( "takeExtension (posix)"
+    , property $ \p -> P.takeExtension p == LP.takeExtension p
+    )
+    ,
+    ( "replaceExtension (posix)"
+    , property $ \p s -> P.replaceExtension p s == LP.replaceExtension p s
+    )
+    ,
+    ( "dropExtension (posix)"
+    , property $ \p -> P.dropExtension p == LP.dropExtension p
+    )
+    ,
+    ( "addExtension (posix)"
+    , property $ \p s -> P.addExtension p s == LP.addExtension p s
+    )
+    ,
+    ( "hasExtension (posix)"
+    , property $ \p -> P.hasExtension p == LP.hasExtension p
+    )
+    ,
+    ( "splitExtensions (posix)"
+    , property $ \p -> P.splitExtensions p == LP.splitExtensions p
+    )
+    ,
+    ( "dropExtensions (posix)"
+    , property $ \p -> P.dropExtensions p == LP.dropExtensions p
+    )
+    ,
+    ( "takeExtensions (posix)"
+    , property $ \p -> P.takeExtensions p == LP.takeExtensions p
+    )
+    ,
+    ( "replaceExtensions (posix)"
+    , property $ \p s -> P.replaceExtensions p s == LP.replaceExtensions p s
+    )
+    ,
+    ( "isExtensionOf (posix)"
+    , property $ \p s -> P.isExtensionOf p s == LP.isExtensionOf p s
+    )
+    ,
+    ( "stripExtension (posix)"
+    , property $ \p s -> P.stripExtension p s == LP.stripExtension p s
+    )
+    ,
+    ( "splitFileName (posix)"
+    , property $ \p -> P.splitFileName p == LP.splitFileName p
+    )
+    ,
+    ( "takeFileName (posix)"
+    , property $ \p -> P.takeFileName p == LP.takeFileName p
+    )
+    ,
+    ( "replaceFileName (posix)"
+    , property $ \p s -> P.replaceFileName p s == LP.replaceFileName p s
+    )
+    ,
+    ( "dropFileName (posix)"
+    , property $ \p -> P.dropFileName p == LP.dropFileName p
+    )
+    ,
+    ( "takeBaseName (posix)"
+    , property $ \p -> P.takeBaseName p == LP.takeBaseName p
+    )
+    ,
+    ( "replaceBaseName (posix)"
+    , property $ \p s -> P.replaceBaseName p s == LP.replaceBaseName p s
+    )
+    ,
+    ( "takeDirectory (posix)"
+    , property $ \p -> P.takeDirectory p == LP.takeDirectory p
+    )
+    ,
+    ( "replaceDirectory (posix)"
+    , property $ \p s -> P.replaceDirectory p s == LP.replaceDirectory p s
+    )
+    ,
+    ( "combine (posix)"
+    , property $ \p s -> P.combine p s == LP.combine p s
+    )
+    ,
+    ( "splitPath (posix)"
+    , property $ \p -> P.splitPath p == LP.splitPath p
+    )
+    ,
+    ( "joinPath (posix)"
+    , property $ \p -> P.joinPath p == LP.joinPath p
+    )
+    ,
+    ( "splitDirectories (posix)"
+    , property $ \p -> P.splitDirectories p == LP.splitDirectories p
+    )
+    ,
+    ( "splitDirectories (posix)"
+    , property $ \p -> P.splitDirectories p == LP.splitDirectories p
+    )
+    ,
+    ( "splitDrive (posix)"
+    , property $ \p -> P.splitDrive p == LP.splitDrive p
+    )
+    ,
+    ( "joinDrive (posix)"
+    , property $ \p s -> P.joinDrive p s == LP.joinDrive p s
+    )
+    ,
+    ( "takeDrive (posix)"
+    , property $ \p -> P.takeDrive p == LP.takeDrive p
+    )
+    ,
+    ( "hasDrive (posix)"
+    , property $ \p -> P.hasDrive p == LP.hasDrive p
+    )
+    ,
+    ( "dropDrive (posix)"
+    , property $ \p -> P.dropDrive p == LP.dropDrive p
+    )
+    ,
+    ( "isDrive (posix)"
+    , property $ \p -> P.isDrive p == LP.isDrive p
+    )
+    ,
+    ( "hasTrailingPathSeparator (posix)"
+    , property $ \p -> P.hasTrailingPathSeparator p == LP.hasTrailingPathSeparator p
+    )
+    ,
+    ( "addTrailingPathSeparator (posix)"
+    , property $ \p -> P.addTrailingPathSeparator p == LP.addTrailingPathSeparator p
+    )
+    ,
+    ( "dropTrailingPathSeparator (posix)"
+    , property $ \p -> P.dropTrailingPathSeparator p == LP.dropTrailingPathSeparator p
+    )
+    ,
+    ( "normalise (posix)"
+    , property $ \p -> P.normalise p == LP.normalise p
+    )
+    ,
+    ( "equalFilePath (posix)"
+    , property $ \p s -> P.equalFilePath p s == LP.equalFilePath p s
+    )
+    ,
+    ( "makeRelative (posix)"
+    , property $ \p s -> P.makeRelative p s == LP.makeRelative p s
+    )
+    ,
+    ( "isRelative (posix)"
+    , property $ \p -> P.isRelative p == LP.isRelative p
+    )
+    ,
+    ( "isAbsolute (posix)"
+    , property $ \p -> P.isAbsolute p == LP.isAbsolute p
+    )
+    ,
+    ( "isValid (posix)"
+    , property $ \p -> P.isValid p == LP.isValid p
+    )
+    ,
+    ( "makeValid (posix)"
+    , property $ \p -> P.makeValid p == LP.makeValid p
     )
   ]
 

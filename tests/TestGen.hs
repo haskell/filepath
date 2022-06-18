@@ -1,19 +1,22 @@
 -- GENERATED CODE: See ../Generate.hs
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 module TestGen(tests) where
 import TestUtil
-import Prelude as P
+#if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup
+#endif
+import Prelude as P
+import System.OsString.Internal.Types
 import qualified Data.Char as C
 import qualified System.AbstractFilePath.Data.ByteString.Short as SBS
 import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as SBS16
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
-import System.AbstractFilePath.Types
 import qualified System.AbstractFilePath.Windows as AFP_W
 import qualified System.AbstractFilePath.Posix as AFP_P
-import System.AbstractFilePath.Data.ByteString.Short.Encode
 tests :: [(String, Property)]
 tests =
     [("W.pathSeparator == '\\\\'", property $ W.pathSeparator == '\\')
