@@ -21,10 +21,10 @@ main = do
         , "{-# LANGUAGE OverloadedStrings #-}"
         , "{-# LANGUAGE ViewPatterns #-}"
 #endif
+        , "{-# OPTIONS_GHC -Wno-name-shadowing #-}"
         ,"module TestGen(tests) where"
         ,"import TestUtil"
         ,"import Prelude as P"
-        ,"import Data.Semigroup"
         ,"import System.OsString.Internal.Types"
         ,"import qualified Data.Char as C"
         ,"import qualified System.AbstractFilePath.Data.ByteString.Short as SBS"
@@ -35,7 +35,6 @@ main = do
         ,"import qualified System.AbstractFilePath.Windows.Internal as AFP_W"
         ,"import qualified System.AbstractFilePath.Posix.Internal as AFP_P"
 #else
-        ,"import System.AbstractFilePath.Types"
         ,"import qualified System.AbstractFilePath.Windows as AFP_W"
         ,"import qualified System.AbstractFilePath.Posix as AFP_P"
 #endif

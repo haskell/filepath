@@ -114,6 +114,7 @@ test-suite filepath-tests
   default-language: Haskell2010
   main-is:          Test.hs
   hs-source-dirs:   tests
+  ghc-options:      -Wall
   other-modules:
     TestGen
     TestUtil
@@ -129,6 +130,7 @@ test-suite filepath-equivalent-tests
   default-language: Haskell2010
   main-is:          TestEquiv.hs
   hs-source-dirs:   tests
+  ghc-options:      -Wall
   other-modules:
     Legacy.System.FilePath
     Legacy.System.FilePath.Posix
@@ -146,6 +148,7 @@ test-suite bytestring-tests
   default-language: Haskell2010
   main-is:          Main.hs
   hs-source-dirs:   tests
+  ghc-options:      -Wall
   other-modules:
     Properties
     Properties.ShortByteString

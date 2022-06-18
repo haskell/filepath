@@ -1,17 +1,16 @@
 -- GENERATED CODE: See ../Generate.hs
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 module TestGen(tests) where
 import TestUtil
 import Prelude as P
-import Data.Semigroup
 import System.OsString.Internal.Types
 import qualified Data.Char as C
 import qualified System.AbstractFilePath.Data.ByteString.Short as SBS
 import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as SBS16
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
-import System.AbstractFilePath.Types
 import qualified System.AbstractFilePath.Windows as AFP_W
 import qualified System.AbstractFilePath.Posix as AFP_P
 tests :: [(String, Property)]
