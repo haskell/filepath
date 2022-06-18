@@ -31,24 +31,24 @@ tests :: [TestTree]
 tests =
   [ testProperty "ucs2le_decode . ucs2le_encode == id" $
     \(padEven -> ba) ->
-      let encoded = encode ucs2le (BS8.toShort ba)
-          decoded = decode ucs2le =<< encoded
-      in (BS8.fromShort <$> decoded) === Right ba
+      let decoded = decode ucs2le (BS8.toShort ba)
+          encoded = encode ucs2le =<< decoded
+      in (BS8.fromShort <$> encoded) === Right ba
   , testCase "utf16 doesn't handle invalid surrogate pairs" $
       let str = [toEnum 55296, toEnum 55297]
-          decoded = decode utf16le str
-          encoded = encode utf16le =<< decoded
-      in encoded @?= Left "recoverEncode: invalid argument (invalid character)"
+          encoded = encode utf16le str
+          decoded = decode utf16le =<< encoded
+      in decoded @?= Left "recoverEncode: invalid argument (invalid character)"
   , testCase "ucs2 handles invalid surrogate pairs" $
       let str = [toEnum 55296, toEnum 55297]
-          decoded = decode ucs2le str
-          encoded = encode ucs2le =<< decoded
-      in encoded @?= Right str
+          encoded = encode ucs2le str
+          decoded = decode ucs2le =<< encoded
+      in decoded @?= Right str
   , testProperty "cannot roundtrip arbitrary bytes through utf-16 (with RoundtripFailure)" $
       \(padEven -> bs) ->
-        let encoded = encode (mkUTF16le RoundtripFailure) (BS8.toShort bs)
-            decoded = decode (mkUTF16le RoundtripFailure) =<< encoded
-        in expectFailure $ (either (const 0) BS8.length decoded, decoded) === (BS8.length (BS8.toShort bs), Right (BS8.toShort bs))
+        let decoded = decode (mkUTF16le RoundtripFailure) (BS8.toShort bs)
+            encoded = encode (mkUTF16le RoundtripFailure) =<< decoded
+        in expectFailure $ (either (const 0) BS8.length encoded, encoded) === (BS8.length (BS8.toShort bs), Right (BS8.toShort bs))
   , testProperty "encodeWith/decodeWith ErrorOnCodingFailure fails (utf16le)" $
       \(padEven -> bs) ->
         let decoded = decodeWith (mkUTF16le ErrorOnCodingFailure) (BS8.toShort bs)
@@ -78,13 +78,13 @@ padEven bs
   | otherwise = bs `BS.append` BS.pack [70]
 
 
-encode :: TextEncoding -> BS8.ShortByteString -> Either String String
-encode enc ba = unsafePerformIO $ do
+decode :: TextEncoding -> BS8.ShortByteString -> Either String String
+decode enc ba = unsafePerformIO $ do
   r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
   evaluate $ force $ first (displayException) r
 
-decode :: TextEncoding -> String -> Either String BS8.ShortByteString
-decode enc str = unsafePerformIO $ do
+encode :: TextEncoding -> String -> Either String BS8.ShortByteString
+encode enc str = unsafePerformIO $ do
   r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> BS8.packCStringLen cstr
   evaluate $ force $ first (displayException) r
 
