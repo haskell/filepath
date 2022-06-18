@@ -23,12 +23,12 @@ import System.IO
 
 import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..) )
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
-import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import System.OsString.Windows
 import qualified System.OsString.Windows as PF
 #else
+import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.OsString.Posix
 import qualified System.OsString.Posix as PF
 #endif

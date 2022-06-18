@@ -69,7 +69,7 @@ import Language.Haskell.TH.Syntax
 import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..) )
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #ifdef WINDOWS
-import System.AbstractFilePath.Encoding
+import System.AbstractFilePath.Encoding ( ucs2le )
 import System.IO
     ( TextEncoding, utf16le )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
