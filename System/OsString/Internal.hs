@@ -46,14 +46,14 @@ toOsStringUtf :: MonadThrow m => String -> m OsString
 toOsStringUtf = fmap OsString . toPlatformStringUtf
 
 -- | Like 'toOsStringUtf', except allows to provide encodings.
-toOsStringEnc :: String
-              -> TextEncoding  -- ^ unix text encoding
+toOsStringEnc :: TextEncoding  -- ^ unix text encoding
               -> TextEncoding  -- ^ windows text encoding
+              -> String
               -> Either EncodingException OsString
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-toOsStringEnc str _ winEnc = OsString <$> toPlatformStringEnc str winEnc
+toOsStringEnc _ winEnc str = OsString <$> toPlatformStringEnc winEnc str
 #else
-toOsStringEnc str unixEnc _ = OsString <$> toPlatformStringEnc str unixEnc
+toOsStringEnc unixEnc _ str = OsString <$> toPlatformStringEnc unixEnc str
 #endif
 
 -- | Like 'toOsStringUtf', except on unix this uses the current
@@ -81,14 +81,14 @@ fromOsStringUtf (OsString x) = fromPlatformStringUtf x
 -- | Like 'fromOsStringUtf', except allows to provide encodings.
 --
 -- The String is forced into memory to catch all exceptions.
-fromOsStringEnc :: OsString
-                -> TextEncoding  -- ^ unix text encoding
+fromOsStringEnc :: TextEncoding  -- ^ unix text encoding
                 -> TextEncoding  -- ^ windows text encoding
+                -> OsString
                 -> Either EncodingException String
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-fromOsStringEnc (OsString x) _ winEnc = fromPlatformStringEnc x winEnc
+fromOsStringEnc _ winEnc (OsString x) = fromPlatformStringEnc winEnc x
 #else
-fromOsStringEnc (OsString x) unixEnc _ = fromPlatformStringEnc x unixEnc
+fromOsStringEnc unixEnc _ (OsString x) = fromPlatformStringEnc unixEnc x
 #endif
 
 

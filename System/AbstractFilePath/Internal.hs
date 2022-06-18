@@ -35,9 +35,9 @@ toAbstractFilePathUtf :: MonadThrow m => String -> m AbstractFilePath
 toAbstractFilePathUtf = toOsStringUtf
 
 -- | Like 'toAbstractFilePathUtf', except allows to provide encodings.
-toAbstractFilePathEnc :: String
-                      -> TextEncoding  -- ^ unix text encoding
+toAbstractFilePathEnc :: TextEncoding  -- ^ unix text encoding
                       -> TextEncoding  -- ^ windows text encoding
+                      -> String
                       -> Either EncodingException AbstractFilePath
 toAbstractFilePathEnc = toOsStringEnc
 
@@ -70,9 +70,9 @@ fromAbstractFilePathUtf = fromOsStringUtf
 -- 'TextEncoding' for decoding.
 --
 -- On windows, the TextEncoding parameter is ignored.
-fromAbstractFilePathEnc :: AbstractFilePath
-                        -> TextEncoding  -- ^ unix text encoding
+fromAbstractFilePathEnc :: TextEncoding  -- ^ unix text encoding
                         -> TextEncoding  -- ^ windows text encoding
+                        -> AbstractFilePath
                         -> Either EncodingException String
 fromAbstractFilePathEnc = fromOsStringEnc
 

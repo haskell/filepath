@@ -94,16 +94,16 @@ import GHC.IO.Encoding
 -- Throws a 'EncodingException' if encoding fails.
 toPlatformStringUtf :: MonadThrow m => String -> m PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformStringUtf str = either throwM pure $ toPlatformStringEnc str utf16le
+toPlatformStringUtf = either throwM pure . toPlatformStringEnc utf16le
 #else
-toPlatformStringUtf str = either throwM pure $ toPlatformStringEnc str utf8
+toPlatformStringUtf = either throwM pure . toPlatformStringEnc utf8
 #endif
 
 -- | Like 'toPlatformStringUtf', except allows to provide an encoding.
-toPlatformStringEnc :: String
-                    -> TextEncoding
+toPlatformStringEnc :: TextEncoding
+                    -> String
                     -> Either EncodingException PLATFORM_STRING
-toPlatformStringEnc str enc = unsafePerformIO $ do
+toPlatformStringEnc enc str = unsafePerformIO $ do
 #ifdef WINDOWS
   r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WS <$> BS8.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
@@ -139,23 +139,23 @@ toPlatformStringFS str = do
 -- Throws a 'EncodingException' if decoding fails.
 fromPlatformStringUtf :: MonadThrow m => PLATFORM_STRING -> m String
 #ifdef WINDOWS
-fromPlatformStringUtf ps = either throwM pure (fromPlatformStringEnc ps utf16le)
+fromPlatformStringUtf = either throwM pure . fromPlatformStringEnc utf16le
 #else
-fromPlatformStringUtf ps = either throwM pure (fromPlatformStringEnc ps utf8)
+fromPlatformStringUtf = either throwM pure . fromPlatformStringEnc utf8
 #endif
 
 -- | Like 'fromPlatformStringUtf', except allows to provide a text encoding.
 --
 -- The String is forced into memory to catch all exceptions.
-fromPlatformStringEnc :: PLATFORM_STRING
-                      -> TextEncoding
+fromPlatformStringEnc :: TextEncoding
+                      -> PLATFORM_STRING
                       -> Either EncodingException String
 #ifdef WINDOWS
-fromPlatformStringEnc (WS ba) winEnc = unsafePerformIO $ do
+fromPlatformStringEnc winEnc (WS ba) = unsafePerformIO $ do
   r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen winEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
-fromPlatformStringEnc (PS ba) unixEnc = unsafePerformIO $ do
+fromPlatformStringEnc unixEnc (PS ba) = unsafePerformIO $ do
   r <- try @SomeException $ BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
@@ -192,7 +192,7 @@ bytesToPlatformString :: MonadThrow m
 #ifdef WINDOWS
 bytesToPlatformString bs =
   let ws = WS . toShort $ bs
-  in either throwM (const . pure $ ws) $ fromPlatformStringEnc ws ucs2le
+  in either throwM (const . pure $ ws) $ fromPlatformStringEnc ucs2le ws
 #else
 bytesToPlatformString = pure . PS . toShort
 #endif

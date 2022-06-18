@@ -37,10 +37,10 @@ tests =
   , testProperty "fromPlatformStringUtf . toPlatformStringUtf == id (Windows)" $
     \(NonNullString str) -> (Windows.fromPlatformStringUtf . fromJust . Windows.toPlatformStringUtf) str == Just str
   , testProperty "toPlatformStringEnc ucs2le . fromPlatformStringEnc ucs2le == id (Posix)" $
-    \(padEven -> bs) -> (flip Posix.toPlatformStringEnc ucs2le . (\(Right r) -> r) . flip Posix.fromPlatformStringEnc ucs2le . OS.PS . toShort) bs
+    \(padEven -> bs) -> (Posix.toPlatformStringEnc ucs2le . (\(Right r) -> r) . Posix.fromPlatformStringEnc ucs2le . OS.PS . toShort) bs
            === Right (OS.PS . toShort $ bs)
   , testProperty "toPlatformStringEnc ucs2le . fromPlatformStringEnc ucs2le == id (Windows)" $
-    \(padEven -> bs) -> (flip Windows.toPlatformStringEnc ucs2le . (\(Right r) -> r) . flip Windows.fromPlatformStringEnc ucs2le . OS.WS . toShort) bs
+    \(padEven -> bs) -> (Windows.toPlatformStringEnc ucs2le . (\(Right r) -> r) . Windows.fromPlatformStringEnc ucs2le . OS.WS . toShort) bs
            === Right (OS.WS . toShort $ bs)
 
   ] ++ testBatch (ord (\(a :: AbstractFilePath) -> pure a))

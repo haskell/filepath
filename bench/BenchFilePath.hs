@@ -204,11 +204,11 @@ main = do
     , bgroup "encoding/decoding"
       [ bench "fromPlatformStringUtf (posix)"      $ nf (APF.fromPlatformStringUtf @Maybe) posixPathAFPP
       , bench "fromPlatformStringUtf (windows)"    $ nf (AWF.fromPlatformStringUtf @Maybe) windowsPathAFPP
-      , bench "fromPlatformStringEnc (windows)"    $ nf (flip AWF.fromPlatformStringEnc ucs2le) windowsPathAFPP
+      , bench "fromPlatformStringEnc (windows)"    $ nf (AWF.fromPlatformStringEnc ucs2le) windowsPathAFPP
 
       , bench "toPlatformStringUtf (posix)"        $ nf (APF.toPlatformStringUtf @Maybe) posixPath
       , bench "toPlatformStringUtf (windows)"      $ nf (AWF.toPlatformStringUtf @Maybe) windowsPath
-      , bench "toPlatformStringEnc (windows)"      $ nf (flip AWF.toPlatformStringEnc ucs2le) windowsPath
+      , bench "toPlatformStringEnc (windows)"      $ nf (AWF.toPlatformStringEnc ucs2le) windowsPath
 
       , bench "unpackPlatformString (posix)"       $ nf APF.unpackPlatformString posixPathAFPP
       , bench "unpackPlatformString (windows)"     $ nf AWF.unpackPlatformString windowsPathAFPP
