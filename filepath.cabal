@@ -191,6 +191,7 @@ benchmark bench-filepath
   type:           exitcode-stdio-1.0
   main-is:        BenchFilePath.hs
   hs-source-dirs: bench
+  default-language: Haskell2010
   build-depends:
       base
     , bytestring   >=0.11.3.0
