@@ -66,16 +66,16 @@ import Language.Haskell.TH.Syntax
     ( Lift (..), lift )
 
 
-import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..) )
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #ifdef WINDOWS
-import System.AbstractFilePath.Encoding ( ucs2le )
+import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..), ucs2le )
 import System.IO
     ( TextEncoding, utf16le )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import System.AbstractFilePath.Data.ByteString.Short.Word16 as BS
 import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
 #else
+import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..) )
 import System.IO
     ( TextEncoding, utf8 )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
