@@ -402,9 +402,6 @@ tests =
 #endif
   ]
 
-stripSuffix :: Eq a => [a] -> [a] -> Maybe [a]
-stripSuffix x y = fmap reverse (stripPrefix (reverse x) (reverse y))
-
 split :: Eq a => a -> [a] -> [[a]]
 split c = splitWith (== c)
 
