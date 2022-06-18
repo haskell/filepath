@@ -160,7 +160,6 @@ test-suite bytestring-tests
 test-suite abstract-filepath
   type:               exitcode-stdio-1.0
   main-is:            Test.hs
-  build-tool-depends: hspec-discover:hspec-discover -any
   hs-source-dirs:     tests/afpp
   ghc-options:      -Wall
   other-modules:
@@ -178,5 +177,5 @@ test-suite abstract-filepath
     , QuickCheck        >=2.7   && <2.15
     , tasty
     , tasty-quickcheck
-    , tasty-hunit
+    , tasty-hunit       <0.10 -- tasty >= 0.10 depends on call-stack, which causes cyclic import with filepath
     , text
