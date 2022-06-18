@@ -21,9 +21,13 @@ main = do
         , "{-# LANGUAGE OverloadedStrings #-}"
         , "{-# LANGUAGE ViewPatterns #-}"
 #endif
+        , "{-# LANGUAGE CPP #-}"
         , "{-# OPTIONS_GHC -Wno-name-shadowing #-}"
         ,"module TestGen(tests) where"
         ,"import TestUtil"
+        ,"#if !MIN_VERSION_base(4,11,0)"
+        ,"import Data.Semigroup"
+        ,"#endif"
         ,"import Prelude as P"
         ,"import System.OsString.Internal.Types"
         ,"import qualified Data.Char as C"

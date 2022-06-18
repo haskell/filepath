@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module TestUtil(
     module TestUtil,
@@ -30,6 +31,7 @@ import GHC.IO.Encoding.Failure
 
 
 infixr 0 ==>
+(==>) :: Bool -> Bool -> Bool
 a ==> b = not a || b
 
 
