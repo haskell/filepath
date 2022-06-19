@@ -18,9 +18,10 @@
 -- An implementation of the <https://gitlab.haskell.org/ghc/ghc/-/wikis/proposal/abstract-file-path Abstract FilePath Proposal>,
 -- which aims to supersede @type FilePath = String@ for various reasons:
 --
--- 1. it is more efficient (uses unpinned 'ShortByteString' under the hood)
--- 2. is more type-safe (not a type synonym, but a newtype)
--- 3. avoids round-tripping issues, by not converting to String (which loses the encoding)
+-- 1. it is more efficient and avoids memory fragmentation (uses unpinned 'ShortByteString' under the hood)
+-- 2. it is more type-safe (newtype over 'ShortByteString')
+-- 3. avoids round-tripping issues by not converting to String (which is not total and loses the encoding)
+-- 4. abstracts over unix and windows while keeping the original bytes
 --
 -- It is important to know that filenames\/filepaths have different representations across platforms:
 --
@@ -63,7 +64,7 @@
 --    encoding is lost. The output encoding (e.g. how we write a filename to disk) can then
 --    either follow the current locale again ('toAbstractFilePathFS') or a fixed encoding
 --    ('toAbstractFilePathUtf'/'toAbstractFilePathEnc'). The decision should be clearly documented. If the input is in the
---    form of a @ByteString@, then 'bytesToAFP' (from @System.AbstractFilePath.Internal@) may be of interest, unless the input needs further
+--    form of a @ByteString@, then 'System.AbstractFilePath.Internal.bytesToAFP' may be of interest, unless the input needs further
 --    interpretation.
 
 #include "AbstractFilePath/Common.hs"

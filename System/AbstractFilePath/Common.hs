@@ -347,8 +347,8 @@ hasExtension (CTOR x) = C.hasExtension x
 isExtensionOf :: OSSTRING_NAME -> FILEPATH_NAME -> Bool
 isExtensionOf (CTOR x) (CTOR y) = C.isExtensionOf x y
 
--- | Drop the given extension from a FILEPATH, and the @\".\"@ preceding it.
---   Returns 'Nothing' if the FILEPATH does not have the given extension, or
+-- | Drop the given extension from a filepath, and the @\".\"@ preceding it.
+--   Returns 'Nothing' if the filepath does not have the given extension, or
 --   'Just' and the part before the extension if it does.
 --
 --   This function can be more predictable than 'dropExtensions', especially if the filename
@@ -699,7 +699,7 @@ joinPath = foldr (</>) (CTOR mempty)
 -- File name manipulations
 
 
--- | Equality of two 'FILEPATH's.
+-- | Equality of two filepaths.
 --   If you call @System.Directory.canonicalizePath@
 --   first this has a much better chance of working.
 --   Note that this doesn't follow symlinks or DOSNAM~1s.
@@ -780,7 +780,7 @@ normalise :: FILEPATH_NAME -> FILEPATH_NAME
 normalise (CTOR filepath) = CTOR $ C.normalise filepath
 
 
--- | Is a FILEPATH valid, i.e. could you create a file like it? This function checks for invalid names,
+-- | Is a filepath valid, i.e. could you create a file like it? This function checks for invalid names,
 --   and invalid characters, but does not check if length limits are exceeded, as these are typically
 --   filesystem dependent.
 --
@@ -804,7 +804,7 @@ isValid :: FILEPATH_NAME -> Bool
 isValid (CTOR filepath) = C.isValid filepath
 
 
--- | Take a FILEPATH and make it valid; does not change already valid FILEPATHs.
+-- | Take a filepath and make it valid; does not change already valid filepaths.
 --
 -- > isValid (makeValid x)
 -- > isValid x ==> makeValid x == x

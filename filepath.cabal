@@ -40,7 +40,7 @@ description:
   .
   * "System.FilePath.Windows" / "System.AbstractFilePath.Windows" manipulates Windows style @FilePath@ values (with either @\\@ or @\/@ as the path separator, and deals with drives).
   .
-  * "System.FilePath" / "System.AbstractFilePath" for dealing with current platform-specific filepath
+  * "System.FilePath" / "System.AbstractFilePath" for dealing with current platform-specific filepaths
   .
   "System.OsString" is like "System.AbstractFilePath", but more general purpose. Refer to the documentation of
   those modules for more information.

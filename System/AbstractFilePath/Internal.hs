@@ -68,8 +68,6 @@ fromAbstractFilePathUtf = fromOsStringUtf
 
 -- | Like 'fromAbstractFilePathUtf', except on unix this uses the provided
 -- 'TextEncoding' for decoding.
---
--- On windows, the TextEncoding parameter is ignored.
 fromAbstractFilePathEnc :: TextEncoding  -- ^ unix text encoding
                         -> TextEncoding  -- ^ windows text encoding
                         -> AbstractFilePath
@@ -115,7 +113,7 @@ afp :: QuasiQuoter
 afp = qq mkAbstractFilePath
 
 
--- | Unpack an 'AbstractFilePath to a list of 'OsChar'.
+-- | Unpack an 'AbstractFilePath' to a list of 'OsChar'.
 unpackAFP :: AbstractFilePath -> [OsChar]
 unpackAFP = unpackOsString
 

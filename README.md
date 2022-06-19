@@ -1,16 +1,23 @@
 # FilePath [![Hackage version](https://img.shields.io/hackage/v/filepath.svg?label=Hackage)](https://hackage.haskell.org/package/filepath)
 
 The `filepath` package provides functionality for manipulating `FilePath` values, and is shipped with [GHC](https://www.haskell.org/ghc/).
-It provides three modules:
+It provides two variants for filepaths:
 
-* [`System.FilePath.Posix`](http://hackage.haskell.org/package/filepath/docs/System-FilePath-Posix.html)
-  manipulates POSIX/Linux style `FilePath` values (with `/` as the path separator).
-* [`System.FilePath.Windows`](http://hackage.haskell.org/package/filepath/docs/System-FilePath-Windows.html)
-  manipulates Windows style `FilePath` values (with either `\` or `/` as the path separator, and deals with drives).
-* [`System.FilePath`](http://hackage.haskell.org/package/filepath/docs/System-FilePath.html)
-  is an alias for the module appropriate to your platform.
+1. legacy filepaths: `type FilePath = String`
+2. abstract filepaths: internally unpinned `ShortByteString` (platform-dependent encoding)
+
+It is recommended to use `AbstractFilePath` when possible, because it is more correct.
+
+For each variant there are three main modules:
+
+* `System.FilePath.Posix` / `System.AbstractFilePath.Posix` manipulates POSIX\/Linux style `FilePath` values (with `/` as the path separator).
+* `System.FilePath.Windows` / `System.AbstractFilePath.Windows` manipulates Windows style `FilePath` values (with either `\` or `/` as the path separator, and deals with drives).
+* `System.FilePath` / `System.AbstractFilePath` for dealing with current platform-specific filepaths
 
 All three modules provide the same API, and the same documentation (calling out differences in the different variants).
+
+`System.OsString` is like `System.AbstractFilePath`, but more general purpose. Refer to the documentation of
+those modules for more information.
 
 ### What is a `FilePath`?
 
@@ -24,7 +31,7 @@ On unix, filenames don't have a predefined encoding as per the
 [POSIX specification](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_170)
 and are passed as `char[]` to syscalls.
 
-On windows (at least the API used by `Win32`) filepaths are UTF-16 strings.
+On windows (at least the API used by `Win32`) filepaths are UTF-16LE strings.
 
 You are encouraged to use `AbstractFilePath` whenever possible, because it is more correct.
 
