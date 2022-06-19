@@ -46,12 +46,12 @@ description:
   those modules for more information.
 
 extra-source-files:
-  Makefile
   Generate.hs
+  Makefile
   System/AbstractFilePath/Common.hs
   System/FilePath/Internal.hs
   System/OsString/Common.hs
-  tests/Properties/Common.hs
+  tests/bytestring-tests/Properties/Common.hs
 
 extra-doc-files:
   changelog.md
@@ -67,47 +67,7 @@ source-repository head
   type:     git
   location: https://gitlab.haskell.org/haskell/filepath
 
-common library
-  default-language: Haskell2010
-  build-depends:
-      base              >=4.9      && <4.18
-    , bytestring        >=0.11.3.0
-    , deepseq
-    , exceptions
-    , template-haskell
-
-  ghc-options:      -Wall
-
-  if flag(cpphs)
-    ghc-options:        -pgmPcpphs -optP--cpp
-    build-tool-depends: cpphs:cpphs -any
-
-common library-other
-  import: library
-  hs-source-dirs: .
-  other-modules:
-    System.AbstractFilePath
-    System.AbstractFilePath.Data.ByteString.Short
-    System.AbstractFilePath.Data.ByteString.Short.Internal
-    System.AbstractFilePath.Data.ByteString.Short.Word16
-    System.AbstractFilePath.Encoding
-    System.AbstractFilePath.Internal
-    System.AbstractFilePath.Posix
-    System.AbstractFilePath.Posix.Internal
-    System.AbstractFilePath.Types
-    System.AbstractFilePath.Windows
-    System.AbstractFilePath.Windows.Internal
-    System.FilePath
-    System.FilePath.Posix
-    System.FilePath.Windows
-    System.OsString
-    System.OsString.Internal
-    System.OsString.Internal.Types
-    System.OsString.Posix
-    System.OsString.Windows
-
 library
-  import: library
   exposed-modules:
     System.AbstractFilePath
     System.AbstractFilePath.Data.ByteString.Short
@@ -128,6 +88,7 @@ library
     System.OsString.Internal.Types
     System.OsString.Posix
     System.OsString.Windows
+
   other-extensions:
     CPP
     PatternGuards
@@ -135,26 +96,43 @@ library
   if impl(ghc >=7.2)
     other-extensions: Safe
 
+  default-language: Haskell2010
+  build-depends:
+    , base              >=4.9      && <4.18
+    , bytestring        >=0.11.3.0
+    , deepseq
+    , exceptions
+    , template-haskell
+
+  ghc-options:      -Wall
+
+  if flag(cpphs)
+    ghc-options:        -pgmPcpphs -optP--cpp
+    build-tool-depends: cpphs:cpphs -any
 
 test-suite filepath-tests
-  import: library-other
   type:             exitcode-stdio-1.0
   main-is:          Test.hs
-  hs-source-dirs:   tests
+  hs-source-dirs:   tests tests/filepath-tests
   other-modules:
     TestGen
     TestUtil
 
   build-depends:
-      base
+    , base
     , bytestring  >=0.11.3.0
+    , filepath
     , QuickCheck  >=2.7      && <2.15
 
+  default-language: Haskell2010
+  ghc-options:      -Wall
+
 test-suite filepath-equivalent-tests
-  import: library-other
+  default-language: Haskell2010
+  ghc-options:      -Wall
   type:             exitcode-stdio-1.0
   main-is:          TestEquiv.hs
-  hs-source-dirs:   tests
+  hs-source-dirs:   tests tests/filepath-equivalent-tests
   other-modules:
     Legacy.System.FilePath
     Legacy.System.FilePath.Posix
@@ -162,56 +140,60 @@ test-suite filepath-equivalent-tests
     TestUtil
 
   build-depends:
-      base
+    , base
     , bytestring  >=0.11.3.0
+    , filepath
     , QuickCheck  >=2.7      && <2.15
 
 test-suite bytestring-tests
-  import: library-other
+  default-language: Haskell2010
+  ghc-options:      -Wall
   type:             exitcode-stdio-1.0
   main-is:          Main.hs
-  hs-source-dirs:   tests
+  hs-source-dirs:   tests tests/bytestring-tests
   other-modules:
-    Properties
     Properties.ShortByteString
     Properties.ShortByteString.Word16
+    TestUtil
 
   build-depends:
-      base
-    , bytestring        >=0.11.3.0
-    , QuickCheck        >=2.7      && <2.15
-    , tasty
-    , tasty-quickcheck
+    , base
+    , bytestring  >=0.11.3.0
+    , filepath
+    , QuickCheck  >=2.7      && <2.15
 
 test-suite abstract-filepath
-  import: library-other
+  default-language: Haskell2010
+  ghc-options:      -Wall
   type:             exitcode-stdio-1.0
   main-is:          Test.hs
-  hs-source-dirs:   tests/afpp
+  hs-source-dirs:   tests tests/abstract-filepath
   other-modules:
     AbstractFilePathSpec
     Arbitrary
     EncodingSpec
+    TestUtil
 
   build-depends:
-      base
-    , bytestring        >=0.11.3.0
-    , checkers          ^>=0.5.6
+    , base
+    , bytestring  >=0.11.3.0
+    , checkers    ^>=0.5.6
     , deepseq
-    , QuickCheck        >=2.7      && <2.15
-    , tasty
-    , tasty-hunit
-    , tasty-quickcheck
+    , filepath
+    , QuickCheck  >=2.7      && <2.15
 
 benchmark bench-filepath
-  import: library-other
-  type:           exitcode-stdio-1.0
-  main-is:        BenchFilePath.hs
-  hs-source-dirs: bench
+  default-language: Haskell2010
+  ghc-options:      -Wall
+  type:             exitcode-stdio-1.0
+  main-is:          BenchFilePath.hs
+  hs-source-dirs:   bench
+  other-modules:    TastyBench
   build-depends:
-      base
-    , bytestring
-    , tasty-bench
+    , base
+    , bytestring  >=0.11.3.0
+    , deepseq
+    , filepath
 
   if impl(ghc >=8.10)
     ghc-options: "-with-rtsopts=-A32m --nonmoving-gc"
