@@ -15,7 +15,7 @@ main :: IO ()
 main = do
     src <- readFile "System/FilePath/Internal.hs"
     let tests = map renderTest $ concatMap parseTest $ lines src
-    writeFileBinaryChanged "tests/TestGen.hs" $ unlines $
+    writeFileBinaryChanged "tests/filepath-tests/TestGen.hs" $ unlines $
         ["-- GENERATED CODE: See ../Generate.hs"
 #ifndef GHC_MAKE
         , "{-# LANGUAGE OverloadedStrings #-}"

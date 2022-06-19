@@ -15,12 +15,11 @@ import System.AbstractFilePath.Data.ByteString.Short ( toShort )
 
 import Data.ByteString ( ByteString )
 import qualified Data.ByteString as BS
+import Test.QuickCheck
+import Test.QuickCheck.Checkers
+import Test.QuickCheck.Classes
 
 import Arbitrary
-import Test.Tasty
-import Test.Tasty.QuickCheck
-import Test.QuickCheck.Classes
-import Test.QuickCheck.Checkers
 
 
 fromRight :: b -> Either a b -> b
@@ -28,20 +27,19 @@ fromRight _ (Right b) = b
 fromRight b _         = b
 
 
-tests :: [TestTree]
+tests :: [(String, Property)]
 tests =
-  [ testProperty "fromAbstractFilePathUtf . toAbstractFilePathUtf == id" $
-    \(NonNullString str) -> (fromAbstractFilePathUtf . fromJust . toAbstractFilePathUtf) str == Just str
-  , testProperty "fromPlatformStringUtf . toPlatformStringUtf == id (Posix)" $
-    \(NonNullString str) -> (Posix.fromPlatformStringUtf . fromJust . Posix.toPlatformStringUtf) str == Just str
-  , testProperty "fromPlatformStringUtf . toPlatformStringUtf == id (Windows)" $
-    \(NonNullString str) -> (Windows.fromPlatformStringUtf . fromJust . Windows.toPlatformStringUtf) str == Just str
-  , testProperty "toPlatformStringEnc ucs2le . fromPlatformStringEnc ucs2le == id (Posix)" $
-    \(padEven -> bs) -> (Posix.toPlatformStringEnc ucs2le . (\(Right r) -> r) . Posix.fromPlatformStringEnc ucs2le . OS.PS . toShort) bs
-           === Right (OS.PS . toShort $ bs)
-  , testProperty "toPlatformStringEnc ucs2le . fromPlatformStringEnc ucs2le == id (Windows)" $
-    \(padEven -> bs) -> (Windows.toPlatformStringEnc ucs2le . (\(Right r) -> r) . Windows.fromPlatformStringEnc ucs2le . OS.WS . toShort) bs
-           === Right (OS.WS . toShort $ bs)
+  [ ("fromAbstractFilePathUtf . toAbstractFilePathUtf == id",
+    property $ \(NonNullString str) -> (fromAbstractFilePathUtf . fromJust . toAbstractFilePathUtf) str == Just str)
+  , ("fromPlatformStringUtf . toPlatformStringUtf == id (Posix)",
+    property $ \(NonNullString str) -> (Posix.fromPlatformStringUtf . fromJust . Posix.toPlatformStringUtf) str == Just str)
+  , ("fromPlatformStringUtf . toPlatformStringUtf == id (Windows)",
+    property $ \(NonNullString str) -> (Windows.fromPlatformStringUtf . fromJust . Windows.toPlatformStringUtf) str == Just str)
+  , ("toPlatformStringEnc ucs2le . fromPlatformStringEnc ucs2le == id (Posix)",
+    property $ \(padEven -> bs) -> (Posix.toPlatformStringEnc ucs2le . (\(Right r) -> r) . Posix.fromPlatformStringEnc ucs2le . OS.PS . toShort) bs === Right (OS.PS . toShort $ bs))
+  , ("toPlatformStringEnc ucs2le . fromPlatformStringEnc ucs2le == id (Windows)",
+    property $ \(padEven -> bs) -> (Windows.toPlatformStringEnc ucs2le . (\(Right r) -> r) . Windows.fromPlatformStringEnc ucs2le . OS.WS . toShort) bs
+           === Right (OS.WS . toShort $ bs))
 
   ] ++ testBatch (ord (\(a :: AbstractFilePath) -> pure a))
     ++ testBatch (monoid (undefined :: AbstractFilePath))
@@ -59,9 +57,8 @@ tests =
     ++ testBatch (monoid (undefined :: PlatformString))
 
 -- | Allows to insert a 'TestBatch' into a Spec.
-testBatch :: TestBatch -> [TestTree]
-testBatch (_, tests') =
-    fmap (\(str, prop) -> testProperty str prop) tests'
+testBatch :: TestBatch -> [(String, Property)]
+testBatch (_, tests') = tests'
 
 
 padEven :: ByteString -> ByteString

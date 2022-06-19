@@ -15,7 +15,6 @@ variables:
     - GHC_VERSION: 8.10.7
     - GHC_VERSION: 9.0.2
     - GHC_VERSION: 9.2.3
-      ADD_CABAL_ARGS: "--ghc-options=-fcheck-prim-bounds -fno-ignore-asserts"
 
 .darwin_matrix: &darwin_matrix
   matrix:

@@ -88,11 +88,6 @@ run tar xf dist-newstyle/sdist/filepath-*.tar.gz
 run cd filepath-*
 run cabal v2-build ${args[@]}
 run cabal v2-test ${args[@]} --test-show-details=direct all
-case "$(uname -s)" in
-    MSYS_*|MINGW*) ;;
-	*)
-		run cabal v2-bench ${args[@]} all
-		;;
-esac
+run cabal v2-bench ${args[@]} all
 run cabal v2-haddock
 
