@@ -1,13 +1,13 @@
-cabal-version:      2.0
+cabal-version:      2.2
 name:               filepath
 version:            2.0.0.2
 
 -- NOTE: Don't forget to update ./changelog.md
-license:            BSD3
+license:            BSD-3-Clause
 license-file:       LICENSE
 author:             Neil Mitchell <ndmitchell@gmail.com>
 maintainer:         Julian Ospald <hasufell@posteo.de>
-copyright:          Neil Mitchell 2005-2020
+copyright:          Neil Mitchell 2005-2020, Julain Ospald 2021-2022
 bug-reports:        https://gitlab.haskell.org/haskell/filepath/-/issues
 homepage:
   https://gitlab.haskell.org/haskell/filepath/-/blob/master/README.md
@@ -23,7 +23,7 @@ tested-with:
    || ==8.8.4
    || ==8.10.7
    || ==9.0.2
-   || ==9.2.2
+   || ==9.2.3
 
 description:
   This package provides functionality for manipulating @FilePath@ values, and is shipped with <https://www.haskell.org/ghc/ GHC>. It provides two variants for filepaths:
@@ -67,16 +67,25 @@ source-repository head
   type:     git
   location: https://gitlab.haskell.org/haskell/filepath
 
-library
+common library
   default-language: Haskell2010
-  other-extensions:
-    CPP
-    PatternGuards
+  build-depends:
+      base              >=4.9      && <4.18
+    , bytestring        >=0.11.3.0
+    , deepseq
+    , exceptions
+    , template-haskell
 
-  if impl(ghc >=7.2)
-    other-extensions: Safe
+  ghc-options:      -Wall
 
-  exposed-modules:
+  if flag(cpphs)
+    ghc-options:        -pgmPcpphs -optP--cpp
+    build-tool-depends: cpphs:cpphs -any
+
+common library-other
+  import: library
+  hs-source-dirs: .
+  other-modules:
     System.AbstractFilePath
     System.AbstractFilePath.Data.ByteString.Short
     System.AbstractFilePath.Data.ByteString.Short.Internal
@@ -97,25 +106,41 @@ library
     System.OsString.Posix
     System.OsString.Windows
 
-  build-depends:
-      base              >=4.9      && <4.18
-    , bytestring        >=0.11.3.0
-    , deepseq
-    , exceptions
-    , template-haskell
+library
+  import: library
+  exposed-modules:
+    System.AbstractFilePath
+    System.AbstractFilePath.Data.ByteString.Short
+    System.AbstractFilePath.Data.ByteString.Short.Internal
+    System.AbstractFilePath.Data.ByteString.Short.Word16
+    System.AbstractFilePath.Encoding
+    System.AbstractFilePath.Internal
+    System.AbstractFilePath.Posix
+    System.AbstractFilePath.Posix.Internal
+    System.AbstractFilePath.Types
+    System.AbstractFilePath.Windows
+    System.AbstractFilePath.Windows.Internal
+    System.FilePath
+    System.FilePath.Posix
+    System.FilePath.Windows
+    System.OsString
+    System.OsString.Internal
+    System.OsString.Internal.Types
+    System.OsString.Posix
+    System.OsString.Windows
+  other-extensions:
+    CPP
+    PatternGuards
 
-  ghc-options:      -Wall
+  if impl(ghc >=7.2)
+    other-extensions: Safe
 
-  if flag(cpphs)
-    ghc-options:        -pgmPcpphs -optP--cpp
-    build-tool-depends: cpphs:cpphs -any
 
 test-suite filepath-tests
+  import: library-other
   type:             exitcode-stdio-1.0
-  default-language: Haskell2010
   main-is:          Test.hs
   hs-source-dirs:   tests
-  ghc-options:      -Wall
   other-modules:
     TestGen
     TestUtil
@@ -123,15 +148,13 @@ test-suite filepath-tests
   build-depends:
       base
     , bytestring  >=0.11.3.0
-    , filepath
     , QuickCheck  >=2.7      && <2.15
 
 test-suite filepath-equivalent-tests
+  import: library-other
   type:             exitcode-stdio-1.0
-  default-language: Haskell2010
   main-is:          TestEquiv.hs
   hs-source-dirs:   tests
-  ghc-options:      -Wall
   other-modules:
     Legacy.System.FilePath
     Legacy.System.FilePath.Posix
@@ -141,15 +164,13 @@ test-suite filepath-equivalent-tests
   build-depends:
       base
     , bytestring  >=0.11.3.0
-    , filepath
     , QuickCheck  >=2.7      && <2.15
 
 test-suite bytestring-tests
+  import: library-other
   type:             exitcode-stdio-1.0
-  default-language: Haskell2010
   main-is:          Main.hs
   hs-source-dirs:   tests
-  ghc-options:      -Wall
   other-modules:
     Properties
     Properties.ShortByteString
@@ -158,49 +179,39 @@ test-suite bytestring-tests
   build-depends:
       base
     , bytestring        >=0.11.3.0
-    , filepath
     , QuickCheck        >=2.7      && <2.15
     , tasty
     , tasty-quickcheck
 
 test-suite abstract-filepath
+  import: library-other
   type:             exitcode-stdio-1.0
   main-is:          Test.hs
   hs-source-dirs:   tests/afpp
-  ghc-options:      -Wall
   other-modules:
     AbstractFilePathSpec
     Arbitrary
     EncodingSpec
 
-  default-language: Haskell2010
   build-depends:
       base
     , bytestring        >=0.11.3.0
     , checkers          ^>=0.5.6
     , deepseq
-    , filepath
     , QuickCheck        >=2.7      && <2.15
     , tasty
-    -- tasty-hunit >= 0.10 depends on call-stack, which causes cyclic import with filepath
-    -- https://github.com/UnkindPartition/tasty/issues/339
-    , tasty-hunit       <0.10
+    , tasty-hunit
     , tasty-quickcheck
 
 benchmark bench-filepath
+  import: library-other
   type:           exitcode-stdio-1.0
   main-is:        BenchFilePath.hs
   hs-source-dirs: bench
-  default-language: Haskell2010
-  if os(windows)
-      build-depends: unbuildable<0
-      buildable: False
-  else
-      build-depends:
-          base
-        , bytestring
-        , filepath
-        , tasty-bench
+  build-depends:
+      base
+    , bytestring
+    , tasty-bench
 
   if impl(ghc >=8.10)
     ghc-options: "-with-rtsopts=-A32m --nonmoving-gc"
