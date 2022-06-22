@@ -1,11 +1,26 @@
 -- This template expects CPP definitions for:
---     WINDOWS
---     POSIX
---     FILEPATH_NAME = PosixFilePath | WindowsFilePath  | AbstractFilePath
---     OSSTRING_NAME = PosixString   | WindowsString    | OsString
---     WORD_NAME     = PosixChar     | WindowsChar      | OsChar
---     WTOR          = PW            | WW               | OsChar
---     CTOR          = PS            | WS               | OsString
+--
+--     WINDOWS defined? = no            | yes              | no
+--     POSIX   defined? = yes           | no               | no
+--
+--     FILEPATH_NAME    = PosixFilePath | WindowsFilePath  | AbstractFilePath
+--     OSSTRING_NAME    = PosixString   | WindowsString    | OsString
+--     WORD_NAME        = PosixChar     | WindowsChar      | OsChar
+--     WTOR             = PW            | WW               | OsChar
+--     CTOR             = PS            | WS               | OsString
+
+-- For (native) abstract file paths we document both platforms, so people can
+-- understand how their code is compiled no matter what. But for the
+-- platform-specific types we only want to document the behavior on that
+-- platform.
+#if defined(WINDOWS)
+#  define WINDOWS_DOC
+#elif defined(POSIX)
+#  define POSIX_DOC
+#else
+#  define WINDOWS_DOC
+#  define POSIX_DOC
+#endif
 
 #ifdef WINDOWS
 module System.AbstractFilePath.Windows
@@ -180,16 +195,24 @@ import System.OsString.Internal.Types
 -- | The character that separates directories. In the case where more than
 --   one character is possible, 'pathSeparator' is the \'ideal\' one.
 --
--- > Windows: pathSeparator == '\\'
+#ifdef WINDOWS_DOC
+-- > Windows: pathSeparator == '\\'S
+#endif
+#ifdef POSIX_DOC
 -- > Posix:   pathSeparator ==  '/'
+#endif
 -- > isPathSeparator pathSeparator
 pathSeparator :: WORD_NAME
 pathSeparator = WTOR C.pathSeparator
 
 -- | The list of all possible separators.
 --
+#ifdef WINDOWS_DOC
 -- > Windows: pathSeparators == ['\\', '/']
+#endif
+#ifdef POSIX_DOC
 -- > Posix:   pathSeparators == ['/']
+#endif
 -- > pathSeparator `elem` pathSeparators
 pathSeparators :: [WORD_NAME]
 pathSeparators = WTOR <$> C.pathSeparators
@@ -232,17 +255,27 @@ isExtSeparator (WTOR w) = C.isExtSeparator w
 -- Path methods (environment $PATH)
 
 -- | Take a string, split it on the 'searchPathSeparator' character.
---   Blank items are ignored on Windows, and converted to @.@ on Posix.
---   On Windows path elements are stripped of quotes.
+#ifdef WINDOWS_DOC
+--   On Windows, blank items are ignored on Windows, and path elements are
+--   stripped of quotes.
+#endif
+#ifdef POSIX_DOC
+--   On Posix, blank items are converted to @.@ on Posix, and quotes are not
+--   treated specially.
+#endif
 --
 --   Follows the recommendations in
 --   <http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap08.html>
 --
--- > Posix:   splitSearchPath "File1:File2:File3"  == ["File1","File2","File3"]
--- > Posix:   splitSearchPath "File1::File2:File3" == ["File1",".","File2","File3"]
+#ifdef WINDOWS_DOC
 -- > Windows: splitSearchPath "File1;File2;File3"  == ["File1","File2","File3"]
 -- > Windows: splitSearchPath "File1;;File2;File3" == ["File1","File2","File3"]
 -- > Windows: splitSearchPath "File1;\"File2\";File3" == ["File1","File2","File3"]
+#endif
+#ifdef POSIX_DOC
+-- > Posix:   splitSearchPath "File1:File2:File3"  == ["File1","File2","File3"]
+-- > Posix:   splitSearchPath "File1::File2:File3" == ["File1",".","File2","File3"]
+#endif
 splitSearchPath :: OSSTRING_NAME -> [FILEPATH_NAME]
 splitSearchPath (CTOR x) = fmap CTOR . C.splitSearchPath $ x
 
@@ -323,7 +356,9 @@ dropExtension (CTOR x) = CTOR $ C.dropExtension x
 -- > addExtension "/" "x" == "/.x"
 -- > addExtension x "" == x
 -- > Valid x => takeFileName (addExtension (addTrailingPathSeparator x) "ext") == ".ext"
+#ifdef WINDOWS_DOC
 -- > Windows: addExtension "\\\\share" ".txt" == "\\\\share\\.txt"
+#endif
 addExtension :: FILEPATH_NAME -> OSSTRING_NAME -> FILEPATH_NAME
 addExtension (CTOR bs) (CTOR ext) = CTOR $ C.addExtension bs ext
 
@@ -409,9 +444,12 @@ replaceExtensions (CTOR x) (CTOR y) = CTOR $ C.replaceExtensions x y
 -- Drive functions
 
 -- | Split a path into a drive and a path.
+#ifdef POSIX_DOC
 --   On Posix, \/ is a Drive.
+#endif
 --
 -- > uncurry (<>) (splitDrive x) == x
+#ifdef WINDOWS_DOC
 -- > Windows: splitDrive "file" == ("","file")
 -- > Windows: splitDrive "c:/file" == ("c:/","file")
 -- > Windows: splitDrive "c:\\file" == ("c:\\","file")
@@ -421,10 +459,13 @@ replaceExtensions (CTOR x) (CTOR y) = CTOR $ C.replaceExtensions x y
 -- > Windows: splitDrive "\\\\?\\UNCshared\\file" == ("\\\\?\\","UNCshared\\file")
 -- > Windows: splitDrive "\\\\?\\d:\\file" == ("\\\\?\\d:\\","file")
 -- > Windows: splitDrive "/d" == ("","/d")
+#endif
+#ifdef POSIX_DOC
 -- > Posix:   splitDrive "/test" == ("/","test")
 -- > Posix:   splitDrive "//test" == ("//","test")
 -- > Posix:   splitDrive "test/file" == ("","test/file")
 -- > Posix:   splitDrive "file" == ("","file")
+#endif
 splitDrive :: FILEPATH_NAME -> (FILEPATH_NAME, FILEPATH_NAME)
 splitDrive (CTOR p) = bimap CTOR CTOR $ C.splitDrive p
 
@@ -432,10 +473,12 @@ splitDrive (CTOR p) = bimap CTOR CTOR $ C.splitDrive p
 -- | Join a drive and the rest of the path.
 --
 -- > Valid x => uncurry joinDrive (splitDrive x) == x
+#ifdef WINDOWS_DOC
 -- > Windows: joinDrive "C:" "foo" == "C:foo"
 -- > Windows: joinDrive "C:\\" "bar" == "C:\\bar"
 -- > Windows: joinDrive "\\\\share" "foo" == "\\\\share\\foo"
 -- > Windows: joinDrive "/:" "foo" == "/:\\foo"
+#endif
 joinDrive :: FILEPATH_NAME -> FILEPATH_NAME -> FILEPATH_NAME
 joinDrive (CTOR a) (CTOR b) = CTOR $ C.joinDrive a b
 
@@ -457,9 +500,13 @@ dropDrive (CTOR x) = CTOR $ C.dropDrive x
 -- | Does a path have a drive.
 --
 -- > not (hasDrive x) == null (takeDrive x)
+#ifdef POSIX_DOC
 -- > Posix:   hasDrive "/foo" == True
+#endif
+#ifdef WINDOWS_DOC
 -- > Windows: hasDrive "C:\\foo" == True
 -- > Windows: hasDrive "C:foo" == True
+#endif
 -- >          hasDrive "foo" == False
 -- >          hasDrive "" == False
 hasDrive :: FILEPATH_NAME -> Bool
@@ -469,10 +516,14 @@ hasDrive (CTOR x) = C.hasDrive x
 
 -- | Is an element a drive
 --
+#ifdef POSIX_DOC
 -- > Posix:   isDrive "/" == True
 -- > Posix:   isDrive "/foo" == False
+#endif
+#ifdef WINDOWS_DOC
 -- > Windows: isDrive "C:\\" == True
 -- > Windows: isDrive "C:\\foo" == False
+#endif
 -- >          isDrive "" == False
 isDrive :: FILEPATH_NAME -> Bool
 isDrive (CTOR x) = C.isDrive x
@@ -490,8 +541,12 @@ isDrive (CTOR x) = C.isDrive x
 -- > splitFileName "file/bob.txt" == ("file/", "bob.txt")
 -- > splitFileName "file/" == ("file/", "")
 -- > splitFileName "bob" == ("./", "bob")
+#ifdef POSIX_DOC
 -- > Posix:   splitFileName "/" == ("/","")
+#endif
+#ifdef WINDOWS_DOC
 -- > Windows: splitFileName "c:" == ("c:","")
+#endif
 splitFileName :: FILEPATH_NAME -> (FILEPATH_NAME, FILEPATH_NAME)
 splitFileName (CTOR x) = bimap CTOR CTOR $ C.splitFileName x
 
