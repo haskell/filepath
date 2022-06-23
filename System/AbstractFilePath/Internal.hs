@@ -27,8 +27,8 @@ import System.AbstractFilePath.Encoding ( EncodingException(..) )
 
 -- | Convert a String.
 --
--- On windows this encodes as UTF16, which is a pretty good guess.
--- On unix this encodes as UTF8, which is a good guess.
+-- On windows this encodes as UTF16-LE (strictly), which is a pretty good guess.
+-- On unix this encodes as UTF8 (strictly), which is a good guess.
 --
 -- Throws a 'EncodingException' if encoding fails.
 toAbstractFilePathUtf :: MonadThrow m => String -> m AbstractFilePath
@@ -41,40 +41,7 @@ toAbstractFilePathEnc :: TextEncoding  -- ^ unix text encoding
                       -> Either EncodingException AbstractFilePath
 toAbstractFilePathEnc = toOsStringEnc
 
--- | Like 'toAbstractFilePathUtf', except on unix this uses the current
--- filesystem locale for encoding instead of always UTF8.
---
--- Looking up the locale requires IO. If you're not worried about calls
--- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
--- to deeply evaluate the result to catch exceptions).
---
--- Throws 'EncodingException' if decoding fails.
-toAbstractFilePathFS :: String -> IO AbstractFilePath
-toAbstractFilePathFS = toOsStringFS
-
-
--- | Partial unicode friendly decoding.
---
--- On windows this decodes as UTF16-LE (which is the expected filename encoding).
--- On unix this decodes as UTF8 (which is a good guess). Note that
--- filenames on unix are encoding agnostic char arrays.
---
--- Throws a 'EncodingException' if decoding fails.
---
--- Note that filenames of different encodings may have the same @String@
--- representation, although they're not the same byte-wise.
-fromAbstractFilePathUtf :: MonadThrow m => AbstractFilePath -> m String
-fromAbstractFilePathUtf = fromOsStringUtf
-
--- | Like 'fromAbstractFilePathUtf', except on unix this uses the provided
--- 'TextEncoding' for decoding.
-fromAbstractFilePathEnc :: TextEncoding  -- ^ unix text encoding
-                        -> TextEncoding  -- ^ windows text encoding
-                        -> AbstractFilePath
-                        -> Either EncodingException String
-fromAbstractFilePathEnc = fromOsStringEnc
-
--- | This mimics the behavior of the base library when doing filesystem
+-- | Like 'toAbstractFilePathUtf', except this mimics the behavior of the base library when doing filesystem
 -- operations, which is:
 --
 -- 1. on unix, uses shady PEP 383 style encoding (based on the current locale,
@@ -85,8 +52,41 @@ fromAbstractFilePathEnc = fromOsStringEnc
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
+toAbstractFilePathFS :: String -> IO AbstractFilePath
+toAbstractFilePathFS = toOsStringFS
+
+
+-- | Partial unicode friendly decoding.
 --
--- Throws 'EncodingException' if decoding fails.
+-- On windows this decodes as UTF16-LE (strictly), which is a pretty good guess.
+-- On unix this decodes as UTF8 (strictly), which is a good guess. Note that
+-- filenames on unix are encoding agnostic char arrays.
+--
+-- Throws a 'EncodingException' if decoding fails.
+--
+-- Note that filenames of different encodings may have the same @String@
+-- representation, although they're not the same byte-wise.
+fromAbstractFilePathUtf :: MonadThrow m => AbstractFilePath -> m String
+fromAbstractFilePathUtf = fromOsStringUtf
+
+-- | Like 'fromAbstractFilePathUtf', except allows to provide encodings.
+fromAbstractFilePathEnc :: TextEncoding  -- ^ unix text encoding
+                        -> TextEncoding  -- ^ windows text encoding
+                        -> AbstractFilePath
+                        -> Either EncodingException String
+fromAbstractFilePathEnc = fromOsStringEnc
+
+-- | Like 'fromAbstractFilePathUtf', except this mimics the behavior of the base library when doing filesystem
+-- operations, which is:
+--
+-- 1. on unix, uses shady PEP 383 style encoding (based on the current locale,
+--    but PEP 383 only works properly on UTF-8 encodings, so good luck)
+-- 2. on windows does permissive UTF-16 encoding, where coding errors generate
+--    Chars in the surrogate range
+--
+-- Looking up the locale requires IO. If you're not worried about calls
+-- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
+-- to deeply evaluate the result to catch exceptions).
 fromAbstractFilePathFS :: AbstractFilePath -> IO String
 fromAbstractFilePathFS = fromOsStringFS
 

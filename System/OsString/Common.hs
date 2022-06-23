@@ -74,20 +74,18 @@ import Language.Haskell.TH.Syntax
 
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #ifdef WINDOWS
-import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..), ucs2le )
+import System.AbstractFilePath.Encoding
 import System.IO
     ( TextEncoding, utf16le )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import System.AbstractFilePath.Data.ByteString.Short.Word16 as BS
 import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
 #else
-import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..) )
+import System.AbstractFilePath.Encoding
 import System.IO
     ( TextEncoding, utf8 )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.AbstractFilePath.Data.ByteString.Short as BS
-import GHC.IO.Encoding
-    ( getFileSystemEncoding )
 #endif
 
 
@@ -95,15 +93,15 @@ import GHC.IO.Encoding
 #ifdef WINDOWS_DOC
 -- | Convert a String.
 --
--- This encodes as UTF16, which is a pretty good guess.
+-- This encodes as UTF16-LE (strictly), which is a pretty good guess.
 --
--- Throws a 'EncodingException' if encoding fails.
+-- Throws an 'EncodingException' if encoding fails.
 #else
 -- | Convert a String.
 --
--- This encodes as UTF8, which is a good guess.
+-- This encodes as UTF8 (strictly), which is a good guess.
 --
--- Throws a 'EncodingException' if encoding fails.
+-- Throws an 'EncodingException' if encoding fails.
 #endif
 toPlatformStringUtf :: MonadThrow m => String -> m PLATFORM_STRING
 #ifdef WINDOWS
@@ -140,29 +138,25 @@ toPlatformStringEnc enc str = unsafePerformIO $ do
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
---
--- Throws 'EncodingException' if decoding fails.
 #endif
 toPlatformStringFS :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformStringFS str = GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
+toPlatformStringFS = fmap WS . encodeWithBaseWindows
 #else
-toPlatformStringFS str = do
-  enc <- getFileSystemEncoding
-  GHC.withCStringLen enc str $ \cstr -> PS <$> BS.packCStringLen cstr
+toPlatformStringFS = fmap PS . encodeWithBasePosix
 #endif
 
 
 #ifdef WINDOWS_DOC
 -- | Partial unicode friendly decoding.
 --
--- This decodes as UTF16-LE (which is the expected filename encoding).
+-- This decodes as UTF16-LE (strictly), which is a pretty good.
 --
 -- Throws a 'EncodingException' if decoding fails.
 #else
 -- | Partial unicode friendly decoding.
 --
--- This decodes as UTF8 (which is a good guess). Note that
+-- This decodes as UTF8 (strictly), which is a good guess. Note that
 -- filenames on unix are encoding agnostic char arrays.
 --
 -- Throws a 'EncodingException' if decoding fails.
@@ -206,17 +200,12 @@ fromPlatformStringEnc unixEnc (PS ba) = unsafePerformIO $ do
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
---
--- Throws 'EncodingException' if decoding fails.
 #endif
 fromPlatformStringFS :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
-fromPlatformStringFS (WS ba) =
-  BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen utf16le fp
+fromPlatformStringFS (WS ba) = decodeWithBaseWindows ba
 #else
-fromPlatformStringFS (PS ba) = do
-  enc <- getFileSystemEncoding
-  BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
+fromPlatformStringFS (PS ba) = decodeWithBasePosix ba
 #endif
 
 

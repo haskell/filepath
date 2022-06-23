@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module AbstractFilePathSpec where
@@ -13,11 +14,17 @@ import System.AbstractFilePath.Encoding
 import qualified System.OsString.Internal.Types as OS
 import System.AbstractFilePath.Data.ByteString.Short ( toShort )
 
+import Control.Exception
 import Data.ByteString ( ByteString )
 import qualified Data.ByteString as BS
 import Test.QuickCheck
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Classes
+import GHC.IO.Encoding.UTF8 ( mkUTF8 )
+import GHC.IO.Encoding ( setFileSystemEncoding )
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
+import Control.DeepSeq
+import Data.Bifunctor ( first )
 
 import Arbitrary
 
@@ -40,6 +47,21 @@ tests =
   , ("toPlatformStringEnc ucs2le . fromPlatformStringEnc ucs2le == id (Windows)",
     property $ \(padEven -> bs) -> (Windows.toPlatformStringEnc ucs2le . (\(Right r) -> r) . Windows.fromPlatformStringEnc ucs2le . OS.WS . toShort) bs
            === Right (OS.WS . toShort $ bs))
+  , ("fromPlatformStringFS . toPlatformStringFS == id (Posix)",
+    property $ \(NonNullString str) -> ioProperty $ do
+      setFileSystemEncoding (mkUTF8 TransliterateCodingFailure)
+      r1 <- Posix.toPlatformStringUtf str
+      r2 <- try @SomeException $ Posix.fromPlatformStringFS r1
+      r3 <- evaluate $ force $ first displayException r2
+      pure (r3 === Right str)
+      )
+  , ("fromPlatformStringFS . toPlatformStringFS == id (Windows)",
+    property $ \(NonNullString str) -> ioProperty $ do
+      r1 <- Windows.toPlatformStringUtf str
+      r2 <- try @SomeException $ Windows.fromPlatformStringFS r1
+      r3 <- evaluate $ force $ first displayException r2
+      pure (r3 === Right str)
+      )
 
   ] ++ testBatch (ord (\(a :: AbstractFilePath) -> pure a))
     ++ testBatch (monoid (undefined :: AbstractFilePath))

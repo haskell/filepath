@@ -74,6 +74,7 @@ library
     System.AbstractFilePath.Data.ByteString.Short.Internal
     System.AbstractFilePath.Data.ByteString.Short.Word16
     System.AbstractFilePath.Encoding
+    System.AbstractFilePath.Encoding.Internal
     System.AbstractFilePath.Internal
     System.AbstractFilePath.Posix
     System.AbstractFilePath.Posix.Internal

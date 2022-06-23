@@ -38,8 +38,8 @@ import qualified System.OsString.Posix as PF
 
 -- | Convert a String.
 --
--- On windows this encodes as UTF16-LE, which is a pretty good guess.
--- On unix this encodes as UTF8, which is a good guess.
+-- On windows this encodes as UTF16-LE (strictly), which is a pretty good guess.
+-- On unix this encodes as UTF8 (strictly), which is a good guess.
 --
 -- Throws a 'EncodingException' if encoding fails.
 toOsStringUtf :: MonadThrow m => String -> m OsString
@@ -56,14 +56,17 @@ toOsStringEnc _ winEnc str = OsString <$> toPlatformStringEnc winEnc str
 toOsStringEnc unixEnc _ str = OsString <$> toPlatformStringEnc unixEnc str
 #endif
 
--- | Like 'toOsStringUtf', except on unix this uses the current
--- filesystem locale for encoding instead of always UTF8.
+-- | Like 'toOsStringUtf', except this mimics the behavior of the base library when doing filesystem
+-- operations, which is:
+--
+-- 1. on unix, uses shady PEP 383 style encoding (based on the current locale,
+--    but PEP 383 only works properly on UTF-8 encodings, so good luck)
+-- 2. on windows does permissive UTF-16 encoding, where coding errors generate
+--    Chars in the surrogate range
 --
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
---
--- Throws a 'EncodingException' if decoding fails.
 toOsStringFS :: String -> IO OsString
 toOsStringFS = fmap OsString . toPlatformStringFS
 
@@ -92,14 +95,17 @@ fromOsStringEnc unixEnc _ (OsString x) = fromPlatformStringEnc unixEnc x
 #endif
 
 
--- | Like 'fromOsStringUtf', except on unix this uses the current
--- filesystem locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
+-- | Like 'fromOsStringUtf', except this mimics the behavior of the base library when doing filesystem
+-- operations, which is:
+--
+-- 1. on unix, uses shady PEP 383 style encoding (based on the current locale,
+--    but PEP 383 only works properly on UTF-8 encodings, so good luck)
+-- 2. on windows does permissive UTF-16 encoding, where coding errors generate
+--    Chars in the surrogate range
 --
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
---
--- Throws 'EncodingException' if decoding fails.
 fromOsStringFS :: OsString -> IO String
 fromOsStringFS (OsString x) = fromPlatformStringFS x
 
