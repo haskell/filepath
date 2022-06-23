@@ -9,11 +9,11 @@
 --
 -- An implementation of platform specific short 'OsString', which is:
 --
--- 1. on windows UTF16 data
--- 2. on unix UTF8 data
+-- 1. on windows wide char bytes (@[Word16]@)
+-- 2. on unix char bytes (@[Word8]@)
 --
--- It captures the notion of syscall specific encoding to avoid roundtrip issues
--- and memory fragmentation by using unpinned byte arrays.
+-- It captures the notion of syscall specific encoding (or the lack thereof) to avoid roundtrip issues
+-- and memory fragmentation by using unpinned byte arrays. Bytes are not touched or interpreted.
 module System.OsString
   (
   -- * String types
