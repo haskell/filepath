@@ -237,7 +237,7 @@ qq :: (ByteString -> Q Exp) -> QuasiQuoter
 qq quoteExp' =
   QuasiQuoter
 #ifdef WINDOWS
-  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
+  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF16le ErrorOnCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -246,7 +246,7 @@ qq quoteExp' =
       fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
   }
 #else
-  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
+  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF8 ErrorOnCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
