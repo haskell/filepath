@@ -74,8 +74,13 @@ fromAbstractFilePathEnc :: TextEncoding  -- ^ unix text encoding
                         -> Either EncodingException String
 fromAbstractFilePathEnc = fromOsStringEnc
 
--- | Like 'fromAbstractFilePathUtf', except on unix this uses the current
--- locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
+-- | This mimics the behavior of the base library when doing filesystem
+-- operations, which is:
+--
+-- 1. on unix, uses shady PEP 383 style encoding (based on the current locale,
+--    but PEP 383 only works properly on UTF-8 encodings, so good luck)
+-- 2. on windows does permissive UTF-16 encoding, where coding errors generate
+--    Chars in the surrogate range
 --
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure

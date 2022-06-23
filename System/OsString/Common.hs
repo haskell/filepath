@@ -3,6 +3,12 @@
 -- This template expects CPP definitions for:
 --     MODULE_NAME = Posix | Windows
 --     IS_WINDOWS  = False | True
+--
+#if defined(WINDOWS)
+#define WINDOWS_DOC
+#else
+#define POSIX_DOC
+#endif
 
 module System.OsString.MODULE_NAME
   (
@@ -86,12 +92,19 @@ import GHC.IO.Encoding
 
 
 
+#ifdef WINDOWS_DOC
 -- | Convert a String.
 --
--- On windows this encodes as UTF16, which is a pretty good guess.
--- On unix this encodes as UTF8, which is a good guess.
+-- This encodes as UTF16, which is a pretty good guess.
 --
 -- Throws a 'EncodingException' if encoding fails.
+#else
+-- | Convert a String.
+--
+-- This encodes as UTF8, which is a good guess.
+--
+-- Throws a 'EncodingException' if encoding fails.
+#endif
 toPlatformStringUtf :: MonadThrow m => String -> m PLATFORM_STRING
 #ifdef WINDOWS
 toPlatformStringUtf = either throwM pure . toPlatformStringEnc utf16le
@@ -112,14 +125,24 @@ toPlatformStringEnc enc str = unsafePerformIO $ do
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
 
--- | Like 'toPlatformStringUtf', except on unix this uses the current
--- filesystem locale for encoding instead of always UTF8.
+#ifdef WINDOWS_DOC
+-- | Like 'toPlatformStringUtf', except this mimics the behavior of the base library when doing filesystem
+-- operations, which does permissive UTF-16 encoding, where coding errors generate
+-- Chars in the surrogate range.
+--
+-- The reason this is in IO is because it unifies with the Posix counterpart,
+-- which does require IO. This is safe to 'unsafePerformIO'/'unsafeDupablePerformIO'.
+#else
+-- | This mimics the behavior of the base library when doing filesystem
+-- operations, which uses shady PEP 383 style encoding (based on the current locale,
+-- but PEP 383 only works properly on UTF-8 encodings, so good luck).
 --
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
 --
--- Throws a 'EncodingException' if encoding fails.
+-- Throws 'EncodingException' if decoding fails.
+#endif
 toPlatformStringFS :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
 toPlatformStringFS str = GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
@@ -130,13 +153,20 @@ toPlatformStringFS str = do
 #endif
 
 
+#ifdef WINDOWS_DOC
 -- | Partial unicode friendly decoding.
 --
--- On windows this decodes as UTF16-LE (which is the expected filename encoding).
--- On unix this decodes as UTF8 (which is a good guess). Note that
+-- This decodes as UTF16-LE (which is the expected filename encoding).
+--
+-- Throws a 'EncodingException' if decoding fails.
+#else
+-- | Partial unicode friendly decoding.
+--
+-- This decodes as UTF8 (which is a good guess). Note that
 -- filenames on unix are encoding agnostic char arrays.
 --
 -- Throws a 'EncodingException' if decoding fails.
+#endif
 fromPlatformStringUtf :: MonadThrow m => PLATFORM_STRING -> m String
 #ifdef WINDOWS
 fromPlatformStringUtf = either throwM pure . fromPlatformStringEnc utf16le
@@ -161,14 +191,24 @@ fromPlatformStringEnc unixEnc (PS ba) = unsafePerformIO $ do
 #endif
 
 
--- | Like 'fromPlatformStringUt', except on unix this uses the current
--- filesystem locale for decoding instead of always UTF8. On windows, uses UTF-16LE.
+#ifdef WINDOWS_DOC
+-- | Like 'fromPlatformStringUtf', except this mimics the behavior of the base library when doing filesystem
+-- operations, which does permissive UTF-16 encoding, where coding errors generate
+-- Chars in the surrogate range.
+--
+-- The reason this is in IO is because it unifies with the Posix counterpart,
+-- which does require IO.
+#else
+-- | This mimics the behavior of the base library when doing filesystem
+-- operations, which uses shady PEP 383 style encoding (based on the current locale,
+-- but PEP 383 only works properly on UTF-8 encodings, so good luck).
 --
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
 --
 -- Throws 'EncodingException' if decoding fails.
+#endif
 fromPlatformStringFS :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
 fromPlatformStringFS (WS ba) =
@@ -180,12 +220,18 @@ fromPlatformStringFS (PS ba) = do
 #endif
 
 
+#ifdef WINDOWS_DOC
 -- | Constructs a platform string from a ByteString.
 --
--- On windows, this ensures valid UCS-2LE, on unix it is passed unchecked.
+-- This ensures valid UCS-2LE.
 -- Note that this doesn't expand Word8 to Word16 on windows, so you may get invalid UTF-16.
 --
--- Throws 'EncodingException' on invalid UCS-2LE on windows (although unlikely).
+-- Throws 'EncodingException' on invalid UCS-2LE (although unlikely).
+#else
+-- | Constructs a platform string from a ByteString.
+--
+-- This is a no-op.
+#endif
 bytesToPlatformString :: MonadThrow m
                       => ByteString
                       -> m PLATFORM_STRING
@@ -227,7 +273,7 @@ mkPlatformString bs =
     Just afp -> lift afp
     Nothing -> error "invalid encoding"
 
-#ifdef WINDOWS
+#ifdef WINDOWS_DOC
 -- | QuasiQuote a 'WindowsString'. This accepts Unicode characters
 -- and encodes as UTF-16 on windows.
 #else
