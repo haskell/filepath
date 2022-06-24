@@ -57,12 +57,9 @@
 --    or at worst don't have an ASCII compatible encoding. Some strategies here involve looking
 --    up the current locale and using that for decoding ('fromAbstractFilePathFS' does this).
 --    Otherwise it can be reasonable to assume UTF8 on unix ('fromAbstractFilePathUtf' does that) if your application specifically
---    mentions that it requires a UTF8 compatible system. These things should be documented.
--- 3. When dealing with user input (e.g. on the command line) on /unix/ as e.g. @String@ the input
---    encoding is lost. The output encoding (e.g. how we write a filename to disk) can then
---    either follow the current locale again ('toAbstractFilePathFS') or a fixed encoding
---    ('toAbstractFilePathUtf'/'toAbstractFilePathEnc'). The decision should be clearly documented. If the input is in the
---    form of a @ByteString@, then 'System.AbstractFilePath.Internal.bytesToAFP' may be of interest, unless the input needs further
---    interpretation.
+--    mentions that it requires a UTF8 compatible system. If you know the encoding, you can just use 'fromAbstractFilePathEnc'.
+-- 3. Avoid comparing @String@ based filepaths, because filenames of different encodings
+--    may have the same @String@ representation, although they're not the same byte-wise.
+
 
 #include "AbstractFilePath/Common.hs"

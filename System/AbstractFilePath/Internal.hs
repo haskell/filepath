@@ -59,13 +59,9 @@ toAbstractFilePathFS = toOsStringFS
 -- | Partial unicode friendly decoding.
 --
 -- On windows this decodes as UTF16-LE (strictly), which is a pretty good guess.
--- On unix this decodes as UTF8 (strictly), which is a good guess. Note that
--- filenames on unix are encoding agnostic char arrays.
+-- On unix this decodes as UTF8 (strictly), which is a good guess.
 --
 -- Throws a 'EncodingException' if decoding fails.
---
--- Note that filenames of different encodings may have the same @String@
--- representation, although they're not the same byte-wise.
 fromAbstractFilePathUtf :: MonadThrow m => AbstractFilePath -> m String
 fromAbstractFilePathUtf = fromOsStringUtf
 
