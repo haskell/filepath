@@ -15,8 +15,6 @@ import Test.QuickCheck
 import Test.QuickCheck.Checkers
 
 
-newtype NonNullString = NonNullString { nonNullString :: String }
-  deriving Show
 
 instance Arbitrary OsString where
   arbitrary = fmap fromJust $ toOsStringUtf <$> listOf filepathChar
@@ -36,12 +34,15 @@ instance Arbitrary WindowsString where
 instance EqProp WindowsString where
   (=-=) = eq
 
+
+newtype NonNullString = NonNullString { nonNullString :: String }
+  deriving Show
+
 instance Arbitrary NonNullString where
   arbitrary = NonNullString <$> listOf filepathChar
 
-
 filepathChar :: Gen Char
-filepathChar = arbitraryBoundedEnum `suchThat` (\c -> not (isNull c) && isValidUnicode c)
+filepathChar = arbitraryUnicodeChar `suchThat` (\c -> not (isNull c) && isValidUnicode c)
  where
   isNull = (== '\NUL')
   isValidUnicode c = case generalCategory c of
@@ -49,6 +50,32 @@ filepathChar = arbitraryBoundedEnum `suchThat` (\c -> not (isNull c) && isValidU
       NotAssigned -> False
       _ -> True
 
+
+newtype NonNullAsciiString = NonNullAsciiString { nonNullAsciiString :: String }
+  deriving Show
+
+instance Arbitrary NonNullAsciiString where
+  arbitrary = NonNullAsciiString <$> listOf filepathAsciiChar
+
+filepathAsciiChar :: Gen Char
+filepathAsciiChar = arbitraryASCIIChar `suchThat` (\c -> not (isNull c))
+ where
+  isNull = (== '\NUL')
+
+newtype NonNullSurrogateString = NonNullSurrogateString { nonNullSurrogateString :: String }
+  deriving Show
+
+instance Arbitrary NonNullSurrogateString where
+  arbitrary = NonNullSurrogateString <$> listOf filepathWithSurrogates
+
+filepathWithSurrogates :: Gen Char
+filepathWithSurrogates =
+  frequency
+    [(3, arbitraryASCIIChar),
+     (1, arbitraryUnicodeChar),
+     (1, arbitraryBoundedEnum)
+    ]
+
+
 instance Arbitrary ByteString where arbitrary = ByteString.pack <$> arbitrary
 instance CoArbitrary ByteString where coarbitrary = coarbitrary . ByteString.unpack
-

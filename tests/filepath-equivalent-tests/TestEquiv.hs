@@ -6,9 +6,6 @@ module Main where
 import Test.QuickCheck hiding ((==>))
 import TestUtil
 import Prelude as P
-#if !MIN_VERSION_base(4,11,0)
-import Data.Semigroup
-#endif
 
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P

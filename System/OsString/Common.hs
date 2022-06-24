@@ -1,5 +1,6 @@
 {- HLINT ignore "Unused LANGUAGE pragma" -}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE PatternSynonyms #-}
 -- This template expects CPP definitions for:
 --     MODULE_NAME = Posix | Windows
 --     IS_WINDOWS  = False | True
@@ -74,36 +75,34 @@ import Language.Haskell.TH.Syntax
 
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #ifdef WINDOWS
-import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..), ucs2le )
+import System.AbstractFilePath.Encoding
 import System.IO
     ( TextEncoding, utf16le )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import System.AbstractFilePath.Data.ByteString.Short.Word16 as BS
 import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
 #else
-import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..) )
+import System.AbstractFilePath.Encoding
 import System.IO
     ( TextEncoding, utf8 )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.AbstractFilePath.Data.ByteString.Short as BS
-import GHC.IO.Encoding
-    ( getFileSystemEncoding )
 #endif
 
 
 
 #ifdef WINDOWS_DOC
--- | Convert a String.
+-- | Partial unicode friendly encoding.
 --
--- This encodes as UTF16, which is a pretty good guess.
+-- This encodes as UTF16-LE (strictly), which is a pretty good guess.
 --
--- Throws a 'EncodingException' if encoding fails.
+-- Throws an 'EncodingException' if encoding fails.
 #else
--- | Convert a String.
+-- | Partial unicode friendly encoding.
 --
--- This encodes as UTF8, which is a good guess.
+-- This encodes as UTF8 (strictly), which is a good guess.
 --
--- Throws a 'EncodingException' if encoding fails.
+-- Throws an 'EncodingException' if encoding fails.
 #endif
 toPlatformStringUtf :: MonadThrow m => String -> m PLATFORM_STRING
 #ifdef WINDOWS
@@ -118,10 +117,10 @@ toPlatformStringEnc :: TextEncoding
                     -> Either EncodingException PLATFORM_STRING
 toPlatformStringEnc enc str = unsafePerformIO $ do
 #ifdef WINDOWS
-  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WS <$> BS8.packCStringLen cstr
+  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WindowsString <$> BS8.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
-  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> PS <$> BS.packCStringLen cstr
+  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> PosixString <$> BS.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
 
@@ -140,29 +139,25 @@ toPlatformStringEnc enc str = unsafePerformIO $ do
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
---
--- Throws 'EncodingException' if decoding fails.
 #endif
 toPlatformStringFS :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformStringFS str = GHC.withCStringLen utf16le str $ \cstr -> WS <$> BS8.packCStringLen cstr
+toPlatformStringFS = pure . WindowsString . encodeWithBaseWindows
 #else
-toPlatformStringFS str = do
-  enc <- getFileSystemEncoding
-  GHC.withCStringLen enc str $ \cstr -> PS <$> BS.packCStringLen cstr
+toPlatformStringFS = fmap PosixString . encodeWithBasePosix
 #endif
 
 
 #ifdef WINDOWS_DOC
 -- | Partial unicode friendly decoding.
 --
--- This decodes as UTF16-LE (which is the expected filename encoding).
+-- This decodes as UTF16-LE (strictly), which is a pretty good.
 --
 -- Throws a 'EncodingException' if decoding fails.
 #else
 -- | Partial unicode friendly decoding.
 --
--- This decodes as UTF8 (which is a good guess). Note that
+-- This decodes as UTF8 (strictly), which is a good guess. Note that
 -- filenames on unix are encoding agnostic char arrays.
 --
 -- Throws a 'EncodingException' if decoding fails.
@@ -181,11 +176,11 @@ fromPlatformStringEnc :: TextEncoding
                       -> PLATFORM_STRING
                       -> Either EncodingException String
 #ifdef WINDOWS
-fromPlatformStringEnc winEnc (WS ba) = unsafePerformIO $ do
+fromPlatformStringEnc winEnc (WindowsString ba) = unsafePerformIO $ do
   r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen winEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
-fromPlatformStringEnc unixEnc (PS ba) = unsafePerformIO $ do
+fromPlatformStringEnc unixEnc (PosixString ba) = unsafePerformIO $ do
   r <- try @SomeException $ BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
@@ -197,7 +192,7 @@ fromPlatformStringEnc unixEnc (PS ba) = unsafePerformIO $ do
 -- Chars in the surrogate range.
 --
 -- The reason this is in IO is because it unifies with the Posix counterpart,
--- which does require IO.
+-- which does require IO. 'unsafePerformIO'/'unsafeDupablePerformIO' are safe, however.
 #else
 -- | This mimics the behavior of the base library when doing filesystem
 -- operations, which uses shady PEP 383 style encoding (based on the current locale,
@@ -206,17 +201,12 @@ fromPlatformStringEnc unixEnc (PS ba) = unsafePerformIO $ do
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
---
--- Throws 'EncodingException' if decoding fails.
 #endif
 fromPlatformStringFS :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
-fromPlatformStringFS (WS ba) =
-  BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen utf16le fp
+fromPlatformStringFS (WindowsString ba) = pure $ decodeWithBaseWindows ba
 #else
-fromPlatformStringFS (PS ba) = do
-  enc <- getFileSystemEncoding
-  BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
+fromPlatformStringFS (PosixString ba) = decodeWithBasePosix ba
 #endif
 
 
@@ -237,10 +227,10 @@ bytesToPlatformString :: MonadThrow m
                       -> m PLATFORM_STRING
 #ifdef WINDOWS
 bytesToPlatformString bs =
-  let ws = WS . toShort $ bs
+  let ws = WindowsString . toShort $ bs
   in either throwM (const . pure $ ws) $ fromPlatformStringEnc ucs2le ws
 #else
-bytesToPlatformString = pure . PS . toShort
+bytesToPlatformString = pure . PosixString . toShort
 #endif
 
 
@@ -248,7 +238,7 @@ qq :: (ByteString -> Q Exp) -> QuasiQuoter
 qq quoteExp' =
   QuasiQuoter
 #ifdef WINDOWS
-  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
+  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF16le ErrorOnCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -257,7 +247,7 @@ qq quoteExp' =
       fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
   }
 #else
-  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
+  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF8 ErrorOnCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -287,9 +277,9 @@ pstr = qq mkPlatformString
 -- | Unpack a platform string to a list of platform words.
 unpackPlatformString :: PLATFORM_STRING -> [PLATFORM_WORD]
 #ifdef WINDOWS
-unpackPlatformString (WS ba) = WW <$> BS.unpack ba
+unpackPlatformString (WindowsString ba) = WindowsChar <$> BS.unpack ba
 #else
-unpackPlatformString (PS ba) = PW <$> BS.unpack ba
+unpackPlatformString (PosixString ba) = PosixChar <$> BS.unpack ba
 #endif
 
 
@@ -300,26 +290,26 @@ unpackPlatformString (PS ba) = PW <$> BS.unpack ba
 -- you want, because it will truncate unicode code points.
 packPlatformString :: [PLATFORM_WORD] -> PLATFORM_STRING
 #ifdef WINDOWS
-packPlatformString = WS . BS.pack . fmap (\(WW w) -> w)
+packPlatformString = WindowsString . BS.pack . fmap (\(WindowsChar w) -> w)
 #else
-packPlatformString = PS . BS.pack . fmap (\(PW w) -> w)
+packPlatformString = PosixString . BS.pack . fmap (\(PosixChar w) -> w)
 #endif
 
 
 #ifdef WINDOWS
 -- | Truncates to 2 octets.
 unsafeFromChar :: Char -> PLATFORM_WORD
-unsafeFromChar = WW . fromIntegral . fromEnum
+unsafeFromChar = WindowsChar . fromIntegral . fromEnum
 #else
 -- | Truncates to 1 octet.
 unsafeFromChar :: Char -> PLATFORM_WORD
-unsafeFromChar = PW . fromIntegral . fromEnum
+unsafeFromChar = PosixChar . fromIntegral . fromEnum
 #endif
 
 -- | Converts back to a unicode codepoint (total).
 toChar :: PLATFORM_WORD -> Char
 #ifdef WINDOWS
-toChar (WW w) = chr $ fromIntegral w
+toChar (WindowsChar w) = chr $ fromIntegral w
 #else
-toChar (PW w) = chr $ fromIntegral w
+toChar (PosixChar w) = chr $ fromIntegral w
 #endif

@@ -123,24 +123,24 @@ newtype QFilePathValidAFP_W = QFilePathValidAFP_W WindowsFilePath deriving Show
 
 instance Arbitrary QFilePathValidAFP_W where
     arbitrary = fmap (QFilePathValidAFP_W . AFP_W.makeValid . WS . encodeUtf16LE) arbitraryFilePath
-    shrink (QFilePathValidAFP_W x) = shrinkValid (QFilePathValidAFP_W . WS . encodeUtf16LE) (decodeUtf16LE . unWFP . AFP_W.makeValid . WS . encodeUtf16LE) (decodeUtf16LE . unWFP $ x)
+    shrink (QFilePathValidAFP_W x) = shrinkValid (QFilePathValidAFP_W . WS . encodeUtf16LE) (decodeUtf16LE . getWindowsString . AFP_W.makeValid . WS . encodeUtf16LE) (decodeUtf16LE . getWindowsString $ x)
 
 newtype QFilePathValidAFP_P = QFilePathValidAFP_P PosixFilePath deriving Show
 
 instance Arbitrary QFilePathValidAFP_P where
     arbitrary = fmap (QFilePathValidAFP_P . AFP_P.makeValid . PS . encodeUtf8) arbitraryFilePath
-    shrink (QFilePathValidAFP_P x) = shrinkValid (QFilePathValidAFP_P . PS . encodeUtf8) (decodeUtf8 . unPFP . AFP_P.makeValid . PS . encodeUtf8) (decodeUtf8 . unPFP $ x)
+    shrink (QFilePathValidAFP_P x) = shrinkValid (QFilePathValidAFP_P . PS . encodeUtf8) (decodeUtf8 . getPosixString . AFP_P.makeValid . PS . encodeUtf8) (decodeUtf8 . getPosixString $ x)
 
 newtype QFilePathAFP_W = QFilePathAFP_W WindowsFilePath deriving Show
 newtype QFilePathAFP_P = QFilePathAFP_P PosixFilePath deriving Show
 
 instance Arbitrary QFilePathAFP_W where
     arbitrary = fmap (QFilePathAFP_W . WS . encodeUtf16LE) arbitraryFilePath
-    shrink (QFilePathAFP_W x) = shrinkValid (QFilePathAFP_W . WS . encodeUtf16LE) id (decodeUtf16LE . unWFP $ x)
+    shrink (QFilePathAFP_W x) = shrinkValid (QFilePathAFP_W . WS . encodeUtf16LE) id (decodeUtf16LE . getWindowsString $ x)
 
 instance Arbitrary QFilePathAFP_P where
     arbitrary = fmap (QFilePathAFP_P . PS . encodeUtf8) arbitraryFilePath
-    shrink (QFilePathAFP_P x) = shrinkValid (QFilePathAFP_P . PS . encodeUtf8) id (decodeUtf8 . unPFP $ x)
+    shrink (QFilePathAFP_P x) = shrinkValid (QFilePathAFP_P . PS . encodeUtf8) id (decodeUtf8 . getPosixString $ x)
 
 newtype QFilePathsAFP_W = QFilePathsAFP_W [WindowsFilePath] deriving Show
 newtype QFilePathsAFP_P = QFilePathsAFP_P [PosixFilePath] deriving Show

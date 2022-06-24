@@ -23,13 +23,19 @@ main = do
 #endif
         , "{-# LANGUAGE CPP #-}"
         , "{-# OPTIONS_GHC -Wno-name-shadowing #-}"
+        , "{-# OPTIONS_GHC -Wno-orphans #-}"
         ,"module TestGen(tests) where"
         ,"import TestUtil"
         ,"#if !MIN_VERSION_base(4,11,0)"
         ,"import Data.Semigroup"
         ,"#endif"
         ,"import Prelude as P"
+        ,"import Data.String"
+        ,"import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )"
+        ,"import GHC.IO.Encoding.UTF16 ( mkUTF16le )"
+        ,"import GHC.IO.Encoding.UTF8 ( mkUTF8 )"
         ,"import System.OsString.Internal.Types"
+        ,"import System.AbstractFilePath.Encoding.Internal"
         ,"import qualified Data.Char as C"
         ,"import qualified System.AbstractFilePath.Data.ByteString.Short as SBS"
         ,"import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as SBS16"
@@ -42,6 +48,13 @@ main = do
         ,"import qualified System.AbstractFilePath.Windows as AFP_W"
         ,"import qualified System.AbstractFilePath.Posix as AFP_P"
 #endif
+        ,"instance IsString WindowsString where fromString = WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)"
+        ,"instance IsString PosixString where fromString = PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)"
+        ,"#if defined(mingw32_HOST_OS) || defined(__MINGW32__)"
+        ,"instance IsString OsString where fromString = OsString . WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)"
+        ,"#else"
+        ,"instance IsString OsString where fromString = OsString . PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)"
+        ,"#endif"
         ,"tests :: [(String, Property)]"
         ,"tests ="] ++
         ["    " ++ c ++ "(" ++ show t1 ++ ", " ++ t2 ++ ")" | (c,(t1,t2)) <- zip ("[":repeat ",") tests] ++
@@ -156,17 +169,17 @@ qualify pw str
         isChar' _ = False
         qualifyBS v = case pw of
                         AFP_P
-                          | v == "concat" -> "(PS . SBS." <> v <> " . fmap unPFP)"
-                          | v == "any" -> "(\\f (unPFP -> x) -> SBS." <> v <> " (f . PW) x)"
-                          | v == "isPrefixOf" -> "(\\(unPFP -> x) (unPFP -> y) -> SBS." <> v <> " x y)"
-                          | v == "isSuffixOf" -> "(\\(unPFP -> x) (unPFP -> y) -> SBS." <> v <> " x y)"
-                          | otherwise -> "(SBS." <> v <> " . unPFP)"
+                          | v == "concat" -> "(PS . SBS." <> v <> " . fmap getPosixString)"
+                          | v == "any" -> "(\\f (getPosixString -> x) -> SBS." <> v <> " (f . PW) x)"
+                          | v == "isPrefixOf" -> "(\\(getPosixString -> x) (getPosixString -> y) -> SBS." <> v <> " x y)"
+                          | v == "isSuffixOf" -> "(\\(getPosixString -> x) (getPosixString -> y) -> SBS." <> v <> " x y)"
+                          | otherwise -> "(SBS." <> v <> " . getPosixString)"
                         AFP_W
-                          | v == "concat" -> "(WS . SBS16." <> v <> " . fmap unWFP)"
-                          | v == "any" -> "(\\f (unWFP -> x) -> SBS16." <> v <> " (f . WW) x)"
-                          | v == "isPrefixOf" -> "(\\(unWFP -> x) (unWFP -> y) -> SBS16." <> v <> " x y)"
-                          | v == "isSuffixOf" -> "(\\(unWFP -> x) (unWFP -> y) -> SBS16." <> v <> " x y)"
-                          | otherwise -> "(SBS16." <> v <> " . unWFP)"
+                          | v == "concat" -> "(WS . SBS16." <> v <> " . fmap getWindowsString)"
+                          | v == "any" -> "(\\f (getWindowsString -> x) -> SBS16." <> v <> " (f . WW) x)"
+                          | v == "isPrefixOf" -> "(\\(getWindowsString -> x) (getWindowsString -> y) -> SBS16." <> v <> " x y)"
+                          | v == "isSuffixOf" -> "(\\(getWindowsString -> x) (getWindowsString -> y) -> SBS16." <> v <> " x y)"
+                          | otherwise -> "(SBS16." <> v <> " . getWindowsString)"
                         _ -> v
 #endif
 

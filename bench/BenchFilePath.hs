@@ -256,8 +256,8 @@ main = do
       , ("packPlatformString (posix)"         , nf APF.packPlatformString (APF.unpackPlatformString posixPathAFPP))
       , ("packPlatformString (windows)"       , nf AWF.packPlatformString (AWF.unpackPlatformString windowsPathAFPP))
 
-      , ("bytesToPlatformString (posix)"      , nf (OSP.bytesToPlatformString @Maybe) (SBS.fromShort . OST.unPFP $ posixPathAFPP))
-      , ("bytesToPlatformString (windows)"    , nf (WSP.bytesToPlatformString @Maybe) (SBS.fromShort . OST.unWFP $ windowsPathAFPP))
+      , ("bytesToPlatformString (posix)"      , nf (OSP.bytesToPlatformString @Maybe) (SBS.fromShort . OST.getPosixString $ posixPathAFPP))
+      , ("bytesToPlatformString (windows)"    , nf (WSP.bytesToPlatformString @Maybe) (SBS.fromShort . OST.getWindowsString $ windowsPathAFPP))
       ]
       )
     ]

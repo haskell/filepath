@@ -6,8 +6,6 @@
 --     FILEPATH_NAME    = PosixFilePath | WindowsFilePath  | AbstractFilePath
 --     OSSTRING_NAME    = PosixString   | WindowsString    | OsString
 --     WORD_NAME        = PosixChar     | WindowsChar      | OsChar
---     WTOR             = PW            | WW               | OsChar
---     CTOR             = PS            | WS               | OsString
 
 -- For (native) abstract file paths we document both platforms, so people can
 -- understand how their code is compiled no matter what. But for the
@@ -207,7 +205,7 @@ import System.OsString.Internal.Types
 -- > Posix:   pathSeparator ==  '/'
 #endif
 pathSeparator :: WORD_NAME
-pathSeparator = WTOR C.pathSeparator
+pathSeparator = WORD_NAME C.pathSeparator
 
 #ifdef WINDOWS_DOC
 -- | The list of all possible separators.
@@ -227,14 +225,14 @@ pathSeparator = WTOR C.pathSeparator
 -- > pathSeparator `elem` pathSeparators
 #endif
 pathSeparators :: [WORD_NAME]
-pathSeparators = WTOR <$> C.pathSeparators
+pathSeparators = WORD_NAME <$> C.pathSeparators
 
 -- | Rather than using @(== 'pathSeparator')@, use this. Test if something
 --   is a path separator.
 --
 -- > isPathSeparator a == (a `elem` pathSeparators)
 isPathSeparator :: WORD_NAME -> Bool
-isPathSeparator (WTOR w) = C.isPathSeparator w
+isPathSeparator (WORD_NAME w) = C.isPathSeparator w
 
 #ifdef WINDOWS_DOC
 -- | The character that is used to separate the entries in the $PATH environment variable.
@@ -251,27 +249,27 @@ isPathSeparator (WTOR w) = C.isPathSeparator w
 -- > Windows: searchPathSeparator == ';'
 #endif
 searchPathSeparator :: WORD_NAME
-searchPathSeparator = WTOR C.searchPathSeparator
+searchPathSeparator = WORD_NAME C.searchPathSeparator
 
 -- | Is the character a file separator?
 --
 -- > isSearchPathSeparator a == (a == searchPathSeparator)
 isSearchPathSeparator :: WORD_NAME -> Bool
-isSearchPathSeparator (WTOR w) = C.isSearchPathSeparator w
+isSearchPathSeparator (WORD_NAME w) = C.isSearchPathSeparator w
 
 
 -- | File extension character
 --
 -- > extSeparator == '.'
 extSeparator :: WORD_NAME
-extSeparator = WTOR C.extSeparator
+extSeparator = WORD_NAME C.extSeparator
 
 
 -- | Is the character an extension character?
 --
 -- > isExtSeparator a == (a == extSeparator)
 isExtSeparator :: WORD_NAME -> Bool
-isExtSeparator (WTOR w) = C.isExtSeparator w
+isExtSeparator (WORD_NAME w) = C.isExtSeparator w
 
 
 ---------------------------------------------------------------------
@@ -315,7 +313,7 @@ isExtSeparator (WTOR w) = C.isExtSeparator w
 -- > Posix:   splitSearchPath "File1::File2:File3" == ["File1",".","File2","File3"]
 #endif
 splitSearchPath :: OSSTRING_NAME -> [FILEPATH_NAME]
-splitSearchPath (CTOR x) = fmap CTOR . C.splitSearchPath $ x
+splitSearchPath (OSSTRING_NAME x) = fmap OSSTRING_NAME . C.splitSearchPath $ x
 
 
 
@@ -335,7 +333,7 @@ splitSearchPath (CTOR x) = fmap CTOR . C.splitSearchPath $ x
 -- > splitExtension "file/path.txt.bob.fred" == ("file/path.txt.bob",".fred")
 -- > splitExtension "file/path.txt/" == ("file/path.txt/","")
 splitExtension :: FILEPATH_NAME -> (FILEPATH_NAME, OSSTRING_NAME)
-splitExtension (CTOR x) = bimap CTOR CTOR $ C.splitExtension x
+splitExtension (OSSTRING_NAME x) = bimap OSSTRING_NAME OSSTRING_NAME $ C.splitExtension x
 
 
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
@@ -345,7 +343,7 @@ splitExtension (CTOR x) = bimap CTOR CTOR $ C.splitExtension x
 -- > Valid x => takeExtension (addExtension x "ext") == ".ext"
 -- > Valid x => takeExtension (replaceExtension x "ext") == ".ext"
 takeExtension :: FILEPATH_NAME -> OSSTRING_NAME
-takeExtension (CTOR x) = CTOR $ C.takeExtension x
+takeExtension (OSSTRING_NAME x) = OSSTRING_NAME $ C.takeExtension x
 
 
 -- | Remove the current extension and add another, equivalent to 'replaceExtension'.
@@ -367,7 +365,7 @@ takeExtension (CTOR x) = CTOR $ C.takeExtension x
 -- > replaceExtension "file.fred.bob" "txt" == "file.fred.txt"
 -- > replaceExtension x y == addExtension (dropExtension x) y
 replaceExtension :: FILEPATH_NAME -> OSSTRING_NAME -> FILEPATH_NAME
-replaceExtension (CTOR path) (CTOR ext) = CTOR (C.replaceExtension path ext)
+replaceExtension (OSSTRING_NAME path) (OSSTRING_NAME ext) = OSSTRING_NAME (C.replaceExtension path ext)
 
 
 -- | Add an extension, even if there is already one there, equivalent to 'addExtension'.
@@ -382,7 +380,7 @@ replaceExtension (CTOR path) (CTOR ext) = CTOR (C.replaceExtension path ext)
 -- > dropExtension "/directory/path.ext" == "/directory/path"
 -- > dropExtension x == fst (splitExtension x)
 dropExtension :: FILEPATH_NAME -> FILEPATH_NAME
-dropExtension (CTOR x) = CTOR $ C.dropExtension x
+dropExtension (OSSTRING_NAME x) = OSSTRING_NAME $ C.dropExtension x
 
 
 -- | Add an extension, even if there is already one there, equivalent to '<.>'.
@@ -430,7 +428,7 @@ dropExtension (CTOR x) = CTOR $ C.dropExtension x
 -- > Windows: addExtension "\\\\share" ".txt" == "\\\\share\\.txt"
 #endif
 addExtension :: FILEPATH_NAME -> OSSTRING_NAME -> FILEPATH_NAME
-addExtension (CTOR bs) (CTOR ext) = CTOR $ C.addExtension bs ext
+addExtension (OSSTRING_NAME bs) (OSSTRING_NAME ext) = OSSTRING_NAME $ C.addExtension bs ext
 
 
 -- | Does the given filename have an extension?
@@ -439,7 +437,7 @@ addExtension (CTOR bs) (CTOR ext) = CTOR $ C.addExtension bs ext
 -- > hasExtension "/directory/path" == False
 -- > null (takeExtension x) == not (hasExtension x)
 hasExtension :: FILEPATH_NAME -> Bool
-hasExtension (CTOR x) = C.hasExtension x
+hasExtension (OSSTRING_NAME x) = C.hasExtension x
 
 -- | Does the given filename have the specified extension?
 --
@@ -450,7 +448,7 @@ hasExtension (CTOR x) = C.hasExtension x
 -- > "png" `isExtensionOf` "/directory/file.png.jpg" == False
 -- > "csv/table.csv" `isExtensionOf` "/data/csv/table.csv" == False
 isExtensionOf :: OSSTRING_NAME -> FILEPATH_NAME -> Bool
-isExtensionOf (CTOR x) (CTOR y) = C.isExtensionOf x y
+isExtensionOf (OSSTRING_NAME x) (OSSTRING_NAME y) = C.isExtensionOf x y
 
 -- | Drop the given extension from a filepath, and the @\".\"@ preceding it.
 --   Returns 'Nothing' if the filepath does not have the given extension, or
@@ -469,7 +467,7 @@ isExtensionOf (CTOR x) (CTOR y) = C.isExtensionOf x y
 -- > stripExtension "bar"  "foobar"   == Nothing
 -- > stripExtension ""     x          == Just x
 stripExtension :: OSSTRING_NAME -> FILEPATH_NAME -> Maybe FILEPATH_NAME
-stripExtension (CTOR bs) (CTOR x) = CTOR <$> C.stripExtension bs x
+stripExtension (OSSTRING_NAME bs) (OSSTRING_NAME x) = OSSTRING_NAME <$> C.stripExtension bs x
 
 -- | Split on all extensions.
 --
@@ -479,7 +477,7 @@ stripExtension (CTOR bs) (CTOR x) = CTOR <$> C.stripExtension bs x
 -- > Valid x => uncurry addExtension (splitExtensions x) == x
 -- > splitExtensions "file.tar.gz" == ("file",".tar.gz")
 splitExtensions :: FILEPATH_NAME -> (FILEPATH_NAME, OSSTRING_NAME)
-splitExtensions (CTOR x) = bimap CTOR CTOR $ C.splitExtensions x
+splitExtensions (OSSTRING_NAME x) = bimap OSSTRING_NAME OSSTRING_NAME $ C.splitExtensions x
 
 
 -- | Drop all extensions.
@@ -489,7 +487,7 @@ splitExtensions (CTOR x) = bimap CTOR CTOR $ C.splitExtensions x
 -- > not $ hasExtension $ dropExtensions x
 -- > not $ any isExtSeparator $ takeFileName $ dropExtensions x
 dropExtensions :: FILEPATH_NAME -> FILEPATH_NAME
-dropExtensions (CTOR x) = CTOR $ C.dropExtensions x
+dropExtensions (OSSTRING_NAME x) = OSSTRING_NAME $ C.dropExtensions x
 
 
 -- | Get all extensions.
@@ -497,7 +495,7 @@ dropExtensions (CTOR x) = CTOR $ C.dropExtensions x
 -- > takeExtensions "/directory/path.ext" == ".ext"
 -- > takeExtensions "file.tar.gz" == ".tar.gz"
 takeExtensions :: FILEPATH_NAME -> OSSTRING_NAME
-takeExtensions (CTOR x) = CTOR $ C.takeExtensions x
+takeExtensions (OSSTRING_NAME x) = OSSTRING_NAME $ C.takeExtensions x
 
 -- | Replace all extensions of a file with a new extension. Note
 --   that 'replaceExtension' and 'addExtension' both work for adding
@@ -507,7 +505,7 @@ takeExtensions (CTOR x) = CTOR $ C.takeExtensions x
 -- > replaceExtensions "file.fred.bob" "txt" == "file.txt"
 -- > replaceExtensions "file.fred.bob" "tar.gz" == "file.tar.gz"
 replaceExtensions :: FILEPATH_NAME -> OSSTRING_NAME -> FILEPATH_NAME
-replaceExtensions (CTOR x) (CTOR y) = CTOR $ C.replaceExtensions x y
+replaceExtensions (OSSTRING_NAME x) (OSSTRING_NAME y) = OSSTRING_NAME $ C.replaceExtensions x y
 
 
 ------------------------
@@ -556,7 +554,7 @@ replaceExtensions (CTOR x) (CTOR y) = CTOR $ C.replaceExtensions x y
 -- > Posix:   splitDrive "file" == ("","file")
 #endif
 splitDrive :: FILEPATH_NAME -> (FILEPATH_NAME, FILEPATH_NAME)
-splitDrive (CTOR p) = bimap CTOR CTOR $ C.splitDrive p
+splitDrive (OSSTRING_NAME p) = bimap OSSTRING_NAME OSSTRING_NAME $ C.splitDrive p
 
 
 -- | Join a drive and the rest of the path.
@@ -589,21 +587,21 @@ splitDrive (CTOR p) = bimap CTOR CTOR $ C.splitDrive p
 -- > Windows: joinDrive "/:" "foo" == "/:\\foo"
 #endif
 joinDrive :: FILEPATH_NAME -> FILEPATH_NAME -> FILEPATH_NAME
-joinDrive (CTOR a) (CTOR b) = CTOR $ C.joinDrive a b
+joinDrive (OSSTRING_NAME a) (OSSTRING_NAME b) = OSSTRING_NAME $ C.joinDrive a b
 
 
 -- | Get the drive from a filepath.
 --
 -- > takeDrive x == fst (splitDrive x)
 takeDrive :: FILEPATH_NAME -> FILEPATH_NAME
-takeDrive (CTOR x) = CTOR $ C.takeDrive x
+takeDrive (OSSTRING_NAME x) = OSSTRING_NAME $ C.takeDrive x
 
 
 -- | Delete the drive, if it exists.
 --
 -- > dropDrive x == snd (splitDrive x)
 dropDrive :: FILEPATH_NAME -> FILEPATH_NAME
-dropDrive (CTOR x) = CTOR $ C.dropDrive x
+dropDrive (OSSTRING_NAME x) = OSSTRING_NAME $ C.dropDrive x
 
 
 #ifdef WINDOWS_DOC
@@ -635,7 +633,7 @@ dropDrive (CTOR x) = CTOR $ C.dropDrive x
 --
 #endif
 hasDrive :: FILEPATH_NAME -> Bool
-hasDrive (CTOR x) = C.hasDrive x
+hasDrive (OSSTRING_NAME x) = C.hasDrive x
 
 
 #ifdef WINDOWS_DOC
@@ -660,7 +658,7 @@ hasDrive (CTOR x) = C.hasDrive x
 -- >          isDrive "" == False
 #endif
 isDrive :: FILEPATH_NAME -> Bool
-isDrive (CTOR x) = C.isDrive x
+isDrive (OSSTRING_NAME x) = C.isDrive x
 
 
 ---------------------------------------------------------------------
@@ -702,7 +700,7 @@ isDrive (CTOR x) = C.isDrive x
 -- > Windows: splitFileName "c:" == ("c:","")
 #endif
 splitFileName :: FILEPATH_NAME -> (FILEPATH_NAME, FILEPATH_NAME)
-splitFileName (CTOR x) = bimap CTOR CTOR $ C.splitFileName x
+splitFileName (OSSTRING_NAME x) = bimap OSSTRING_NAME OSSTRING_NAME $ C.splitFileName x
 
 
 -- | Set the filename.
@@ -710,7 +708,7 @@ splitFileName (CTOR x) = bimap CTOR CTOR $ C.splitFileName x
 -- > replaceFileName "/directory/other.txt" "file.ext" == "/directory/file.ext"
 -- > Valid x => replaceFileName x (takeFileName x) == x
 replaceFileName :: FILEPATH_NAME -> OSSTRING_NAME -> FILEPATH_NAME
-replaceFileName (CTOR x) (CTOR y) = CTOR $ C.replaceFileName x y
+replaceFileName (OSSTRING_NAME x) (OSSTRING_NAME y) = OSSTRING_NAME $ C.replaceFileName x y
 
 
 -- | Drop the filename. Unlike 'takeDirectory', this function will leave
@@ -719,7 +717,7 @@ replaceFileName (CTOR x) (CTOR y) = CTOR $ C.replaceFileName x y
 -- > dropFileName "/directory/file.ext" == "/directory/"
 -- > dropFileName x == fst (splitFileName x)
 dropFileName :: FILEPATH_NAME -> FILEPATH_NAME
-dropFileName (CTOR x) = CTOR $ C.dropFileName x
+dropFileName (OSSTRING_NAME x) = OSSTRING_NAME $ C.dropFileName x
 
 
 -- | Get the file name.
@@ -732,7 +730,7 @@ dropFileName (CTOR x) = CTOR $ C.dropFileName x
 -- > Valid x => takeFileName (x </> "fred") == "fred"
 -- > Valid x => isRelative (takeFileName x)
 takeFileName :: FILEPATH_NAME -> FILEPATH_NAME
-takeFileName (CTOR x) = CTOR $ C.takeFileName x
+takeFileName (OSSTRING_NAME x) = OSSTRING_NAME $ C.takeFileName x
 
 
 -- | Get the base name, without an extension or path.
@@ -745,7 +743,7 @@ takeFileName (CTOR x) = CTOR $ C.takeFileName x
 -- > takeBaseName (addTrailingPathSeparator x) == ""
 -- > takeBaseName "file/file.tar.gz" == "file.tar"
 takeBaseName :: FILEPATH_NAME -> FILEPATH_NAME
-takeBaseName (CTOR x) = CTOR $ C.takeBaseName x
+takeBaseName (OSSTRING_NAME x) = OSSTRING_NAME $ C.takeBaseName x
 
 
 -- | Set the base name.
@@ -756,7 +754,7 @@ takeBaseName (CTOR x) = CTOR $ C.takeBaseName x
 -- > replaceBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
 -- > Valid x => replaceBaseName x (takeBaseName x) == x
 replaceBaseName :: FILEPATH_NAME -> OSSTRING_NAME -> FILEPATH_NAME
-replaceBaseName (CTOR path) (CTOR name) = CTOR $ C.replaceBaseName path name
+replaceBaseName (OSSTRING_NAME path) (OSSTRING_NAME name) = OSSTRING_NAME $ C.replaceBaseName path name
 
 
 -- | Is an item either a directory or the last character a path separator?
@@ -764,7 +762,7 @@ replaceBaseName (CTOR path) (CTOR name) = CTOR $ C.replaceBaseName path name
 -- > hasTrailingPathSeparator "test" == False
 -- > hasTrailingPathSeparator "test/" == True
 hasTrailingPathSeparator :: FILEPATH_NAME -> Bool
-hasTrailingPathSeparator (CTOR x) = C.hasTrailingPathSeparator x
+hasTrailingPathSeparator (OSSTRING_NAME x) = C.hasTrailingPathSeparator x
 
 
 #ifdef WINDOWS_DOC
@@ -786,7 +784,7 @@ hasTrailingPathSeparator (CTOR x) = C.hasTrailingPathSeparator x
 -- > Posix:    addTrailingPathSeparator "test/rest" == "test/rest/"
 #endif
 addTrailingPathSeparator :: FILEPATH_NAME -> FILEPATH_NAME
-addTrailingPathSeparator (CTOR bs) = CTOR $ C.addTrailingPathSeparator bs
+addTrailingPathSeparator (OSSTRING_NAME bs) = OSSTRING_NAME $ C.addTrailingPathSeparator bs
 
 
 #ifdef WINDOWS_DOC
@@ -810,7 +808,7 @@ addTrailingPathSeparator (CTOR bs) = CTOR $ C.addTrailingPathSeparator bs
 -- > Posix:    not (hasTrailingPathSeparator (dropTrailingPathSeparator x)) || isDrive x
 #endif
 dropTrailingPathSeparator :: FILEPATH_NAME -> FILEPATH_NAME
-dropTrailingPathSeparator (CTOR x) = CTOR $ C.dropTrailingPathSeparator x
+dropTrailingPathSeparator (OSSTRING_NAME x) = OSSTRING_NAME $ C.dropTrailingPathSeparator x
 
 
 #ifdef WINDOWS_DOC
@@ -854,7 +852,7 @@ dropTrailingPathSeparator (CTOR x) = CTOR $ C.dropTrailingPathSeparator x
 -- > Windows:  takeDirectory "C:\\" == "C:\\"
 #endif
 takeDirectory :: FILEPATH_NAME -> FILEPATH_NAME
-takeDirectory (CTOR x) = CTOR $ C.takeDirectory x
+takeDirectory (OSSTRING_NAME x) = OSSTRING_NAME $ C.takeDirectory x
 
 
 -- | Set the directory, keeping the filename the same.
@@ -862,12 +860,12 @@ takeDirectory (CTOR x) = CTOR $ C.takeDirectory x
 -- > replaceDirectory "root/file.ext" "/directory/" == "/directory/file.ext"
 -- > Valid x => replaceDirectory x (takeDirectory x) `equalFilePath` x
 replaceDirectory :: FILEPATH_NAME -> FILEPATH_NAME -> FILEPATH_NAME
-replaceDirectory (CTOR file) (CTOR dir) = CTOR $ C.replaceDirectory file dir
+replaceDirectory (OSSTRING_NAME file) (OSSTRING_NAME dir) = OSSTRING_NAME $ C.replaceDirectory file dir
 
 
 -- | An alias for '</>'.
 combine :: FILEPATH_NAME -> FILEPATH_NAME -> FILEPATH_NAME
-combine (CTOR a) (CTOR b) = CTOR $ C.combine a b
+combine (OSSTRING_NAME a) (OSSTRING_NAME b) = OSSTRING_NAME $ C.combine a b
 
 #ifdef WINDOWS_DOC
 -- | Combine two paths with a path separator.
@@ -1001,7 +999,7 @@ combine (CTOR a) (CTOR b) = CTOR $ C.combine a b
 -- > Posix:   splitPath "/file/test" == ["/","file/","test"]
 #endif
 splitPath :: FILEPATH_NAME -> [FILEPATH_NAME]
-splitPath (CTOR bs) = CTOR <$> C.splitPath bs
+splitPath (OSSTRING_NAME bs) = OSSTRING_NAME <$> C.splitPath bs
 
 #ifdef WINDOWS_DOC
 -- | Just as 'splitPath', but don't add the trailing slashes to each element.
@@ -1036,7 +1034,7 @@ splitPath (CTOR bs) = CTOR <$> C.splitPath bs
 -- >          splitDirectories "/test///file" == ["/","test","file"]
 #endif
 splitDirectories :: FILEPATH_NAME -> [FILEPATH_NAME]
-splitDirectories (CTOR x) = CTOR <$> C.splitDirectories x
+splitDirectories (OSSTRING_NAME x) = OSSTRING_NAME <$> C.splitDirectories x
 
 #ifdef WINDOWS_DOC
 -- | Join path elements back together.
@@ -1063,7 +1061,7 @@ splitDirectories (CTOR x) = CTOR <$> C.splitDirectories x
 -- > Posix: joinPath ["test","file","path"] == "test/file/path"
 #endif
 joinPath :: [FILEPATH_NAME] -> FILEPATH_NAME
-joinPath = foldr (</>) (CTOR mempty)
+joinPath = foldr (</>) (OSSTRING_NAME mempty)
 
 
 
@@ -1124,7 +1122,7 @@ joinPath = foldr (</>) (CTOR mempty)
 -- > Windows: not (equalFilePath "C:" "C:/")
 #endif
 equalFilePath :: FILEPATH_NAME -> FILEPATH_NAME -> Bool
-equalFilePath (CTOR p1) (CTOR p2) = C.equalFilePath p1 p2
+equalFilePath (OSSTRING_NAME p1) (OSSTRING_NAME p2) = C.equalFilePath p1 p2
 
 #ifdef WINDOWS_DOC
 -- | Contract a filename, based on a relative path. Note that the resulting path
@@ -1191,7 +1189,7 @@ equalFilePath (CTOR p1) (CTOR p2) = C.equalFilePath p1 p2
 -- > Posix:   makeRelative "some/path" "some/path/a/b/c" == "a/b/c"
 #endif
 makeRelative :: FILEPATH_NAME -> FILEPATH_NAME -> FILEPATH_NAME
-makeRelative (CTOR root) (CTOR path) = CTOR $ C.makeRelative root path
+makeRelative (OSSTRING_NAME root) (OSSTRING_NAME path) = OSSTRING_NAME $ C.makeRelative root path
 
 #ifdef WINDOWS_DOC
 -- | Normalise a file
@@ -1273,7 +1271,7 @@ makeRelative (CTOR root) (CTOR path) = CTOR $ C.makeRelative root path
 -- > Posix:   normalise "//home" == "/home"
 #endif
 normalise :: FILEPATH_NAME -> FILEPATH_NAME
-normalise (CTOR filepath) = CTOR $ C.normalise filepath
+normalise (OSSTRING_NAME filepath) = OSSTRING_NAME $ C.normalise filepath
 
 
 #ifdef WINDOWS_DOC
@@ -1327,7 +1325,7 @@ normalise (CTOR filepath) = CTOR $ C.normalise filepath
 -- > Windows: isValid " nul.txt" == True
 #endif
 isValid :: FILEPATH_NAME -> Bool
-isValid (CTOR filepath) = C.isValid filepath
+isValid (OSSTRING_NAME filepath) = C.isValid filepath
 
 
 #ifdef WINDOWS_DOC
@@ -1373,7 +1371,7 @@ isValid (CTOR filepath) = C.isValid filepath
 -- > Windows: makeValid "nul .txt" == "nul _.txt"
 #endif
 makeValid :: FILEPATH_NAME -> FILEPATH_NAME
-makeValid (CTOR path) = CTOR $ C.makeValid path
+makeValid (OSSTRING_NAME path) = OSSTRING_NAME $ C.makeValid path
 
 
 #ifdef WINDOWS_DOC
@@ -1427,11 +1425,11 @@ makeValid (CTOR path) = CTOR $ C.makeValid path
 -- * "You cannot use the "\\?\" prefix with a relative path."
 #endif
 isRelative :: FILEPATH_NAME -> Bool
-isRelative (CTOR x) = C.isRelative x
+isRelative (OSSTRING_NAME x) = C.isRelative x
 
 
 -- | @not . 'isRelative'@
 --
 -- > isAbsolute x == not (isRelative x)
 isAbsolute :: FILEPATH_NAME -> Bool
-isAbsolute (CTOR x) = C.isAbsolute x
+isAbsolute (OSSTRING_NAME x) = C.isAbsolute x
