@@ -3,13 +3,19 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module TestGen(tests) where
 import TestUtil
 #if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup
 #endif
 import Prelude as P
+import Data.String
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
+import GHC.IO.Encoding.UTF16 ( mkUTF16le )
+import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.OsString.Internal.Types
+import System.AbstractFilePath.Encoding.Internal
 import qualified Data.Char as C
 import qualified System.AbstractFilePath.Data.ByteString.Short as SBS
 import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as SBS16
@@ -17,6 +23,13 @@ import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 import qualified System.AbstractFilePath.Windows as AFP_W
 import qualified System.AbstractFilePath.Posix as AFP_P
+instance IsString WindowsString where fromString = WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
+instance IsString PosixString where fromString = PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+instance IsString OsString where fromString = OsString . WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
+#else
+instance IsString OsString where fromString = OsString . PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
+#endif
 tests :: [(String, Property)]
 tests =
     [("W.pathSeparator == '\\\\'", property $ W.pathSeparator == '\\')

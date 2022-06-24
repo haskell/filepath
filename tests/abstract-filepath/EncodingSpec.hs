@@ -7,7 +7,7 @@ module EncodingSpec where
 import Data.ByteString ( ByteString )
 import qualified Data.ByteString as BS
 
-import Arbitrary ()
+import Arbitrary
 import Test.QuickCheck
 
 import Data.Either ( isRight )
@@ -55,10 +55,10 @@ tests =
 
   , ("can decode arbitrary strings through utf-8 (with RoundtripFailure)",
      property $
-      \str ->
+      \(NonNullSurrogateString str) ->
         let encoded = encode (mkUTF8 RoundtripFailure) str
             decoded = decode (mkUTF8 RoundtripFailure) =<< encoded
-        in (either (const 0) length decoded, decoded) === (length str, Right str))
+        in expectFailure $ (either (const 0) length decoded, decoded) === (length str, Right str))
 
   , ("utf-8 roundtrip encode cannot deal with some surrogates",
      property $
