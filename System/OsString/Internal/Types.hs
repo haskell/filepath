@@ -65,8 +65,8 @@ pattern WS { unWS } <- WindowsString unWS where
 
 
 instance Lift WindowsString where
-  lift (WS bs)
-    = [| WS (BS.pack $(lift $ BS.unpack bs)) :: WindowsString |]
+  lift (WindowsString bs)
+    = [| WindowsString (BS.pack $(lift $ BS.unpack bs)) :: WindowsString |]
 #if MIN_VERSION_template_haskell(2,17,0)
   liftTyped = TH.unsafeCodeCoerce . TH.lift
 #elif MIN_VERSION_template_haskell(2,16,0)
@@ -85,8 +85,8 @@ pattern PS { unPS } <- PosixString unPS where
 {-# COMPLETE PS #-}
 
 instance Lift PosixString where
-  lift (PS bs)
-    = [| PS (BS.pack $(lift $ BS.unpack bs)) :: PosixString |]
+  lift (PosixString bs)
+    = [| PosixString (BS.pack $(lift $ BS.unpack bs)) :: PosixString |]
 #if MIN_VERSION_template_haskell(2,17,0)
   liftTyped = TH.unsafeCodeCoerce . TH.lift
 #elif MIN_VERSION_template_haskell(2,16,0)
@@ -149,31 +149,31 @@ instance Ord OsString where
 -- as '(</>)'.
 instance Monoid OsString where
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-    mempty      = OsString (WS BS.empty)
+    mempty      = OsString (WindowsString BS.empty)
 #if MIN_VERSION_base(4,16,0)
     mappend = (<>)
 #else
-    mappend (OsString (WS a)) (OsString (WS b))
-      = OsString (WS (mappend a b))
+    mappend (OsString (WindowsString a)) (OsString (WindowsString b))
+      = OsString (WindowsString (mappend a b))
 #endif
 #else
-    mempty      = OsString (PS BS.empty)
+    mempty      = OsString (PosixString BS.empty)
 #if MIN_VERSION_base(4,16,0)
     mappend = (<>)
 #else
-    mappend (OsString (PS a)) (OsString (PS b))
-      = OsString (PS (mappend a b))
+    mappend (OsString (PosixString a)) (OsString (PosixString b))
+      = OsString (PosixString (mappend a b))
 #endif
 #endif
 #if MIN_VERSION_base(4,11,0)
 instance Semigroup OsString where
 #if MIN_VERSION_base(4,16,0)
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-    (<>) (OsString (WS a)) (OsString (WS b))
-      = OsString (WS (mappend a b))
+    (<>) (OsString (WindowsString a)) (OsString (WindowsString b))
+      = OsString (WindowsString (mappend a b))
 #else
-    (<>) (OsString (PS a)) (OsString (PS b))
-      = OsString (PS (mappend a b))
+    (<>) (OsString (PosixString a)) (OsString (PosixString b))
+      = OsString (PosixString (mappend a b))
 #endif
 #else
     (<>) = mappend
@@ -183,11 +183,11 @@ instance Semigroup OsString where
 
 instance Lift OsString where
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-  lift (OsString (WS bs))
-    = [| OsString (WS (BS.pack $(lift $ BS.unpack bs))) :: OsString |]
+  lift (OsString (WindowsString bs))
+    = [| OsString (WindowsString (BS.pack $(lift $ BS.unpack bs))) :: OsString |]
 #else
-  lift (OsString (PS bs))
-    = [| OsString (PS (BS.pack $(lift $ BS.unpack bs))) :: OsString |]
+  lift (OsString (PosixString bs))
+    = [| OsString (PosixString (BS.pack $(lift $ BS.unpack bs))) :: OsString |]
 #endif
 #if MIN_VERSION_template_haskell(2,17,0)
   liftTyped = TH.unsafeCodeCoerce . TH.lift

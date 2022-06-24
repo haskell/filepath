@@ -177,8 +177,8 @@ unsafeFromChar = OsChar . PF.unsafeFromChar
 -- | Converts back to a unicode codepoint (total).
 toChar :: OsChar -> Char
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-toChar (OsChar (WW w)) = chr $ fromIntegral w
+toChar (OsChar (WindowsChar w)) = chr $ fromIntegral w
 #else
-toChar (OsChar (PW w)) = chr $ fromIntegral w
+toChar (OsChar (PosixChar w)) = chr $ fromIntegral w
 #endif
 

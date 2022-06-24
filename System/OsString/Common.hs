@@ -48,9 +48,9 @@ where
 
 import System.OsString.Internal.Types (
 #ifdef WINDOWS
-  WindowsString(..), WindowsChar(..), pattern WW, pattern WS
+  WindowsString(..), WindowsChar(..)
 #else
-  PosixString(..), PosixChar(..), pattern PW, pattern PS
+  PosixString(..), PosixChar(..)
 #endif
   )
 
@@ -117,10 +117,10 @@ toPlatformStringEnc :: TextEncoding
                     -> Either EncodingException PLATFORM_STRING
 toPlatformStringEnc enc str = unsafePerformIO $ do
 #ifdef WINDOWS
-  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WS <$> BS8.packCStringLen cstr
+  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WindowsString <$> BS8.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
-  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> PS <$> BS.packCStringLen cstr
+  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> PosixString <$> BS.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
 
@@ -142,9 +142,9 @@ toPlatformStringEnc enc str = unsafePerformIO $ do
 #endif
 toPlatformStringFS :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformStringFS = pure . WS . encodeWithBaseWindows
+toPlatformStringFS = pure . WindowsString . encodeWithBaseWindows
 #else
-toPlatformStringFS = fmap PS . encodeWithBasePosix
+toPlatformStringFS = fmap PosixString . encodeWithBasePosix
 #endif
 
 
@@ -176,11 +176,11 @@ fromPlatformStringEnc :: TextEncoding
                       -> PLATFORM_STRING
                       -> Either EncodingException String
 #ifdef WINDOWS
-fromPlatformStringEnc winEnc (WS ba) = unsafePerformIO $ do
+fromPlatformStringEnc winEnc (WindowsString ba) = unsafePerformIO $ do
   r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen winEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
-fromPlatformStringEnc unixEnc (PS ba) = unsafePerformIO $ do
+fromPlatformStringEnc unixEnc (PosixString ba) = unsafePerformIO $ do
   r <- try @SomeException $ BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
@@ -204,9 +204,9 @@ fromPlatformStringEnc unixEnc (PS ba) = unsafePerformIO $ do
 #endif
 fromPlatformStringFS :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
-fromPlatformStringFS (WS ba) = pure $ decodeWithBaseWindows ba
+fromPlatformStringFS (WindowsString ba) = pure $ decodeWithBaseWindows ba
 #else
-fromPlatformStringFS (PS ba) = decodeWithBasePosix ba
+fromPlatformStringFS (PosixString ba) = decodeWithBasePosix ba
 #endif
 
 
@@ -227,10 +227,10 @@ bytesToPlatformString :: MonadThrow m
                       -> m PLATFORM_STRING
 #ifdef WINDOWS
 bytesToPlatformString bs =
-  let ws = WS . toShort $ bs
+  let ws = WindowsString . toShort $ bs
   in either throwM (const . pure $ ws) $ fromPlatformStringEnc ucs2le ws
 #else
-bytesToPlatformString = pure . PS . toShort
+bytesToPlatformString = pure . PosixString . toShort
 #endif
 
 
@@ -277,9 +277,9 @@ pstr = qq mkPlatformString
 -- | Unpack a platform string to a list of platform words.
 unpackPlatformString :: PLATFORM_STRING -> [PLATFORM_WORD]
 #ifdef WINDOWS
-unpackPlatformString (WS ba) = WW <$> BS.unpack ba
+unpackPlatformString (WindowsString ba) = WindowsChar <$> BS.unpack ba
 #else
-unpackPlatformString (PS ba) = PW <$> BS.unpack ba
+unpackPlatformString (PosixString ba) = PosixChar <$> BS.unpack ba
 #endif
 
 
@@ -290,26 +290,26 @@ unpackPlatformString (PS ba) = PW <$> BS.unpack ba
 -- you want, because it will truncate unicode code points.
 packPlatformString :: [PLATFORM_WORD] -> PLATFORM_STRING
 #ifdef WINDOWS
-packPlatformString = WS . BS.pack . fmap (\(WW w) -> w)
+packPlatformString = WindowsString . BS.pack . fmap (\(WindowsChar w) -> w)
 #else
-packPlatformString = PS . BS.pack . fmap (\(PW w) -> w)
+packPlatformString = PosixString . BS.pack . fmap (\(PosixChar w) -> w)
 #endif
 
 
 #ifdef WINDOWS
 -- | Truncates to 2 octets.
 unsafeFromChar :: Char -> PLATFORM_WORD
-unsafeFromChar = WW . fromIntegral . fromEnum
+unsafeFromChar = WindowsChar . fromIntegral . fromEnum
 #else
 -- | Truncates to 1 octet.
 unsafeFromChar :: Char -> PLATFORM_WORD
-unsafeFromChar = PW . fromIntegral . fromEnum
+unsafeFromChar = PosixChar . fromIntegral . fromEnum
 #endif
 
 -- | Converts back to a unicode codepoint (total).
 toChar :: PLATFORM_WORD -> Char
 #ifdef WINDOWS
-toChar (WW w) = chr $ fromIntegral w
+toChar (WindowsChar w) = chr $ fromIntegral w
 #else
-toChar (PW w) = chr $ fromIntegral w
+toChar (PosixChar w) = chr $ fromIntegral w
 #endif
