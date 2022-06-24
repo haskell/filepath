@@ -116,7 +116,7 @@ ucs2le_encode
 
 
 -- -----------------------------------------------------------------------------
--- Base encodings
+-- Windows encoding (ripped off from base)
 --
 
 
@@ -127,6 +127,7 @@ ucs2le_encode
 cWcharsToChars :: [Word16] -> [Char]
 cWcharsToChars = map chr . fromUTF16 . map fromIntegral
  where
+  fromUTF16 :: [Int] -> [Int]
   fromUTF16 (c1:c2:wcs)
     | 0xd800 <= c1 && c1 <= 0xdbff && 0xdc00 <= c2 && c2 <= 0xdfff =
       ((c1 - 0xd800)*0x400 + (c2 - 0xdc00) + 0x10000) : fromUTF16 wcs
@@ -136,12 +137,18 @@ cWcharsToChars = map chr . fromUTF16 . map fromIntegral
 charsToCWchars :: [Char] -> [Word16]
 charsToCWchars = foldr (utf16Char . ord) []
  where
+  utf16Char :: Int -> [Word16] -> [Word16]
   utf16Char c wcs
     | c < 0x10000 = fromIntegral c : wcs
     | otherwise   = let c' = c - 0x10000 in
                     fromIntegral (c' `div` 0x400 + 0xd800) :
                     fromIntegral (c' `mod` 0x400 + 0xdc00) : wcs
 
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- FFI
+--
 
 -- | Marshal a Haskell string into a NUL terminated C wide string using
 -- temporary storage.
@@ -174,7 +181,7 @@ peekFilePathLenPosix fp = getFileSystemEncoding >>= \enc -> GHC.peekCStringLen e
 
 
 -- -----------------------------------------------------------------------------
--- Utils
+-- Encoders / decoders
 --
 
 decodeWith :: TextEncoding -> BS8.ShortByteString -> Either EncodingException String
@@ -193,11 +200,16 @@ decodeWithBasePosix ba = BS8.useAsCStringLen ba $ \fp -> peekFilePathLenPosix fp
 encodeWithBasePosix :: String -> IO BS8.ShortByteString
 encodeWithBasePosix str = withFilePathPosix str $ \cstr -> BS8.packCString cstr
 
-decodeWithBaseWindows :: BS16.ShortByteString -> IO String
-decodeWithBaseWindows ba = BS16.useAsCWString ba $ \fp -> peekFilePathWin fp
+decodeWithBaseWindows :: BS16.ShortByteString -> String
+decodeWithBaseWindows = cWcharsToChars . BS16.unpack
 
-encodeWithBaseWindows :: String -> IO BS8.ShortByteString
-encodeWithBaseWindows str = withFilePathWin str $ \cstr -> BS16.packCWString cstr
+encodeWithBaseWindows :: String -> BS8.ShortByteString
+encodeWithBaseWindows = BS16.pack . charsToCWchars
+
+
+-- -----------------------------------------------------------------------------
+-- Types
+--
 
 data EncodingException =
     EncodingError String (Maybe Word8)
@@ -220,6 +232,10 @@ instance Exception EncodingException
 instance NFData EncodingException where
     rnf (EncodingError desc w) = rnf desc `seq` rnf w
 
+
+-- -----------------------------------------------------------------------------
+-- Words
+--
 
 wNUL :: Word16
 wNUL = 0x00

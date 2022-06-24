@@ -10,7 +10,7 @@ import Control.Monad.Catch
     ( MonadThrow )
 import Data.ByteString
     ( ByteString )
-import Data.ByteString.Short
+import System.AbstractFilePath.Data.ByteString.Short
     ( fromShort )
 import Data.Char
 import Language.Haskell.TH
@@ -36,7 +36,7 @@ import qualified System.OsString.Posix as PF
 
 
 
--- | Convert a String.
+-- | Partial unicode friendly encoding.
 --
 -- On windows this encodes as UTF16-LE (strictly), which is a pretty good guess.
 -- On unix this encodes as UTF8 (strictly), which is a good guess.
@@ -73,8 +73,8 @@ toOsStringFS = fmap OsString . toPlatformStringFS
 
 -- | Partial unicode friendly decoding.
 --
--- On windows this decodes as UTF16-LE (which is the expected filename encoding).
--- On unix this decodes as UTF8 (which is a good guess). Note that
+-- On windows this decodes as UTF16-LE (strictly), which is a pretty good guess.
+-- On unix this decodes as UTF8 (strictly), which is a good guess. Note that
 -- filenames on unix are encoding agnostic char arrays.
 --
 -- Throws a 'EncodingException' if decoding fails.

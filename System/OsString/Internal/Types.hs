@@ -4,14 +4,25 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 module System.OsString.Internal.Types
   (
     WindowsString(..)
+  , pattern WS
+  , unWS
   , PosixString(..)
+  , unPS
+  , pattern PS
   , PlatformString
   , WindowsChar(..)
+  , unWW
+  , pattern WW
   , PosixChar(..)
+  , unPW
+  , pattern PW
   , PlatformChar
   , OsString(..)
   , OsChar(..)
@@ -22,8 +33,6 @@ where
 import Control.DeepSeq
 import Data.Data
 import Data.Word
-import GHC.Exts
-    ( IsString (..) )
 import Language.Haskell.TH.Syntax
     ( Lift (..), lift )
 #if !MIN_VERSION_base(4,11,0)
@@ -31,26 +40,29 @@ import Data.Semigroup
 #endif
 import GHC.Generics (Generic)
 
-import qualified Data.ByteString.Short as BS
+import qualified System.AbstractFilePath.Data.ByteString.Short as BS
 #if MIN_VERSION_template_haskell(2,16,0)
 import qualified Language.Haskell.TH.Syntax as TH
 #endif
-import System.AbstractFilePath.Encoding ( encodeWith, decodeWith )
-import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
-import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 
 -- Using unpinned bytearrays to avoid Heap fragmentation and
 -- which are reasonably cheap to pass to FFI calls
 -- wrapped with typeclass-friendly types allowing to avoid CPP
--- 
+--
 -- Note that, while unpinned bytearrays incur a memcpy on each
 -- FFI call, this overhead is generally much preferable to
 -- the memory fragmentation of pinned bytearrays
 
 -- | Commonly used windows string as UTF16 bytes.
-newtype WindowsString = WS { unWFP :: BS.ShortByteString }
-  deriving (Eq, Ord, Semigroup, Monoid, Typeable, Generic, NFData)
+newtype WindowsString = WindowsString { getWindowsString :: BS.ShortByteString }
+  deriving (Eq, Ord, Show, Semigroup, Monoid, Typeable, Generic, NFData)
+
+-- | Just a short bidirectional synonym for 'WindowsString' constructor.
+pattern WS :: BS.ShortByteString -> WindowsString
+pattern WS { unWS } <- WindowsString unWS where
+  WS a = WindowsString a
+{-# COMPLETE WS #-}
+
 
 instance Lift WindowsString where
   lift (WS bs)
@@ -63,8 +75,14 @@ instance Lift WindowsString where
 
 -- | Commonly used Posix string as uninterpreted @char[]@
 -- array.
-newtype PosixString   = PS { unPFP :: BS.ShortByteString }
-  deriving (Eq, Ord, Semigroup, Monoid, Typeable, Generic, NFData)
+newtype PosixString = PosixString { getPosixString :: BS.ShortByteString }
+  deriving (Eq, Ord, Show, Semigroup, Monoid, Typeable, Generic, NFData)
+
+-- | Just a short bidirectional synonym for 'PosixString' constructor.
+pattern PS :: BS.ShortByteString -> PosixString
+pattern PS { unPS } <- PosixString unPS where
+  PS a = PosixString a
+{-# COMPLETE PS #-}
 
 instance Lift PosixString where
   lift (PS bs)
@@ -75,28 +93,6 @@ instance Lift PosixString where
   liftTyped = TH.unsafeTExpCoerce . TH.lift
 #endif
 
--- | Decodes as UTF-16LE.
-instance Show WindowsString where
-  show (WS bs) = ('\"': either (error . show) id (decodeWith (mkUTF16le TransliterateCodingFailure) bs)) <> "\""
-
--- | Encodes as UTF-16LE.
-instance Read WindowsString where
-  readsPrec p str = [ (WS $ either (error . show) id $ encodeWith (mkUTF16le TransliterateCodingFailure) x, y) | (x, y) <- readsPrec p str ]
-
--- | Decodes as UTF-8 and replaces invalid chars with unicode replacement
--- char U+FFFD.
-instance Show PosixString where
-  show (PS bs) = ('\"': either (error . show) id (decodeWith (mkUTF8 TransliterateCodingFailure) bs)) <> "\""
-
--- | Encodes as UTF-8.
-instance Read PosixString where
-  readsPrec p str = [ (PS $ either (error . show) id $ encodeWith (mkUTF8 TransliterateCodingFailure) x, y) | (x, y) <- readsPrec p str ]
-
-instance IsString WindowsString where
-    fromString = WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
-
-instance IsString PosixString where
-    fromString = PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 type PlatformString = WindowsString
@@ -104,10 +100,22 @@ type PlatformString = WindowsString
 type PlatformString = PosixString
 #endif
 
-newtype WindowsChar = WW { unWW :: Word16 }
+newtype WindowsChar = WindowsChar { getWindowsChar :: Word16 }
   deriving (Eq, Ord, Show, Typeable, Generic, NFData)
-newtype PosixChar   = PW { unPW :: Word8 }
+newtype PosixChar   = PosixChar { getPosixChar :: Word8 }
   deriving (Eq, Ord, Show, Typeable, Generic, NFData)
+
+-- | Just a short bidirectional synonym for 'WindowsChar' constructor.
+pattern WW :: Word16 -> WindowsChar
+pattern WW { unWW } <- WindowsChar unWW where
+  WW a = WindowsChar a
+{-# COMPLETE WW #-}
+
+-- | Just a short bidirectional synonym for 'WindowsChar' constructor.
+pattern PW :: Word8 -> PosixChar
+pattern PW { unPW } <- PosixChar unPW where
+  PW a = PosixChar a
+{-# COMPLETE PW #-}
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 type PlatformChar = WindowsChar
@@ -125,8 +133,8 @@ type PlatformChar = PosixChar
 -- The constructor is only exported via "System.OsString.Internal.Types", since
 -- dealing with the internals isn't generally recommended, but supported
 -- in case you need to write platform specific code.
-newtype OsString = OsString PlatformString
-  deriving (Typeable, Generic, NFData)
+newtype OsString = OsString { getOsString :: PlatformString }
+  deriving (Show, Typeable, Generic, NFData)
 
 -- | Byte equality of the internal representation.
 instance Eq OsString where
@@ -136,18 +144,10 @@ instance Eq OsString where
 instance Ord OsString where
   compare (OsString a) (OsString b) = compare a b
 
--- | Encodes as UTF16 on windows and UTF8 on unix.
-instance IsString OsString where 
-#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-    fromString = OsString . WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
-#else
-    fromString = OsString . PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
-#endif
-
 
 -- | \"String-Concatenation\" for 'OsString. This is __not__ the same
 -- as '(</>)'.
-instance Monoid OsString where 
+instance Monoid OsString where
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
     mempty      = OsString (WS BS.empty)
 #if MIN_VERSION_base(4,16,0)
@@ -166,7 +166,7 @@ instance Monoid OsString where
 #endif
 #endif
 #if MIN_VERSION_base(4,11,0)
-instance Semigroup OsString where 
+instance Semigroup OsString where
 #if MIN_VERSION_base(4,16,0)
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
     (<>) (OsString (WS a)) (OsString (WS b))
@@ -195,31 +195,12 @@ instance Lift OsString where
   liftTyped = TH.unsafeTExpCoerce . TH.lift
 #endif
 
--- | Decodes as UTF-16 on windows.
---
--- Decodes as UTF-8 on unix and replaces invalid chars with unicode replacement
--- char U+FFFD.
-instance Show OsString where
-#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-  show (OsString (WS bs)) = ('\"': either (error . show) id (decodeWith (mkUTF16le TransliterateCodingFailure) bs)) <> "\""
-#else
-  show (OsString (PS bs)) = ('\"': either (error . show) id (decodeWith (mkUTF8 TransliterateCodingFailure) bs)) <> "\""
-#endif
-
--- | Encodes as UTF-8 on unix and UTF-16LE on windows.
-instance Read OsString where
-#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-  readsPrec p str = [ (OsString $ WS $ either (error . show) id $ encodeWith (mkUTF16le TransliterateCodingFailure) x, y) | (x, y) <- readsPrec p str ]
-#else
-  readsPrec p str = [ (OsString $ PS $ either (error . show) id $ encodeWith (mkUTF8 TransliterateCodingFailure) x, y) | (x, y) <- readsPrec p str ]
-#endif
-
 
 -- | Newtype representing a code unit.
 --
 -- On Windows, this is restricted to two-octet codepoints 'Word16',
 -- on POSIX one-octet ('Word8').
-newtype OsChar = OsChar PlatformChar
+newtype OsChar = OsChar { getOsChar :: PlatformChar }
   deriving (Show, Typeable, Generic, NFData)
 
 -- | Byte equality of the internal representation.
@@ -229,6 +210,4 @@ instance Eq OsChar where
 -- | Byte ordering of the internal representation.
 instance Ord OsChar where
   compare (OsChar a) (OsChar b) = compare a b
-
-
 

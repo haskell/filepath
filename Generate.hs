@@ -156,17 +156,17 @@ qualify pw str
         isChar' _ = False
         qualifyBS v = case pw of
                         AFP_P
-                          | v == "concat" -> "(PS . SBS." <> v <> " . fmap unPFP)"
-                          | v == "any" -> "(\\f (unPFP -> x) -> SBS." <> v <> " (f . PW) x)"
-                          | v == "isPrefixOf" -> "(\\(unPFP -> x) (unPFP -> y) -> SBS." <> v <> " x y)"
-                          | v == "isSuffixOf" -> "(\\(unPFP -> x) (unPFP -> y) -> SBS." <> v <> " x y)"
-                          | otherwise -> "(SBS." <> v <> " . unPFP)"
+                          | v == "concat" -> "(PS . SBS." <> v <> " . fmap getPosixString)"
+                          | v == "any" -> "(\\f (getPosixString -> x) -> SBS." <> v <> " (f . PW) x)"
+                          | v == "isPrefixOf" -> "(\\(getPosixString -> x) (getPosixString -> y) -> SBS." <> v <> " x y)"
+                          | v == "isSuffixOf" -> "(\\(getPosixString -> x) (getPosixString -> y) -> SBS." <> v <> " x y)"
+                          | otherwise -> "(SBS." <> v <> " . getPosixString)"
                         AFP_W
-                          | v == "concat" -> "(WS . SBS16." <> v <> " . fmap unWFP)"
-                          | v == "any" -> "(\\f (unWFP -> x) -> SBS16." <> v <> " (f . WW) x)"
-                          | v == "isPrefixOf" -> "(\\(unWFP -> x) (unWFP -> y) -> SBS16." <> v <> " x y)"
-                          | v == "isSuffixOf" -> "(\\(unWFP -> x) (unWFP -> y) -> SBS16." <> v <> " x y)"
-                          | otherwise -> "(SBS16." <> v <> " . unWFP)"
+                          | v == "concat" -> "(WS . SBS16." <> v <> " . fmap getWindowsString)"
+                          | v == "any" -> "(\\f (getWindowsString -> x) -> SBS16." <> v <> " (f . WW) x)"
+                          | v == "isPrefixOf" -> "(\\(getWindowsString -> x) (getWindowsString -> y) -> SBS16." <> v <> " x y)"
+                          | v == "isSuffixOf" -> "(\\(getWindowsString -> x) (getWindowsString -> y) -> SBS16." <> v <> " x y)"
+                          | otherwise -> "(SBS16." <> v <> " . getWindowsString)"
                         _ -> v
 #endif
 

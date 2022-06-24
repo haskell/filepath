@@ -46,6 +46,27 @@ tests =
           encoded = encode ucs2le str
           decoded = decode ucs2le =<< encoded
       in decoded === Right str)
+  , ("can roundtrip arbitrary bytes through utf-8 (with RoundtripFailure)",
+     property $
+      \bs ->
+        let decoded = decode (mkUTF8 RoundtripFailure) (BS8.toShort bs)
+            encoded = encode (mkUTF8 RoundtripFailure) =<< decoded
+        in (either (const 0) BS8.length encoded, encoded) === (BS8.length (BS8.toShort bs), Right (BS8.toShort bs)))
+
+  , ("can decode arbitrary strings through utf-8 (with RoundtripFailure)",
+     property $
+      \str ->
+        let encoded = encode (mkUTF8 RoundtripFailure) str
+            decoded = decode (mkUTF8 RoundtripFailure) =<< encoded
+        in (either (const 0) length decoded, decoded) === (length str, Right str))
+
+  , ("utf-8 roundtrip encode cannot deal with some surrogates",
+     property $
+      let str = [toEnum 0xDFF0, toEnum 0xDFF2]
+          encoded = encode (mkUTF8 RoundtripFailure) str
+          decoded = decode (mkUTF8 RoundtripFailure) =<< encoded
+      in decoded === Left "recoverEncode: invalid argument (invalid character)")
+
   , ("cannot roundtrip arbitrary bytes through utf-16 (with RoundtripFailure)",
      property $
       \(padEven -> bs) ->

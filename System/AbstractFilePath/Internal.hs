@@ -25,7 +25,7 @@ import System.AbstractFilePath.Encoding ( EncodingException(..) )
 
 
 
--- | Convert a String.
+-- | Partial unicode friendly encoding.
 --
 -- On windows this encodes as UTF16-LE (strictly), which is a pretty good guess.
 -- On unix this encodes as UTF8 (strictly), which is a good guess.
@@ -103,7 +103,7 @@ bytesToAFP = OS.bytesToOsString
 
 
 mkAbstractFilePath :: ByteString -> Q Exp
-mkAbstractFilePath bs = 
+mkAbstractFilePath bs =
   case bytesToAFP bs of
     Just afp' ->
       if isValid afp'

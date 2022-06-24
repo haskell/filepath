@@ -1,5 +1,6 @@
 {- HLINT ignore "Unused LANGUAGE pragma" -}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE PatternSynonyms #-}
 -- This template expects CPP definitions for:
 --     MODULE_NAME = Posix | Windows
 --     IS_WINDOWS  = False | True
@@ -47,9 +48,9 @@ where
 
 import System.OsString.Internal.Types (
 #ifdef WINDOWS
-  WindowsString(..), WindowsChar(..)
+  WindowsString(..), WindowsChar(..), pattern WW, pattern WS
 #else
-  PosixString(..), PosixChar(..)
+  PosixString(..), PosixChar(..), pattern PW, pattern PS
 #endif
   )
 
@@ -91,13 +92,13 @@ import System.AbstractFilePath.Data.ByteString.Short as BS
 
 
 #ifdef WINDOWS_DOC
--- | Convert a String.
+-- | Partial unicode friendly encoding.
 --
 -- This encodes as UTF16-LE (strictly), which is a pretty good guess.
 --
 -- Throws an 'EncodingException' if encoding fails.
 #else
--- | Convert a String.
+-- | Partial unicode friendly encoding.
 --
 -- This encodes as UTF8 (strictly), which is a good guess.
 --
@@ -141,7 +142,7 @@ toPlatformStringEnc enc str = unsafePerformIO $ do
 #endif
 toPlatformStringFS :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformStringFS = fmap WS . encodeWithBaseWindows
+toPlatformStringFS = pure . WS . encodeWithBaseWindows
 #else
 toPlatformStringFS = fmap PS . encodeWithBasePosix
 #endif
@@ -191,7 +192,7 @@ fromPlatformStringEnc unixEnc (PS ba) = unsafePerformIO $ do
 -- Chars in the surrogate range.
 --
 -- The reason this is in IO is because it unifies with the Posix counterpart,
--- which does require IO.
+-- which does require IO. 'unsafePerformIO'/'unsafeDupablePerformIO' are safe, however.
 #else
 -- | This mimics the behavior of the base library when doing filesystem
 -- operations, which uses shady PEP 383 style encoding (based on the current locale,
@@ -203,7 +204,7 @@ fromPlatformStringEnc unixEnc (PS ba) = unsafePerformIO $ do
 #endif
 fromPlatformStringFS :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
-fromPlatformStringFS (WS ba) = decodeWithBaseWindows ba
+fromPlatformStringFS (WS ba) = pure $ decodeWithBaseWindows ba
 #else
 fromPlatformStringFS (PS ba) = decodeWithBasePosix ba
 #endif
