@@ -55,7 +55,10 @@ import qualified Language.Haskell.TH.Syntax as TH
 
 -- | Commonly used windows string as UTF16 bytes.
 newtype WindowsString = WindowsString { getWindowsString :: BS.ShortByteString }
-  deriving (Eq, Ord, Show, Semigroup, Monoid, Typeable, Generic, NFData)
+  deriving (Eq, Ord, Semigroup, Monoid, Typeable, Generic, NFData)
+
+instance Show WindowsString where
+  show (WindowsString ws) = show ws
 
 -- | Just a short bidirectional synonym for 'WindowsString' constructor.
 pattern WS :: BS.ShortByteString -> WindowsString
@@ -76,7 +79,10 @@ instance Lift WindowsString where
 -- | Commonly used Posix string as uninterpreted @char[]@
 -- array.
 newtype PosixString = PosixString { getPosixString :: BS.ShortByteString }
-  deriving (Eq, Ord, Show, Semigroup, Monoid, Typeable, Generic, NFData)
+  deriving (Eq, Ord, Semigroup, Monoid, Typeable, Generic, NFData)
+
+instance Show PosixString where
+  show (PosixString ps) = show ps
 
 -- | Just a short bidirectional synonym for 'PosixString' constructor.
 pattern PS :: BS.ShortByteString -> PosixString
@@ -101,9 +107,16 @@ type PlatformString = PosixString
 #endif
 
 newtype WindowsChar = WindowsChar { getWindowsChar :: Word16 }
-  deriving (Eq, Ord, Show, Typeable, Generic, NFData)
+  deriving (Eq, Ord, Typeable, Generic, NFData)
+
+instance Show WindowsChar where
+  show (WindowsChar wc) = show wc
+
 newtype PosixChar   = PosixChar { getPosixChar :: Word8 }
-  deriving (Eq, Ord, Show, Typeable, Generic, NFData)
+  deriving (Eq, Ord, Typeable, Generic, NFData)
+
+instance Show PosixChar where
+  show (PosixChar pc) = show pc
 
 -- | Just a short bidirectional synonym for 'WindowsChar' constructor.
 pattern WW :: Word16 -> WindowsChar
@@ -134,7 +147,10 @@ type PlatformChar = PosixChar
 -- dealing with the internals isn't generally recommended, but supported
 -- in case you need to write platform specific code.
 newtype OsString = OsString { getOsString :: PlatformString }
-  deriving (Show, Typeable, Generic, NFData)
+  deriving (Typeable, Generic, NFData)
+
+instance Show OsString where
+  show (OsString os) = show os
 
 -- | Byte equality of the internal representation.
 instance Eq OsString where
@@ -201,7 +217,10 @@ instance Lift OsString where
 -- On Windows, this is restricted to two-octet codepoints 'Word16',
 -- on POSIX one-octet ('Word8').
 newtype OsChar = OsChar { getOsChar :: PlatformChar }
-  deriving (Show, Typeable, Generic, NFData)
+  deriving (Typeable, Generic, NFData)
+
+instance Show OsChar where
+  show (OsChar pc) = show pc
 
 -- | Byte equality of the internal representation.
 instance Eq OsChar where
