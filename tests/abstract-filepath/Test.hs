@@ -1,8 +1,8 @@
 module Main (main) where
 
-import qualified AbstractFilePathSpec
+import qualified OsPathSpec
 import qualified EncodingSpec
 import TestUtil
 
 main :: IO ()
-main = runTests (EncodingSpec.tests ++ AbstractFilePathSpec.tests)
+main = runTests (EncodingSpec.tests ++ OsPathSpec.tests)

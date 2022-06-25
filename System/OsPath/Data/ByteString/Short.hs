@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 -- |
--- Module      : System.AbstractFilePath.Data.ByteString.Short
+-- Module      : System.OsPath.Data.ByteString.Short
 -- Copyright   : (c) Duncan Coutts 2012-2013, Julian Ospald 2022
 -- License     : BSD-style
 --
@@ -22,7 +22,7 @@
 --
 -- > import qualified Data.ByteString.Short as B.Short
 --
-module System.AbstractFilePath.Data.ByteString.Short (
+module System.OsPath.Data.ByteString.Short (
 
     -- * The @ShortByteString@ type
 

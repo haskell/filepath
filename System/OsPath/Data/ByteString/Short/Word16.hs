@@ -8,7 +8,7 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fexpose-all-unfoldings #-}
 
 -- |
--- Module      :  System.AbstractFilePath.Data.ByteString.Short.Word16
+-- Module      :  System.OsPath.Data.ByteString.Short.Word16
 -- Copyright   :  © 2022 Julian Ospald
 -- License     :  MIT
 --
@@ -27,7 +27,7 @@
 --
 -- All functions will error out if the input string is not a valid UTF16 stream (uneven number of bytes).
 -- So use this module with caution.
-module System.AbstractFilePath.Data.ByteString.Short.Word16 (
+module System.OsPath.Data.ByteString.Short.Word16 (
     -- * The @ShortByteString@ type and representation
     ShortByteString(..),
 
@@ -142,8 +142,8 @@ module System.AbstractFilePath.Data.ByteString.Short.Word16 (
     useAsCWStringLen
   )
 where
-import System.AbstractFilePath.Data.ByteString.Short ( append, intercalate, concat, stripSuffix, stripPrefix, isInfixOf, isPrefixOf, isSuffixOf, breakSubstring, length, empty, null, ShortByteString(..), fromShort, toShort )
-import System.AbstractFilePath.Data.ByteString.Short.Internal
+import System.OsPath.Data.ByteString.Short ( append, intercalate, concat, stripSuffix, stripPrefix, isInfixOf, isPrefixOf, isSuffixOf, breakSubstring, length, empty, null, ShortByteString(..), fromShort, toShort )
+import System.OsPath.Data.ByteString.Short.Internal
 import Data.Bits
     ( shiftR )
 import Data.Word

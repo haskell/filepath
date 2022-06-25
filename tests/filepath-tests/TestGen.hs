@@ -15,14 +15,14 @@ import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.OsString.Internal.Types
-import System.AbstractFilePath.Encoding.Internal
+import System.OsPath.Encoding.Internal
 import qualified Data.Char as C
-import qualified System.AbstractFilePath.Data.ByteString.Short as SBS
-import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as SBS16
+import qualified System.OsPath.Data.ByteString.Short as SBS
+import qualified System.OsPath.Data.ByteString.Short.Word16 as SBS16
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
-import qualified System.AbstractFilePath.Windows as AFP_W
-import qualified System.AbstractFilePath.Posix as AFP_P
+import qualified System.OsPath.Windows as AFP_W
+import qualified System.OsPath.Posix as AFP_P
 instance IsString WindowsString where fromString = WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
 instance IsString PosixString where fromString = PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)

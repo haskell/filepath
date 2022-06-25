@@ -1,6 +1,6 @@
 cabal-version:      2.2
 name:               filepath
-version:            2.0.0.3
+version:            1.4.99.0
 
 -- NOTE: Don't forget to update ./changelog.md
 license:            BSD-3-Clause
@@ -30,25 +30,25 @@ description:
   .
   1. legacy filepaths: @type FilePath = String@
   .
-  2. abstract filepaths: internally unpinned @ShortByteString@ (platform-dependent encoding)
+  2. operating system abstracted filepaths (@OsPath@): internally unpinned @ShortByteString@ (platform-dependent encoding)
   .
-  It is recommended to use @AbstractFilePath@ when possible, because it is more correct.
+  It is recommended to use @OsPath@ when possible, because it is more correct.
   .
   For each variant there are three main modules:
   .
-  * "System.FilePath.Posix" / "System.AbstractFilePath.Posix" manipulates POSIX\/Linux style @FilePath@ values (with @\/@ as the path separator).
+  * "System.FilePath.Posix" / "System.OsPath.Posix" manipulates POSIX\/Linux style @FilePath@ values (with @\/@ as the path separator).
   .
-  * "System.FilePath.Windows" / "System.AbstractFilePath.Windows" manipulates Windows style @FilePath@ values (with either @\\@ or @\/@ as the path separator, and deals with drives).
+  * "System.FilePath.Windows" / "System.OsPath.Windows" manipulates Windows style @FilePath@ values (with either @\\@ or @\/@ as the path separator, and deals with drives).
   .
-  * "System.FilePath" / "System.AbstractFilePath" for dealing with current platform-specific filepaths
+  * "System.FilePath" / "System.OsPath" for dealing with current platform-specific filepaths
   .
-  "System.OsString" is like "System.AbstractFilePath", but more general purpose. Refer to the documentation of
+  "System.OsString" is like "System.OsPath", but more general purpose. Refer to the documentation of
   those modules for more information.
 
 extra-source-files:
   Generate.hs
   Makefile
-  System/AbstractFilePath/Common.hs
+  System/OsPath/Common.hs
   System/FilePath/Internal.hs
   System/OsString/Common.hs
   tests/bytestring-tests/Properties/Common.hs
@@ -69,18 +69,18 @@ source-repository head
 
 library
   exposed-modules:
-    System.AbstractFilePath
-    System.AbstractFilePath.Data.ByteString.Short
-    System.AbstractFilePath.Data.ByteString.Short.Internal
-    System.AbstractFilePath.Data.ByteString.Short.Word16
-    System.AbstractFilePath.Encoding
-    System.AbstractFilePath.Encoding.Internal
-    System.AbstractFilePath.Internal
-    System.AbstractFilePath.Posix
-    System.AbstractFilePath.Posix.Internal
-    System.AbstractFilePath.Types
-    System.AbstractFilePath.Windows
-    System.AbstractFilePath.Windows.Internal
+    System.OsPath
+    System.OsPath.Data.ByteString.Short
+    System.OsPath.Data.ByteString.Short.Internal
+    System.OsPath.Data.ByteString.Short.Word16
+    System.OsPath.Encoding
+    System.OsPath.Encoding.Internal
+    System.OsPath.Internal
+    System.OsPath.Posix
+    System.OsPath.Posix.Internal
+    System.OsPath.Types
+    System.OsPath.Windows
+    System.OsPath.Windows.Internal
     System.FilePath
     System.FilePath.Posix
     System.FilePath.Windows
@@ -170,7 +170,7 @@ test-suite abstract-filepath
   main-is:          Test.hs
   hs-source-dirs:   tests tests/abstract-filepath
   other-modules:
-    AbstractFilePathSpec
+    OsPathSpec
     Arbitrary
     EncodingSpec
     TestUtil

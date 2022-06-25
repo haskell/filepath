@@ -2,17 +2,17 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module AbstractFilePathSpec where
+module OsPathSpec where
 
 import Data.Maybe
 
-import System.AbstractFilePath
+import System.OsPath
 import System.OsString.Internal.Types
-import System.AbstractFilePath.Posix as Posix
-import System.AbstractFilePath.Windows as Windows
-import System.AbstractFilePath.Encoding
+import System.OsPath.Posix as Posix
+import System.OsPath.Windows as Windows
+import System.OsPath.Encoding
 import qualified System.OsString.Internal.Types as OS
-import System.AbstractFilePath.Data.ByteString.Short ( toShort )
+import System.OsPath.Data.ByteString.Short ( toShort )
 
 import Control.Exception
 import Data.ByteString ( ByteString )
@@ -27,8 +27,8 @@ import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import Control.DeepSeq
 import Data.Bifunctor ( first )
 import qualified Data.ByteString.Char8 as C
-import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as BS16
-import qualified System.AbstractFilePath.Data.ByteString.Short as SBS
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
+import qualified System.OsPath.Data.ByteString.Short as SBS
 import Data.Char ( ord )
 
 import Arbitrary
@@ -41,8 +41,8 @@ fromRight b _         = b
 
 tests :: [(String, Property)]
 tests =
-  [ ("fromAbstractFilePathUtf . toAbstractFilePathUtf == id",
-    property $ \(NonNullString str) -> (fromAbstractFilePathUtf . fromJust . toAbstractFilePathUtf) str == Just str)
+  [ ("fromOsPathUtf . toOsPathUtf == id",
+    property $ \(NonNullString str) -> (fromOsPathUtf . fromJust . toOsPathUtf) str == Just str)
 
   , ("fromPlatformStringUtf . toPlatformStringUtf == id (Posix)",
     property $ \(NonNullString str) -> (Posix.fromPlatformStringUtf . fromJust . Posix.toPlatformStringUtf) str == Just str)
@@ -193,8 +193,8 @@ tests =
     )
 
 
-  ] ++ testBatch (QC.ord (\(a :: AbstractFilePath) -> pure a))
-    ++ testBatch (QC.monoid (undefined :: AbstractFilePath))
+  ] ++ testBatch (QC.ord (\(a :: OsPath) -> pure a))
+    ++ testBatch (QC.monoid (undefined :: OsPath))
 
     ++ testBatch (QC.ord (\(a :: OsString) -> pure a))
     ++ testBatch (QC.monoid (undefined :: OsString))

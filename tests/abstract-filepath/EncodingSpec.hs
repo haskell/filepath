@@ -11,10 +11,10 @@ import Arbitrary
 import Test.QuickCheck
 
 import Data.Either ( isRight )
-import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
-import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as BS16
+import qualified System.OsPath.Data.ByteString.Short as BS8
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
 import qualified GHC.Foreign as GHC
-import System.AbstractFilePath.Encoding.Internal
+import System.OsPath.Encoding.Internal
 import GHC.IO (unsafePerformIO)
 import GHC.IO.Encoding ( setFileSystemEncoding )
 import System.IO

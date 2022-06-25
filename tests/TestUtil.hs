@@ -17,15 +17,15 @@ import Control.Monad
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 #ifdef GHC_MAKE
-import qualified System.AbstractFilePath.Windows.Internal as AFP_W
-import qualified System.AbstractFilePath.Posix.Internal as AFP_P
+import qualified System.OsPath.Windows.Internal as AFP_W
+import qualified System.OsPath.Posix.Internal as AFP_P
 #else
-import qualified System.AbstractFilePath.Windows as AFP_W
-import qualified System.AbstractFilePath.Posix as AFP_P
-import System.AbstractFilePath.Types
+import qualified System.OsPath.Windows as AFP_W
+import qualified System.OsPath.Posix as AFP_P
+import System.OsPath.Types
 #endif
 import System.OsString.Internal.Types
-import System.AbstractFilePath.Encoding
+import System.OsPath.Encoding
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import GHC.IO.Encoding.Failure
@@ -119,20 +119,20 @@ instance Arbitrary QFilePathsAFP_P where
 #else
 
 
-newtype QFilePathValidAFP_W = QFilePathValidAFP_W WindowsFilePath deriving Show
+newtype QFilePathValidAFP_W = QFilePathValidAFP_W WindowsPath deriving Show
 
 instance Arbitrary QFilePathValidAFP_W where
     arbitrary = fmap (QFilePathValidAFP_W . AFP_W.makeValid . WS . encodeUtf16LE) arbitraryFilePath
     shrink (QFilePathValidAFP_W x) = shrinkValid (QFilePathValidAFP_W . WS . encodeUtf16LE) (decodeUtf16LE . getWindowsString . AFP_W.makeValid . WS . encodeUtf16LE) (decodeUtf16LE . getWindowsString $ x)
 
-newtype QFilePathValidAFP_P = QFilePathValidAFP_P PosixFilePath deriving Show
+newtype QFilePathValidAFP_P = QFilePathValidAFP_P PosixPath deriving Show
 
 instance Arbitrary QFilePathValidAFP_P where
     arbitrary = fmap (QFilePathValidAFP_P . AFP_P.makeValid . PS . encodeUtf8) arbitraryFilePath
     shrink (QFilePathValidAFP_P x) = shrinkValid (QFilePathValidAFP_P . PS . encodeUtf8) (decodeUtf8 . getPosixString . AFP_P.makeValid . PS . encodeUtf8) (decodeUtf8 . getPosixString $ x)
 
-newtype QFilePathAFP_W = QFilePathAFP_W WindowsFilePath deriving Show
-newtype QFilePathAFP_P = QFilePathAFP_P PosixFilePath deriving Show
+newtype QFilePathAFP_W = QFilePathAFP_W WindowsPath deriving Show
+newtype QFilePathAFP_P = QFilePathAFP_P PosixPath deriving Show
 
 instance Arbitrary QFilePathAFP_W where
     arbitrary = fmap (QFilePathAFP_W . WS . encodeUtf16LE) arbitraryFilePath
@@ -142,8 +142,8 @@ instance Arbitrary QFilePathAFP_P where
     arbitrary = fmap (QFilePathAFP_P . PS . encodeUtf8) arbitraryFilePath
     shrink (QFilePathAFP_P x) = shrinkValid (QFilePathAFP_P . PS . encodeUtf8) id (decodeUtf8 . getPosixString $ x)
 
-newtype QFilePathsAFP_W = QFilePathsAFP_W [WindowsFilePath] deriving Show
-newtype QFilePathsAFP_P = QFilePathsAFP_P [PosixFilePath] deriving Show
+newtype QFilePathsAFP_W = QFilePathsAFP_W [WindowsPath] deriving Show
+newtype QFilePathsAFP_P = QFilePathsAFP_P [PosixPath] deriving Show
 
 instance Arbitrary QFilePathsAFP_W where
     arbitrary = fmap (QFilePathsAFP_W . fmap (WS . encodeUtf16LE)) (listOf arbitraryFilePath)

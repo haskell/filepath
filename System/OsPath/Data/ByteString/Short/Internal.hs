@@ -6,7 +6,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 -- |
--- Module      :  System.AbstractFilePath.Data.ByteString.Short.Internal
+-- Module      :  System.OsPath.Data.ByteString.Short.Internal
 -- Copyright   :  © 2022 Julian Ospald
 -- License     :  MIT
 --
@@ -14,9 +14,9 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Internal low-level utilities mostly for 'System.AbstractFilePath.Data.ByteString.Short.Word16',
+-- Internal low-level utilities mostly for 'System.OsPath.Data.ByteString.Short.Word16',
 -- such as byte-array operations and other stuff not meant to be exported from Word16 module.
-module System.AbstractFilePath.Data.ByteString.Short.Internal where
+module System.OsPath.Data.ByteString.Short.Internal where
 
 import Control.Monad.ST
 import Control.Exception (assert, throwIO)
@@ -230,7 +230,7 @@ moduleErrorIO fun msg = throwIO . userError $ moduleErrorMsg fun msg
 {-# NOINLINE moduleErrorIO #-}
 
 moduleErrorMsg :: String -> String -> String
-moduleErrorMsg fun msg = "System.AbstractFilePath.Data.ByteString.Short." ++ fun ++ ':':' ':msg
+moduleErrorMsg fun msg = "System.OsPath.Data.ByteString.Short." ++ fun ++ ':':' ':msg
 
 packWord16 :: [Word16] -> ShortByteString
 packWord16 cs = packLenWord16 (List.length cs) cs

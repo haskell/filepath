@@ -75,18 +75,18 @@ import Language.Haskell.TH.Syntax
 
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #ifdef WINDOWS
-import System.AbstractFilePath.Encoding
+import System.OsPath.Encoding
 import System.IO
     ( TextEncoding, utf16le )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import System.AbstractFilePath.Data.ByteString.Short.Word16 as BS
-import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
+import System.OsPath.Data.ByteString.Short.Word16 as BS
+import qualified System.OsPath.Data.ByteString.Short as BS8
 #else
-import System.AbstractFilePath.Encoding
+import System.OsPath.Encoding
 import System.IO
     ( TextEncoding, utf8 )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
-import System.AbstractFilePath.Data.ByteString.Short as BS
+import System.OsPath.Data.ByteString.Short as BS
 #endif
 
 
