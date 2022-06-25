@@ -184,25 +184,31 @@ peekFilePathLenPosix fp = getFileSystemEncoding >>= \enc -> GHC.peekCStringLen e
 -- Encoders / decoders
 --
 
+-- | Decode with the given 'TextEncoding'.
 decodeWith :: TextEncoding -> BS8.ShortByteString -> Either EncodingException String
 decodeWith enc ba = unsafePerformIO $ do
   r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 
+-- | Encode with the given 'TextEncoding'.
 encodeWith :: TextEncoding -> String -> Either EncodingException BS8.ShortByteString
 encodeWith enc str = unsafePerformIO $ do
   r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> BS8.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 
+-- | This mimics the filepath ddecoder base uses on unix.
 decodeWithBasePosix :: BS8.ShortByteString -> IO String
 decodeWithBasePosix ba = BS8.useAsCStringLen ba $ \fp -> peekFilePathLenPosix fp
 
+-- | This mimics the filepath dencoder base uses on unix.
 encodeWithBasePosix :: String -> IO BS8.ShortByteString
 encodeWithBasePosix str = withFilePathPosix str $ \cstr -> BS8.packCString cstr
 
+-- | This mimics the filepath decoder base uses on windows.
 decodeWithBaseWindows :: BS16.ShortByteString -> String
 decodeWithBaseWindows = cWcharsToChars . BS16.unpack
 
+-- | This mimics the filepath dencoder base uses on windows.
 encodeWithBaseWindows :: String -> BS8.ShortByteString
 encodeWithBaseWindows = BS16.pack . charsToCWchars
 
