@@ -51,7 +51,7 @@ module System.OsPath
   , toOsPathEnc
   , toOsPathFS
   , afp
-  , packAFP
+  , packOsPath
 #endif
 
   -- * Filepath deconstruction
@@ -64,7 +64,7 @@ module System.OsPath
   , fromOsPathUtf
   , fromOsPathEnc
   , fromOsPathFS
-  , unpackAFP
+  , unpackOsPath
 #endif
 
   -- * Word construction
@@ -161,11 +161,11 @@ import System.OsPath.Internal
     , fromOsPathUtf
     , fromOsPathEnc
     , fromOsPathFS
-    , packAFP
+    , packOsPath
     , toOsPathUtf
     , toOsPathEnc
     , toOsPathFS
-    , unpackAFP
+    , unpackOsPath
     )
 import System.OsPath.Types
     ( OsPath )

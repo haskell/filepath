@@ -92,15 +92,15 @@ fromOsPathFS = fromOsStringFS
 -- On windows, this ensures valid UCS-2LE, on unix it is passed unchanged/unchecked.
 --
 -- Throws 'EncodingException' on invalid UCS-2LE on windows (although unlikely).
-bytesToAFP :: MonadThrow m
-           => ByteString
-           -> m OsPath
-bytesToAFP = OS.bytesToOsString
+bytesToOsPath :: MonadThrow m
+              => ByteString
+              -> m OsPath
+bytesToOsPath = OS.bytesToOsString
 
 
 mkOsPath :: ByteString -> Q Exp
 mkOsPath bs =
-  case bytesToAFP bs of
+  case bytesToOsPath bs of
     Just afp' ->
       if isValid afp'
       then lift afp'
@@ -115,8 +115,8 @@ afp = qq mkOsPath
 
 
 -- | Unpack an 'OsPath' to a list of 'OsChar'.
-unpackAFP :: OsPath -> [OsChar]
-unpackAFP = unpackOsString
+unpackOsPath :: OsPath -> [OsChar]
+unpackOsPath = unpackOsString
 
 
 -- | Pack a list of 'OsChar' to an 'OsPath'.
@@ -124,6 +124,6 @@ unpackAFP = unpackOsString
 -- Note that using this in conjunction with 'unsafeFromChar' to
 -- convert from @[Char]@ to 'OsPath' is probably not what
 -- you want, because it will truncate unicode code points.
-packAFP :: [OsChar] -> OsPath
-packAFP = packOsString
+packOsPath :: [OsChar] -> OsPath
+packOsPath = packOsString
 
