@@ -5,10 +5,10 @@
 {-# OPTIONS_GHC  -funbox-strict-fields #-}
 
 
-module System.AbstractFilePath.Encoding.Internal where
+module System.OsPath.Encoding.Internal where
 
-import qualified System.AbstractFilePath.Data.ByteString.Short as BS8
-import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as BS16
+import qualified System.OsPath.Data.ByteString.Short as BS8
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
 
 import GHC.Base
 import GHC.Real

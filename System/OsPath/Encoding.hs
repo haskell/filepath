@@ -1,4 +1,4 @@
-module System.AbstractFilePath.Encoding
+module System.OsPath.Encoding
   (
   -- * Types
     EncodingException(..)
@@ -22,4 +22,4 @@ module System.AbstractFilePath.Encoding
   )
   where
 
-import System.AbstractFilePath.Encoding.Internal
+import System.OsPath.Encoding.Internal

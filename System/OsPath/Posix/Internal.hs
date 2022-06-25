@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 
 #undef WINDOWS
-#define ABSTRACT_FILEPATH
+#define OS_PATH
 #define IS_WINDOWS False
 #define MODULE_NAME Posix
 

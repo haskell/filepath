@@ -3,7 +3,7 @@
 --     WINDOWS defined? = no            | yes              | no
 --     POSIX   defined? = yes           | no               | no
 --
---     FILEPATH_NAME    = PosixFilePath | WindowsFilePath  | AbstractFilePath
+--     FILEPATH_NAME    = PosixPath     | WindowsPath  | OsPath
 --     OSSTRING_NAME    = PosixString   | WindowsString    | OsString
 --     WORD_NAME        = PosixChar     | WindowsChar      | OsChar
 
@@ -18,24 +18,24 @@
 #endif
 
 #ifdef WINDOWS
-module System.AbstractFilePath.Windows
+module System.OsPath.Windows
 #elif defined(POSIX)
-module System.AbstractFilePath.Posix
+module System.OsPath.Posix
 #else
-module System.AbstractFilePath
+module System.OsPath
 #endif
   (
   -- * Types
 #ifdef WINDOWS
     WindowsString
   , WindowsChar
-  , WindowsFilePath
+  , WindowsPath
 #elif defined(POSIX)
     PosixString
   , PosixChar
-  , PosixFilePath
+  , PosixPath
 #else
-    AbstractFilePath
+    OsPath
   , OsString
   , OsChar
 #endif
@@ -47,9 +47,9 @@ module System.AbstractFilePath
   , pstr
   , packPlatformString
 #else
-  , toAbstractFilePathUtf
-  , toAbstractFilePathEnc
-  , toAbstractFilePathFS
+  , toOsPathUtf
+  , toOsPathEnc
+  , toOsPathFS
   , afp
   , packAFP
 #endif
@@ -61,9 +61,9 @@ module System.AbstractFilePath
   , fromPlatformStringFS
   , unpackPlatformString
 #else
-  , fromAbstractFilePathUtf
-  , fromAbstractFilePathEnc
-  , fromAbstractFilePathFS
+  , fromOsPathUtf
+  , fromOsPathEnc
+  , fromOsPathFS
   , unpackAFP
 #endif
 
@@ -118,7 +118,7 @@ where
 
 
 #ifdef WINDOWS
-import System.AbstractFilePath.Types
+import System.OsPath.Types
 import System.OsString.Windows
     ( unsafeFromChar
     , toChar
@@ -133,11 +133,11 @@ import System.OsString.Windows
     , unpackPlatformString
     )
 import Data.Bifunctor ( bimap )
-import qualified System.AbstractFilePath.Windows.Internal as C
+import qualified System.OsPath.Windows.Internal as C
 
 #elif defined(POSIX)
 
-import System.AbstractFilePath.Types
+import System.OsPath.Types
 import System.OsString.Posix
     ( unsafeFromChar
     , toChar
@@ -152,29 +152,29 @@ import System.OsString.Posix
     , unpackPlatformString
     )
 import Data.Bifunctor ( bimap )
-import qualified System.AbstractFilePath.Posix.Internal as C
+import qualified System.OsPath.Posix.Internal as C
 
 #else
 
-import System.AbstractFilePath.Internal
+import System.OsPath.Internal
     ( afp
-    , fromAbstractFilePathUtf
-    , fromAbstractFilePathEnc
-    , fromAbstractFilePathFS
+    , fromOsPathUtf
+    , fromOsPathEnc
+    , fromOsPathFS
     , packAFP
-    , toAbstractFilePathUtf
-    , toAbstractFilePathEnc
-    , toAbstractFilePathFS
+    , toOsPathUtf
+    , toOsPathEnc
+    , toOsPathFS
     , unpackAFP
     )
-import System.AbstractFilePath.Types
-    ( AbstractFilePath )
+import System.OsPath.Types
+    ( OsPath )
 import System.OsString
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-import qualified System.AbstractFilePath.Windows as C
+import qualified System.OsPath.Windows as C
 #else
-import qualified System.AbstractFilePath.Posix as C
+import qualified System.OsPath.Posix as C
 #endif
 
 import Data.Bifunctor

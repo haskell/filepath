@@ -4,8 +4,8 @@
 
 module Main where
 
-import System.AbstractFilePath.Types
-import System.AbstractFilePath.Encoding ( ucs2le )
+import System.OsPath.Types
+import System.OsPath.Encoding ( ucs2le )
 import System.Environment
 import qualified System.OsString.Internal.Types as OST
 import qualified Data.ByteString.Short as SBS
@@ -19,8 +19,8 @@ import qualified System.FilePath.Posix as PF
 import qualified System.FilePath.Posix as WF
 import qualified System.OsString.Posix as OSP
 import qualified System.OsString.Windows as WSP
-import qualified System.AbstractFilePath.Posix as APF
-import qualified System.AbstractFilePath.Windows as AWF
+import qualified System.OsPath.Posix as APF
+import qualified System.OsPath.Windows as AWF
 
 
 data Config = Config {
@@ -269,10 +269,10 @@ posixPath = "/foo/bar/bath/baz/baz/tz/fooooooooooooooo/laaaaaaaaaaaaaaa/baaaaaaa
 windowsPath :: FilePath
 windowsPath = "C:\\foo\\bar\\bath\\baz\\baz\\tz\\fooooooooooooooo\\laaaaaaaaaaaaaaa\\baaaaaaaaaaaaar\\zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\\zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\\kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\\kkkkkkkkkkkkkkkkkk\\h\\h\\h\\a\\s\\r\\a\\h\\gt\\r\\r\\r\\s\\s.txt"
 
-posixPathAFPP :: PosixFilePath
+posixPathAFPP :: PosixPath
 posixPathAFPP = [OSP.pstr|/foo/bar/bath/baz/baz/tz/fooooooooooooooo/laaaaaaaaaaaaaaa/baaaaaaaaaaaaar/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk/kkkkkkkkkkkkkkkkkk/h/h/h/a/s/r/a/h/gt/r/r/r/s/s.txt|]
 
-windowsPathAFPP :: WindowsFilePath
+windowsPathAFPP :: WindowsPath
 windowsPathAFPP = [WSP.pstr|C:\\foo\\bar\\bath\\baz\\baz\\tz\\fooooooooooooooo\\laaaaaaaaaaaaaaa\\baaaaaaaaaaaaar\\zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\\zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\\kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\\kkkkkkkkkkkkkkkkkk\\h\\h\\h\\a\\s\\r\\a\\h\\gt\\r\\r\\r\\s\\s.txt|]
 
 posixSearchPath :: FilePath

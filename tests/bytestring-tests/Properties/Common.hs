@@ -19,11 +19,11 @@
 
 #ifdef WORD16
 module Properties.ShortByteString.Word16 (tests) where
-import System.AbstractFilePath.Data.ByteString.Short.Internal (_nul, isSpace)
-import qualified System.AbstractFilePath.Data.ByteString.Short.Word16 as B
+import System.OsPath.Data.ByteString.Short.Internal (_nul, isSpace)
+import qualified System.OsPath.Data.ByteString.Short.Word16 as B
 #else
 module Properties.ShortByteString (tests) where
-import qualified System.AbstractFilePath.Data.ByteString.Short as B
+import qualified System.OsPath.Data.ByteString.Short as B
 import qualified Data.Char as C
 #endif
 import Data.ByteString.Short (ShortByteString)

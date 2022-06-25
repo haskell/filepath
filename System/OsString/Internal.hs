@@ -10,7 +10,7 @@ import Control.Monad.Catch
     ( MonadThrow )
 import Data.ByteString
     ( ByteString )
-import System.AbstractFilePath.Data.ByteString.Short
+import System.OsPath.Data.ByteString.Short
     ( fromShort )
 import Data.Char
 import Language.Haskell.TH
@@ -21,7 +21,7 @@ import Language.Haskell.TH.Syntax
 import System.IO
     ( TextEncoding )
 
-import System.AbstractFilePath.Encoding ( encodeWith, EncodingException(..) )
+import System.OsPath.Encoding ( encodeWith, EncodingException(..) )
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )

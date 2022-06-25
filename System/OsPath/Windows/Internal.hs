@@ -2,7 +2,7 @@
 
 #undef  POSIX
 #define WINDOWS
-#define ABSTRACT_FILEPATH
+#define OS_PATH
 #define IS_WINDOWS True
 #define MODULE_NAME Windows
 

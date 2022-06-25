@@ -1,12 +1,12 @@
 {-# LANGUAGE CPP #-}
 
-module System.AbstractFilePath.Types
+module System.OsPath.Types
   (
   -- * FilePath types
-    AbstractFilePath
-  , WindowsFilePath
-  , PosixFilePath
-  , PlatformFilePath
+    OsPath
+  , WindowsPath
+  , PosixPath
+  , PlatformPath
 
   -- * OsString reexports
   , WindowsString
@@ -22,21 +22,21 @@ import System.OsString.Internal.Types
 
 
 -- | Filepaths are @wchar_t*@ data on windows as passed to syscalls.
-type WindowsFilePath = WindowsString
+type WindowsPath = WindowsString
 
 -- | Filepaths are @char[]@ data on unix as passed to syscalls.
-type PosixFilePath = PosixString
+type PosixPath = PosixString
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
--- | Ifdef around current platform (either 'WindowsFilePath' or 'PosixFilePath').
-type PlatformFilePath = WindowsFilePath
+-- | Ifdef around current platform (either 'WindowsPath' or 'PosixPath').
+type PlatformPath = WindowsPath
 #else
--- | Ifdef around current platform (either 'WindowsFilePath' or 'PosixFilePath').
-type PlatformFilePath = PosixFilePath
+-- | Ifdef around current platform (either 'WindowsPath' or 'PosixPath').
+type PlatformPath = PosixPath
 #endif
 
 
 -- | Type representing filenames\/pathnames.
 --
 -- This type doesn't add any guarantees over 'OsString'.
-type AbstractFilePath = OsString
+type OsPath = OsString

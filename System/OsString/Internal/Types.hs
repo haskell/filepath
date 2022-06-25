@@ -40,7 +40,7 @@ import Data.Semigroup
 #endif
 import GHC.Generics (Generic)
 
-import qualified System.AbstractFilePath.Data.ByteString.Short as BS
+import qualified System.OsPath.Data.ByteString.Short as BS
 #if MIN_VERSION_template_haskell(2,16,0)
 import qualified Language.Haskell.TH.Syntax as TH
 #endif

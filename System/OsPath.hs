@@ -1,11 +1,11 @@
 {-# LANGUAGE CPP #-}
 
-#define FILEPATH_NAME AbstractFilePath
+#define FILEPATH_NAME OsPath
 #define OSSTRING_NAME OsString
 #define WORD_NAME OsChar
 
 -- |
--- Module      :  System.AbstractFilePath
+-- Module      :  System.OsPath
 -- Copyright   :  © 2021 Julian Ospald
 -- License     :  MIT
 --
@@ -25,12 +25,12 @@
 --
 -- - On /Windows/, filepaths are expected to be encoded as UTF16-LE <https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/76f10dd8-699d-45e6-a53c-5aefc586da20 as per the documentation>, but
 --   may also include invalid surrogate pairs, in which case UCS-2 can be used. They are passed as @wchar_t*@ to syscalls.
---   'AbstractFilePath' only maintains the wide character invariant.
+--   'OsPath' only maintains the wide character invariant.
 -- - On /Unix/, filepaths don't have a predefined encoding (although they
 --   are often interpreted as UTF8) as per the
 --   <https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_170 POSIX specification>
---   and are passed as @char[]@ to syscalls. 'AbstractFilePath' maintains no invariant
---   here. Some functions however, such as 'toAbstractFilePathUtf', may expect
+--   and are passed as @char[]@ to syscalls. 'OsPath' maintains no invariant
+--   here. Some functions however, such as 'toOsPathUtf', may expect
 --   or produce UTF8.
 --
 -- Apart from encoding, filepaths have additional restrictions per platform:
@@ -38,7 +38,7 @@
 -- - On /Windows/ the <https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions naming convention> may apply
 -- - On /Unix/, only @NUL@ bytes are disallowed as per the <https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_170 POSIX specification>
 --
--- Use 'isValid' to check for these restrictions ('AbstractFilePath' doesn't
+-- Use 'isValid' to check for these restrictions ('OsPath' doesn't
 -- maintain this invariant).
 --
 -- Also note that these restrictions are
@@ -55,11 +55,11 @@
 --    of the filename.
 -- 2. When interpreting OS returned filenames consider that these might not be UTF8 on /unix/
 --    or at worst don't have an ASCII compatible encoding. Some strategies here involve looking
---    up the current locale and using that for decoding ('fromAbstractFilePathFS' does this).
---    Otherwise it can be reasonable to assume UTF8 on unix ('fromAbstractFilePathUtf' does that) if your application specifically
---    mentions that it requires a UTF8 compatible system. If you know the encoding, you can just use 'fromAbstractFilePathEnc'.
+--    up the current locale and using that for decoding ('fromOsPathFS' does this).
+--    Otherwise it can be reasonable to assume UTF8 on unix ('fromOsPathUtf' does that) if your application specifically
+--    mentions that it requires a UTF8 compatible system. If you know the encoding, you can just use 'fromOsPathEnc'.
 -- 3. Avoid comparing @String@ based filepaths, because filenames of different encodings
 --    may have the same @String@ representation, although they're not the same byte-wise.
 
 
-#include "AbstractFilePath/Common.hs"
+#include "OsPath/Common.hs"
