@@ -36,9 +36,9 @@ toOsPathUtf = toOsStringUtf
 
 -- | Like 'toOsPathUtf', except allows to provide encodings.
 toOsPathEnc :: TextEncoding  -- ^ unix text encoding
-                      -> TextEncoding  -- ^ windows text encoding
-                      -> String
-                      -> Either EncodingException OsPath
+            -> TextEncoding  -- ^ windows text encoding
+            -> String
+            -> Either EncodingException OsPath
 toOsPathEnc = toOsStringEnc
 
 -- | Like 'toOsPathUtf', except this mimics the behavior of the base library when doing filesystem
@@ -67,9 +67,9 @@ fromOsPathUtf = fromOsStringUtf
 
 -- | Like 'fromOsPathUtf', except allows to provide encodings.
 fromOsPathEnc :: TextEncoding  -- ^ unix text encoding
-                        -> TextEncoding  -- ^ windows text encoding
-                        -> OsPath
-                        -> Either EncodingException String
+              -> TextEncoding  -- ^ windows text encoding
+              -> OsPath
+              -> Either EncodingException String
 fromOsPathEnc = fromOsStringEnc
 
 -- | Like 'fromOsPathUtf', except this mimics the behavior of the base library when doing filesystem
