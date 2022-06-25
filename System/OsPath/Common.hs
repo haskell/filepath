@@ -50,7 +50,7 @@ module System.OsPath
   , toOsPathUtf
   , toOsPathEnc
   , toOsPathFS
-  , afp
+  , osp
   , packOsPath
 #endif
 
@@ -157,7 +157,7 @@ import qualified System.OsPath.Posix.Internal as C
 #else
 
 import System.OsPath.Internal
-    ( afp
+    ( osp
     , fromOsPathUtf
     , fromOsPathEnc
     , fromOsPathFS

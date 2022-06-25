@@ -110,8 +110,8 @@ mkOsPath bs =
 -- | QuasiQuote an 'OsPath'. This accepts Unicode characters
 -- and encodes as UTF-8 on unix and UTF-16 on windows. Runs 'filepathIsValid'
 -- on the input.
-afp :: QuasiQuoter
-afp = qq mkOsPath
+osp :: QuasiQuoter
+osp = qq mkOsPath
 
 
 -- | Unpack an 'OsPath' to a list of 'OsChar'.
