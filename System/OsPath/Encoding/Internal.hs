@@ -119,6 +119,8 @@ ucs2le_encode
 -- Windows encoding (ripped off from base)
 --
 
+cWcharsToChars_UCS2 :: [Word16] -> [Char]
+cWcharsToChars_UCS2 = map (chr . fromIntegral)
 
 
 -- On Windows, wchar_t is 16 bits wide and CWString uses the UTF-16 encoding.

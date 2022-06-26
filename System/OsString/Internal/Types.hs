@@ -59,9 +59,10 @@ import qualified Language.Haskell.TH.Syntax as TH
 newtype WindowsString = WindowsString { getWindowsString :: BS.ShortByteString }
   deriving (Eq, Ord, Semigroup, Monoid, Typeable, Generic, NFData)
 
+-- | Decodes as UCS-2.
 instance Show WindowsString where
-  -- cWcharsToChars is total
-  show = show . cWcharsToChars . BS16.unpack . getWindowsString
+  -- cWcharsToChars_UCS2 is total
+  show = show . cWcharsToChars_UCS2 . BS16.unpack . getWindowsString
 
 -- | Just a short bidirectional synonym for 'WindowsString' constructor.
 pattern WS :: BS.ShortByteString -> WindowsString
@@ -84,6 +85,7 @@ instance Lift WindowsString where
 newtype PosixString = PosixString { getPosixString :: BS.ShortByteString }
   deriving (Eq, Ord, Semigroup, Monoid, Typeable, Generic, NFData)
 
+-- | Prints the raw bytes without decoding.
 instance Show PosixString where
   show (PosixString ps) = show ps
 
