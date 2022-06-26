@@ -40,7 +40,9 @@ import Data.Semigroup
 #endif
 import GHC.Generics (Generic)
 
+import System.OsPath.Encoding.Internal
 import qualified System.OsPath.Data.ByteString.Short as BS
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
 #if MIN_VERSION_template_haskell(2,16,0)
 import qualified Language.Haskell.TH.Syntax as TH
 #endif
@@ -58,7 +60,8 @@ newtype WindowsString = WindowsString { getWindowsString :: BS.ShortByteString }
   deriving (Eq, Ord, Semigroup, Monoid, Typeable, Generic, NFData)
 
 instance Show WindowsString where
-  show (WindowsString ws) = show ws
+  -- cWcharsToChars is total
+  show = show . cWcharsToChars . BS16.unpack . getWindowsString
 
 -- | Just a short bidirectional synonym for 'WindowsString' constructor.
 pattern WS :: BS.ShortByteString -> WindowsString
