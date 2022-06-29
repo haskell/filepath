@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude
            , BangPatterns
            , TypeApplications
+           , MultiWayIf
   #-}
 {-# OPTIONS_GHC  -funbox-strict-fields #-}
 
@@ -114,6 +115,113 @@ ucs2le_encode
     in
     loop ir0 ow0
 
+-- -----------------------------------------------------------------------------
+-- UTF-16b
+--
+
+-- | Mimics the base encoding for filesystem operations. This should be total on all inputs (word16 byte arrays).
+--
+-- Note that this has a subtle difference to 'encodeWithBaseWindows'/'decodeWithBaseWindows': it doesn't care for
+-- the @0x0000@ end marker and will as such produce different results. Use @takeWhile (/= '\NUL')@ on the input
+-- to recover this behavior.
+utf16le_b :: TextEncoding
+utf16le_b = mkUTF16le_b ErrorOnCodingFailure
+
+mkUTF16le_b :: CodingFailureMode -> TextEncoding
+mkUTF16le_b cfm = TextEncoding { textEncodingName = "UTF-16LE_b",
+                                 mkTextDecoder = utf16le_b_DF cfm,
+                                 mkTextEncoder = utf16le_b_EF cfm }
+
+utf16le_b_DF :: CodingFailureMode -> IO (TextDecoder ())
+utf16le_b_DF cfm =
+  return (BufferCodec {
+             encode   = utf16le_b_decode,
+             recover  = recoverDecode cfm,
+             close    = return (),
+             getState = return (),
+             setState = const $ return ()
+          })
+
+utf16le_b_EF :: CodingFailureMode -> IO (TextEncoder ())
+utf16le_b_EF cfm =
+  return (BufferCodec {
+             encode   = utf16le_b_encode,
+             recover  = recoverEncode cfm,
+             close    = return (),
+             getState = return (),
+             setState = const $ return ()
+          })
+
+
+utf16le_b_decode :: DecodeBuffer
+utf16le_b_decode
+  input@Buffer{  bufRaw=iraw, bufL=ir0, bufR=iw,  bufSize=_  }
+  output@Buffer{ bufRaw=oraw, bufL=_,   bufR=ow0, bufSize=os }
+ = let
+       loop !ir !ow
+         | ow >= os     = done OutputUnderflow ir ow
+         | ir >= iw     = done InputUnderflow ir ow
+         | ir + 1 == iw = done InputUnderflow ir ow
+         | otherwise = do
+              c0 <- readWord8Buf iraw ir
+              c1 <- readWord8Buf iraw (ir+1)
+              let x1 = fromIntegral c1 `shiftL` 8 + fromIntegral c0
+              if | iw - ir >= 4 -> do
+                      c2 <- readWord8Buf iraw (ir+2)
+                      c3 <- readWord8Buf iraw (ir+3)
+                      let x2 = fromIntegral c3 `shiftL` 8 + fromIntegral c2
+                      if | 0xd800 <= x1 && x1 <= 0xdbff
+                         , 0xdc00 <= x2 && x2 <= 0xdfff -> do
+                             ow' <- writeCharBuf oraw ow (unsafeChr ((x1 - 0xd800)*0x400 + (x2 - 0xdc00) + 0x10000))
+                             loop (ir+4) ow'
+                         | otherwise -> do
+                             ow' <- writeCharBuf oraw ow (unsafeChr x1)
+                             loop (ir+2) ow'
+                 | iw - ir >= 2 -> do
+                        ow' <- writeCharBuf oraw ow (unsafeChr x1)
+                        loop (ir+2) ow'
+                 | otherwise -> done InputUnderflow ir ow
+
+       -- lambda-lifted, to avoid thunks being built in the inner-loop:
+       done why !ir !ow = return (why,
+                                  if ir == iw then input{ bufL=0, bufR=0 }
+                                              else input{ bufL=ir },
+                                  output{ bufR=ow })
+    in
+    loop ir0 ow0
+
+
+utf16le_b_encode :: EncodeBuffer
+utf16le_b_encode
+  input@Buffer{  bufRaw=iraw, bufL=ir0, bufR=iw,  bufSize=_  }
+  output@Buffer{ bufRaw=oraw, bufL=_,   bufR=ow0, bufSize=os }
+ = let
+      done why !ir !ow = return (why,
+                                 if ir == iw then input{ bufL=0, bufR=0 }
+                                             else input{ bufL=ir },
+                                 output{ bufR=ow })
+      loop !ir !ow
+        | ir >= iw     =  done InputUnderflow ir ow
+        | os - ow < 2  =  done OutputUnderflow ir ow
+        | otherwise = do
+           (c,ir') <- readCharBuf iraw ir
+           case ord c of
+             x | x < 0x10000 -> do
+                     writeWord8Buf oraw ow     (fromIntegral x)
+                     writeWord8Buf oraw (ow+1) (fromIntegral (x `shiftR` 8))
+                     loop ir' (ow+2)
+               | otherwise ->
+                     if os - ow < 4 then done OutputUnderflow ir ow else do
+                     let x' = x - 0x10000
+                         w1 = x' `div` 0x400 + 0xd800
+                         w2 = x' `mod` 0x400 + 0xdc00
+                     writeWord8Buf oraw ow     (fromIntegral w1)
+                     writeWord8Buf oraw (ow+1) (fromIntegral (w1 `shiftR` 8))
+                     writeWord8Buf oraw (ow+2) (fromIntegral w2)
+                     writeWord8Buf oraw (ow+3) (fromIntegral (w2 `shiftR` 8))
+                     loop ir' (ow+4)
+    in
+    loop ir0 ow0
 
 -- -----------------------------------------------------------------------------
 -- Windows encoding (ripped off from base)

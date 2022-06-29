@@ -12,6 +12,14 @@ module System.OsPath.Encoding
   , ucs2le_decode
   , ucs2le_encode
 
+  -- * UTF-16LE_b
+  , utf16le_b
+  , mkUTF16le_b
+  , utf16le_b_DF
+  , utf16le_b_EF
+  , utf16le_b_decode
+  , utf16le_b_encode
+
   -- * base encoding
   , encodeWithTE
   , decodeWithTE
