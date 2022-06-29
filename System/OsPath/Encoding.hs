@@ -13,8 +13,8 @@ module System.OsPath.Encoding
   , ucs2le_encode
 
   -- * base encoding
-  , encodeWith
-  , decodeWith
+  , encodeWithTE
+  , decodeWithTE
   , encodeWithBasePosix
   , decodeWithBasePosix
   , encodeWithBaseWindows

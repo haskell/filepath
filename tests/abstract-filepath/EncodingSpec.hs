@@ -73,29 +73,29 @@ tests =
         let decoded = decode (mkUTF16le RoundtripFailure) (BS8.toShort bs)
             encoded = encode (mkUTF16le RoundtripFailure) =<< decoded
         in expectFailure $ (either (const 0) BS8.length encoded, encoded) === (BS8.length (BS8.toShort bs), Right (BS8.toShort bs)))
-  , ("encodeWith/decodeWith ErrorOnCodingFailure fails (utf16le)",
+  , ("encodeWithTE/decodeWithTE ErrorOnCodingFailure fails (utf16le)",
      property $
       \(padEven -> bs) ->
-        let decoded = decodeWith (mkUTF16le ErrorOnCodingFailure) (BS8.toShort bs)
-            encoded = encodeWith (mkUTF16le ErrorOnCodingFailure) =<< decoded
+        let decoded = decodeWithTE (mkUTF16le ErrorOnCodingFailure) (BS8.toShort bs)
+            encoded = encodeWithTE (mkUTF16le ErrorOnCodingFailure) =<< decoded
         in expectFailure $ (isRight encoded, isRight decoded) === (True, True))
-  , ("encodeWith/decodeWith ErrorOnCodingFailure fails (utf8)",
+  , ("encodeWithTE/decodeWithTE ErrorOnCodingFailure fails (utf8)",
      property $
       \bs ->
-        let decoded = decodeWith (mkUTF8 ErrorOnCodingFailure) (BS8.toShort bs)
-            encoded = encodeWith (mkUTF8 ErrorOnCodingFailure) =<< decoded
+        let decoded = decodeWithTE (mkUTF8 ErrorOnCodingFailure) (BS8.toShort bs)
+            encoded = encodeWithTE (mkUTF8 ErrorOnCodingFailure) =<< decoded
         in expectFailure $ (isRight encoded, isRight decoded) === (True, True))
-  , ("encodeWith/decodeWith TransliterateCodingFailure never fails (utf16le)",
+  , ("encodeWithTE/decodeWithTE TransliterateCodingFailure never fails (utf16le)",
      property $
       \(padEven -> bs) ->
-        let decoded = decodeWith (mkUTF16le TransliterateCodingFailure) (BS8.toShort bs)
-            encoded = encodeWith (mkUTF16le TransliterateCodingFailure) =<< decoded
+        let decoded = decodeWithTE (mkUTF16le TransliterateCodingFailure) (BS8.toShort bs)
+            encoded = encodeWithTE (mkUTF16le TransliterateCodingFailure) =<< decoded
         in (isRight encoded, isRight decoded) === (True, True))
-  , ("encodeWith/decodeWith TransliterateCodingFailure never fails (utf8)",
+  , ("encodeWithTE/decodeWithTE TransliterateCodingFailure never fails (utf8)",
      property $
       \bs ->
-        let decoded = decodeWith (mkUTF8 TransliterateCodingFailure) (BS8.toShort bs)
-            encoded = encodeWith (mkUTF8 TransliterateCodingFailure) =<< decoded
+        let decoded = decodeWithTE (mkUTF8 TransliterateCodingFailure) (BS8.toShort bs)
+            encoded = encodeWithTE (mkUTF8 TransliterateCodingFailure) =<< decoded
         in (isRight encoded, isRight decoded) === (True, True))
   , ("encodeWithBaseWindows/decodeWithBaseWindows never fails (utf16le)",
      property $
@@ -110,6 +110,29 @@ tests =
         let decoded = decodeP' (BS8.toShort bs)
             encoded = encodeP' =<< decoded
         pure $ (isRight encoded, isRight decoded) === (True, True))
+
+  , ("decodeWithBaseWindows == utf16le_b",
+     property $
+      \(BS8.toShort . padEven -> bs) ->
+        let bs' = BS16.takeWhile (/= wNUL) bs
+            decoded  = decodeW' bs'
+            decoded' = first displayException $ decodeWithTE (mkUTF16le_b ErrorOnCodingFailure) bs'
+        in decoded === decoded')
+
+  , ("encodeWithBaseWindows == utf16le_b",
+     property $
+      \(NonNullSurrogateString str) ->
+        let str' = takeWhile (/= '\NUL') str
+            decoded  = encodeW' str'
+            decoded' = first displayException $ encodeWithTE (mkUTF16le_b ErrorOnCodingFailure) str'
+        in decoded === decoded')
+
+  , ("encodeWithTE/decodeWithTE never fails (utf16le_b)",
+     property $
+      \(padEven -> bs) ->
+        let decoded = decodeWithTE (mkUTF16le_b ErrorOnCodingFailure) (BS8.toShort bs)
+            encoded = encodeWithTE (mkUTF16le_b ErrorOnCodingFailure) =<< decoded
+        in (isRight encoded, isRight decoded) === (True, True))
   ]
 
 

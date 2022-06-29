@@ -129,7 +129,7 @@ pattern WW { unWW } <- WindowsChar unWW where
   WW a = WindowsChar a
 {-# COMPLETE WW #-}
 
--- | Just a short bidirectional synonym for 'WindowsChar' constructor.
+-- | Just a short bidirectional synonym for 'PosixChar' constructor.
 pattern PW :: Word8 -> PosixChar
 pattern PW { unPW } <- PosixChar unPW where
   PW a = PosixChar a
@@ -154,6 +154,7 @@ type PlatformChar = PosixChar
 newtype OsString = OsString { getOsString :: PlatformString }
   deriving (Typeable, Generic, NFData)
 
+-- | On windows, decodes as UCS-2. On unix prints the raw bytes without decoding.
 instance Show OsString where
   show (OsString os) = show os
 
@@ -166,7 +167,7 @@ instance Ord OsString where
   compare (OsString a) (OsString b) = compare a b
 
 
--- | \"String-Concatenation\" for 'OsString. This is __not__ the same
+-- | \"String-Concatenation\" for 'OsString'. This is __not__ the same
 -- as '(</>)'.
 instance Monoid OsString where
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)

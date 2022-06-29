@@ -187,14 +187,14 @@ peekFilePathLenPosix fp = getFileSystemEncoding >>= \enc -> GHC.peekCStringLen e
 --
 
 -- | Decode with the given 'TextEncoding'.
-decodeWith :: TextEncoding -> BS8.ShortByteString -> Either EncodingException String
-decodeWith enc ba = unsafePerformIO $ do
+decodeWithTE :: TextEncoding -> BS8.ShortByteString -> Either EncodingException String
+decodeWithTE enc ba = unsafePerformIO $ do
   r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 
 -- | Encode with the given 'TextEncoding'.
-encodeWith :: TextEncoding -> String -> Either EncodingException BS8.ShortByteString
-encodeWith enc str = unsafePerformIO $ do
+encodeWithTE :: TextEncoding -> String -> Either EncodingException BS8.ShortByteString
+encodeWithTE enc str = unsafePerformIO $ do
   r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> BS8.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 

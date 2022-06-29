@@ -7,7 +7,7 @@ module System.OsPath.Internal where
 import {-# SOURCE #-} System.OsPath
     ( isValid )
 import System.OsPath.Types
-import System.OsString.Internal
+import System.OsString.Internal hiding ( fromBytes )
 import qualified System.OsString.Internal as OS
 
 import Control.Monad.Catch
@@ -31,17 +31,17 @@ import System.OsPath.Encoding ( EncodingException(..) )
 -- On unix this encodes as UTF8 (strictly), which is a good guess.
 --
 -- Throws a 'EncodingException' if encoding fails.
-toOsPathUtf :: MonadThrow m => String -> m OsPath
-toOsPathUtf = toOsStringUtf
+encodeUtf :: MonadThrow m => FilePath -> m OsPath
+encodeUtf = OS.encodeUtf
 
--- | Like 'toOsPathUtf', except allows to provide encodings.
-toOsPathEnc :: TextEncoding  -- ^ unix text encoding
-            -> TextEncoding  -- ^ windows text encoding
-            -> String
-            -> Either EncodingException OsPath
-toOsPathEnc = toOsStringEnc
+-- | Encode a 'FilePath' with the specified encoding.
+encodeWith :: TextEncoding  -- ^ unix text encoding
+           -> TextEncoding  -- ^ windows text encoding
+           -> FilePath
+           -> Either EncodingException OsPath
+encodeWith = OS.encodeWith
 
--- | Like 'toOsPathUtf', except this mimics the behavior of the base library when doing filesystem
+-- | Like 'encodeUtf', except this mimics the behavior of the base library when doing filesystem
 -- operations, which is:
 --
 -- 1. on unix, uses shady PEP 383 style encoding (based on the current locale,
@@ -52,8 +52,8 @@ toOsPathEnc = toOsStringEnc
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
-toOsPathFS :: String -> IO OsPath
-toOsPathFS = toOsStringFS
+encodeFS :: FilePath -> IO OsPath
+encodeFS = OS.encodeFS
 
 
 -- | Partial unicode friendly decoding.
@@ -62,17 +62,17 @@ toOsPathFS = toOsStringFS
 -- On unix this decodes as UTF8 (strictly), which is a good guess.
 --
 -- Throws a 'EncodingException' if decoding fails.
-fromOsPathUtf :: MonadThrow m => OsPath -> m String
-fromOsPathUtf = fromOsStringUtf
+decodeUtf :: MonadThrow m => OsPath -> m FilePath
+decodeUtf = OS.decodeUtf
 
--- | Like 'fromOsPathUtf', except allows to provide encodings.
-fromOsPathEnc :: TextEncoding  -- ^ unix text encoding
-              -> TextEncoding  -- ^ windows text encoding
-              -> OsPath
-              -> Either EncodingException String
-fromOsPathEnc = fromOsStringEnc
+-- | Decode an 'OsPath' with the specified encoding.
+decodeWith :: TextEncoding  -- ^ unix text encoding
+           -> TextEncoding  -- ^ windows text encoding
+           -> OsPath
+           -> Either EncodingException FilePath
+decodeWith = OS.decodeWith
 
--- | Like 'fromOsPathUtf', except this mimics the behavior of the base library when doing filesystem
+-- | Like 'decodeUtf', except this mimics the behavior of the base library when doing filesystem
 -- operations, which is:
 --
 -- 1. on unix, uses shady PEP 383 style encoding (based on the current locale,
@@ -83,8 +83,8 @@ fromOsPathEnc = fromOsStringEnc
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
-fromOsPathFS :: OsPath -> IO String
-fromOsPathFS = fromOsStringFS
+decodeFS :: OsPath -> IO FilePath
+decodeFS = OS.decodeFS
 
 
 -- | Constructs an @OsPath@ from a ByteString.
@@ -92,15 +92,15 @@ fromOsPathFS = fromOsStringFS
 -- On windows, this ensures valid UCS-2LE, on unix it is passed unchanged/unchecked.
 --
 -- Throws 'EncodingException' on invalid UCS-2LE on windows (although unlikely).
-bytesToOsPath :: MonadThrow m
-              => ByteString
-              -> m OsPath
-bytesToOsPath = OS.bytesToOsString
+fromBytes :: MonadThrow m
+          => ByteString
+          -> m OsPath
+fromBytes = OS.fromBytes
 
 
 mkOsPath :: ByteString -> Q Exp
 mkOsPath bs =
-  case bytesToOsPath bs of
+  case fromBytes bs of
     Just afp' ->
       if isValid afp'
       then lift afp'
@@ -115,8 +115,8 @@ osp = qq mkOsPath
 
 
 -- | Unpack an 'OsPath' to a list of 'OsChar'.
-unpackOsPath :: OsPath -> [OsChar]
-unpackOsPath = unpackOsString
+unpack :: OsPath -> [OsChar]
+unpack = OS.unpack
 
 
 -- | Pack a list of 'OsChar' to an 'OsPath'.
@@ -124,6 +124,6 @@ unpackOsPath = unpackOsString
 -- Note that using this in conjunction with 'unsafeFromChar' to
 -- convert from @[Char]@ to 'OsPath' is probably not what
 -- you want, because it will truncate unicode code points.
-packOsPath :: [OsChar] -> OsPath
-packOsPath = packOsString
+pack :: [OsChar] -> OsPath
+pack = OS.pack
 

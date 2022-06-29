@@ -48,12 +48,12 @@ main = do
         ,"import qualified System.OsPath.Windows as AFP_W"
         ,"import qualified System.OsPath.Posix as AFP_P"
 #endif
-        ,"instance IsString WindowsString where fromString = WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)"
-        ,"instance IsString PosixString where fromString = PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)"
+        ,"instance IsString WindowsString where fromString = WS . either (error . show) id . encodeWithTE (mkUTF16le TransliterateCodingFailure)"
+        ,"instance IsString PosixString where fromString = PS . either (error . show) id . encodeWithTE (mkUTF8 TransliterateCodingFailure)"
         ,"#if defined(mingw32_HOST_OS) || defined(__MINGW32__)"
-        ,"instance IsString OsString where fromString = OsString . WS . either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)"
+        ,"instance IsString OsString where fromString = OsString . WS . either (error . show) id . encodeWithTE (mkUTF16le TransliterateCodingFailure)"
         ,"#else"
-        ,"instance IsString OsString where fromString = OsString . PS . either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)"
+        ,"instance IsString OsString where fromString = OsString . PS . either (error . show) id . encodeWithTE (mkUTF8 TransliterateCodingFailure)"
         ,"#endif"
         ,"tests :: [(String, Property)]"
         ,"tests ="] ++
