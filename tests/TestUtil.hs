@@ -72,16 +72,16 @@ shrinkValid wrap valid o =
     where countA = length . filter (== 'a')
 
 encodeUtf16LE :: String -> ShortByteString
-encodeUtf16LE = either (error . show) id . encodeWith (mkUTF16le TransliterateCodingFailure)
+encodeUtf16LE = either (error . show) id . encodeWithTE (mkUTF16le TransliterateCodingFailure)
 
 encodeUtf8 :: String -> ShortByteString
-encodeUtf8 = either (error . show) id . encodeWith (mkUTF8 TransliterateCodingFailure)
+encodeUtf8 = either (error . show) id . encodeWithTE (mkUTF8 TransliterateCodingFailure)
 
 decodeUtf16LE :: ShortByteString -> String
-decodeUtf16LE = either (error . show) id . decodeWith (mkUTF16le TransliterateCodingFailure)
+decodeUtf16LE = either (error . show) id . decodeWithTE (mkUTF16le TransliterateCodingFailure)
 
 decodeUtf8 :: ShortByteString -> String
-decodeUtf8 = either (error . show) id . decodeWith (mkUTF8 TransliterateCodingFailure)
+decodeUtf8 = either (error . show) id . decodeWithTE (mkUTF8 TransliterateCodingFailure)
 
 #ifdef GHC_MAKE
 newtype QFilePathValidAFP_W = QFilePathValidAFP_W ShortByteString deriving Show

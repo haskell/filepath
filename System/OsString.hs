@@ -19,18 +19,18 @@ module System.OsString
   -- * String types
     OsString
 
-  -- * String construction
-  , toOsStringUtf
-  , toOsStringEnc
-  , toOsStringFS
+  -- * OsString construction
+  , encodeUtf
+  , encodeWith
+  , encodeFS
   , osstr
-  , packOsString
+  , pack
 
-  -- * String deconstruction
-  , fromOsStringUtf
-  , fromOsStringEnc
-  , fromOsStringFS
-  , unpackOsString
+  -- * OsString deconstruction
+  , decodeUtf
+  , decodeWith
+  , decodeFS
+  , unpack
 
   -- * Word types
   , OsChar
@@ -46,15 +46,15 @@ where
 import System.OsString.Internal
     ( unsafeFromChar
     , toChar
-    , fromOsStringUtf
-    , fromOsStringEnc
-    , fromOsStringFS
+    , encodeUtf
+    , encodeWith
+    , encodeFS
     , osstr
-    , packOsString
-    , toOsStringUtf
-    , toOsStringEnc
-    , toOsStringFS
-    , unpackOsString
+    , pack
+    , decodeUtf
+    , decodeWith
+    , decodeFS
+    , unpack
     )
 import System.OsString.Internal.Types
     ( OsString, OsChar )

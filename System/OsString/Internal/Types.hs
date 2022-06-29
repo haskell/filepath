@@ -40,7 +40,9 @@ import Data.Semigroup
 #endif
 import GHC.Generics (Generic)
 
+import System.OsPath.Encoding.Internal
 import qualified System.OsPath.Data.ByteString.Short as BS
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
 #if MIN_VERSION_template_haskell(2,16,0)
 import qualified Language.Haskell.TH.Syntax as TH
 #endif
@@ -57,8 +59,10 @@ import qualified Language.Haskell.TH.Syntax as TH
 newtype WindowsString = WindowsString { getWindowsString :: BS.ShortByteString }
   deriving (Eq, Ord, Semigroup, Monoid, Typeable, Generic, NFData)
 
+-- | Decodes as UCS-2.
 instance Show WindowsString where
-  show (WindowsString ws) = show ws
+  -- cWcharsToChars_UCS2 is total
+  show = show . cWcharsToChars_UCS2 . BS16.unpack . getWindowsString
 
 -- | Just a short bidirectional synonym for 'WindowsString' constructor.
 pattern WS :: BS.ShortByteString -> WindowsString
@@ -81,6 +85,7 @@ instance Lift WindowsString where
 newtype PosixString = PosixString { getPosixString :: BS.ShortByteString }
   deriving (Eq, Ord, Semigroup, Monoid, Typeable, Generic, NFData)
 
+-- | Prints the raw bytes without decoding.
 instance Show PosixString where
   show (PosixString ps) = show ps
 
@@ -124,7 +129,7 @@ pattern WW { unWW } <- WindowsChar unWW where
   WW a = WindowsChar a
 {-# COMPLETE WW #-}
 
--- | Just a short bidirectional synonym for 'WindowsChar' constructor.
+-- | Just a short bidirectional synonym for 'PosixChar' constructor.
 pattern PW :: Word8 -> PosixChar
 pattern PW { unPW } <- PosixChar unPW where
   PW a = PosixChar a
@@ -149,6 +154,7 @@ type PlatformChar = PosixChar
 newtype OsString = OsString { getOsString :: PlatformString }
   deriving (Typeable, Generic, NFData)
 
+-- | On windows, decodes as UCS-2. On unix prints the raw bytes without decoding.
 instance Show OsString where
   show (OsString os) = show os
 
@@ -161,7 +167,7 @@ instance Ord OsString where
   compare (OsString a) (OsString b) = compare a b
 
 
--- | \"String-Concatenation\" for 'OsString. This is __not__ the same
+-- | \"String-Concatenation\" for 'OsString'. This is __not__ the same
 -- as '(</>)'.
 instance Monoid OsString where
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)

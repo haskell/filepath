@@ -40,32 +40,21 @@ module System.OsPath
   , OsChar
 #endif
   -- * Filepath construction
+  , PS.encodeUtf
+  , PS.encodeWith
+  , PS.encodeFS
 #if defined(WINDOWS) || defined(POSIX)
-  , toPlatformStringUtf
-  , toPlatformStringEnc
-  , toPlatformStringFS
   , pstr
-  , packPlatformString
 #else
-  , toOsPathUtf
-  , toOsPathEnc
-  , toOsPathFS
   , osp
-  , packOsPath
 #endif
+  , PS.pack
 
   -- * Filepath deconstruction
-#if defined(WINDOWS) || defined(POSIX)
-  , fromPlatformStringUtf
-  , fromPlatformStringEnc
-  , fromPlatformStringFS
-  , unpackPlatformString
-#else
-  , fromOsPathUtf
-  , fromOsPathEnc
-  , fromOsPathFS
-  , unpackOsPath
-#endif
+  , PS.decodeUtf
+  , PS.decodeWith
+  , PS.decodeFS
+  , PS.unpack
 
   -- * Word construction
   , unsafeFromChar
@@ -119,18 +108,18 @@ where
 
 #ifdef WINDOWS
 import System.OsPath.Types
-import System.OsString.Windows
+import System.OsString.Windows as PS
     ( unsafeFromChar
     , toChar
-    , fromPlatformStringUtf
-    , fromPlatformStringEnc
-    , fromPlatformStringFS
-    , packPlatformString
+    , decodeUtf
+    , decodeWith
+    , decodeFS
+    , pack
     , pstr
-    , toPlatformStringUtf
-    , toPlatformStringEnc
-    , toPlatformStringFS
-    , unpackPlatformString
+    , encodeUtf
+    , encodeWith
+    , encodeFS
+    , unpack
     )
 import Data.Bifunctor ( bimap )
 import qualified System.OsPath.Windows.Internal as C
@@ -138,34 +127,34 @@ import qualified System.OsPath.Windows.Internal as C
 #elif defined(POSIX)
 
 import System.OsPath.Types
-import System.OsString.Posix
+import System.OsString.Posix as PS
     ( unsafeFromChar
     , toChar
-    , fromPlatformStringUtf
-    , fromPlatformStringEnc
-    , fromPlatformStringFS
-    , packPlatformString
+    , decodeUtf
+    , decodeWith
+    , decodeFS
+    , pack
     , pstr
-    , toPlatformStringUtf
-    , toPlatformStringEnc
-    , toPlatformStringFS
-    , unpackPlatformString
+    , encodeUtf
+    , encodeWith
+    , encodeFS
+    , unpack
     )
 import Data.Bifunctor ( bimap )
 import qualified System.OsPath.Posix.Internal as C
 
 #else
 
-import System.OsPath.Internal
+import System.OsPath.Internal as PS
     ( osp
-    , fromOsPathUtf
-    , fromOsPathEnc
-    , fromOsPathFS
-    , packOsPath
-    , toOsPathUtf
-    , toOsPathEnc
-    , toOsPathFS
-    , unpackOsPath
+    , decodeUtf
+    , decodeWith
+    , decodeFS
+    , pack
+    , encodeUtf
+    , encodeWith
+    , encodeFS
+    , unpack
     )
 import System.OsPath.Types
     ( OsPath )

@@ -23,18 +23,18 @@ module System.OsString.MODULE_NAME
 #endif
 
   -- * String construction
-  , toPlatformStringUtf
-  , toPlatformStringEnc
-  , toPlatformStringFS
-  , bytesToPlatformString
+  , encodeUtf
+  , encodeWith
+  , encodeFS
+  , fromBytes
   , pstr
-  , packPlatformString
+  , pack
 
   -- * String deconstruction
-  , fromPlatformStringUtf
-  , fromPlatformStringEnc
-  , fromPlatformStringFS
-  , unpackPlatformString
+  , decodeUtf
+  , decodeWith
+  , decodeFS
+  , unpack
 
   -- * Word construction
   , unsafeFromChar
@@ -79,14 +79,14 @@ import System.OsPath.Encoding
 import System.IO
     ( TextEncoding, utf16le )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import System.OsPath.Data.ByteString.Short.Word16 as BS
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BS
 import qualified System.OsPath.Data.ByteString.Short as BS8
 #else
 import System.OsPath.Encoding
 import System.IO
     ( TextEncoding, utf8 )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
-import System.OsPath.Data.ByteString.Short as BS
+import qualified System.OsPath.Data.ByteString.Short as BS
 #endif
 
 
@@ -104,18 +104,18 @@ import System.OsPath.Data.ByteString.Short as BS
 --
 -- Throws an 'EncodingException' if encoding fails.
 #endif
-toPlatformStringUtf :: MonadThrow m => String -> m PLATFORM_STRING
+encodeUtf :: MonadThrow m => String -> m PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformStringUtf = either throwM pure . toPlatformStringEnc utf16le
+encodeUtf = either throwM pure . encodeWith utf16le
 #else
-toPlatformStringUtf = either throwM pure . toPlatformStringEnc utf8
+encodeUtf = either throwM pure . encodeWith utf8
 #endif
 
--- | Like 'toPlatformStringUtf', except allows to provide an encoding.
-toPlatformStringEnc :: TextEncoding
-                    -> String
-                    -> Either EncodingException PLATFORM_STRING
-toPlatformStringEnc enc str = unsafePerformIO $ do
+-- | Encode a 'String' with the specified encoding.
+encodeWith :: TextEncoding
+           -> String
+           -> Either EncodingException PLATFORM_STRING
+encodeWith enc str = unsafePerformIO $ do
 #ifdef WINDOWS
   r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WindowsString <$> BS8.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
@@ -125,7 +125,7 @@ toPlatformStringEnc enc str = unsafePerformIO $ do
 #endif
 
 #ifdef WINDOWS_DOC
--- | Like 'toPlatformStringUtf', except this mimics the behavior of the base library when doing filesystem
+-- | This mimics the behavior of the base library when doing filesystem
 -- operations, which does permissive UTF-16 encoding, where coding errors generate
 -- Chars in the surrogate range.
 --
@@ -140,11 +140,11 @@ toPlatformStringEnc enc str = unsafePerformIO $ do
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
 #endif
-toPlatformStringFS :: String -> IO PLATFORM_STRING
+encodeFS :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
-toPlatformStringFS = pure . WindowsString . encodeWithBaseWindows
+encodeFS = pure . WindowsString . encodeWithBaseWindows
 #else
-toPlatformStringFS = fmap PosixString . encodeWithBasePosix
+encodeFS = fmap PosixString . encodeWithBasePosix
 #endif
 
 
@@ -162,25 +162,31 @@ toPlatformStringFS = fmap PosixString . encodeWithBasePosix
 --
 -- Throws a 'EncodingException' if decoding fails.
 #endif
-fromPlatformStringUtf :: MonadThrow m => PLATFORM_STRING -> m String
+decodeUtf :: MonadThrow m => PLATFORM_STRING -> m String
 #ifdef WINDOWS
-fromPlatformStringUtf = either throwM pure . fromPlatformStringEnc utf16le
+decodeUtf = either throwM pure . decodeWith utf16le
 #else
-fromPlatformStringUtf = either throwM pure . fromPlatformStringEnc utf8
+decodeUtf = either throwM pure . decodeWith utf8
 #endif
 
--- | Like 'fromPlatformStringUtf', except allows to provide a text encoding.
+#ifdef WINDOWS
+-- | Decode a 'WindowsString' with the specified encoding.
 --
 -- The String is forced into memory to catch all exceptions.
-fromPlatformStringEnc :: TextEncoding
-                      -> PLATFORM_STRING
-                      -> Either EncodingException String
-#ifdef WINDOWS
-fromPlatformStringEnc winEnc (WindowsString ba) = unsafePerformIO $ do
+decodeWith :: TextEncoding
+           -> PLATFORM_STRING
+           -> Either EncodingException String
+decodeWith winEnc (WindowsString ba) = unsafePerformIO $ do
   r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen winEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
-fromPlatformStringEnc unixEnc (PosixString ba) = unsafePerformIO $ do
+-- | Decode a 'PosixString' with the specified encoding.
+--
+-- The String is forced into memory to catch all exceptions.
+decodeWith :: TextEncoding
+       -> PLATFORM_STRING
+       -> Either EncodingException String
+decodeWith unixEnc (PosixString ba) = unsafePerformIO $ do
   r <- try @SomeException $ BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
@@ -202,11 +208,11 @@ fromPlatformStringEnc unixEnc (PosixString ba) = unsafePerformIO $ do
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
 #endif
-fromPlatformStringFS :: PLATFORM_STRING -> IO String
+decodeFS :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
-fromPlatformStringFS (WindowsString ba) = pure $ decodeWithBaseWindows ba
+decodeFS (WindowsString ba) = pure $ decodeWithBaseWindows ba
 #else
-fromPlatformStringFS (PosixString ba) = decodeWithBasePosix ba
+decodeFS (PosixString ba) = decodeWithBasePosix ba
 #endif
 
 
@@ -222,15 +228,15 @@ fromPlatformStringFS (PosixString ba) = decodeWithBasePosix ba
 --
 -- This is a no-op.
 #endif
-bytesToPlatformString :: MonadThrow m
-                      => ByteString
-                      -> m PLATFORM_STRING
+fromBytes :: MonadThrow m
+          => ByteString
+          -> m PLATFORM_STRING
 #ifdef WINDOWS
-bytesToPlatformString bs =
-  let ws = WindowsString . toShort $ bs
-  in either throwM (const . pure $ ws) $ fromPlatformStringEnc ucs2le ws
+fromBytes bs =
+  let ws = WindowsString . BS.toShort $ bs
+  in either throwM (const . pure $ ws) $ decodeWith ucs2le ws
 #else
-bytesToPlatformString = pure . PosixString . toShort
+fromBytes = pure . PosixString . BS.toShort
 #endif
 
 
@@ -238,7 +244,7 @@ qq :: (ByteString -> Q Exp) -> QuasiQuoter
 qq quoteExp' =
   QuasiQuoter
 #ifdef WINDOWS
-  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF16le ErrorOnCodingFailure)
+  { quoteExp  = quoteExp' . BS.fromShort . either (error . show) id . encodeWithTE (mkUTF16le ErrorOnCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -247,7 +253,7 @@ qq quoteExp' =
       fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
   }
 #else
-  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF8 ErrorOnCodingFailure)
+  { quoteExp  = quoteExp' . BS.fromShort . either (error . show) id . encodeWithTE (mkUTF8 ErrorOnCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -259,7 +265,7 @@ qq quoteExp' =
 
 mkPlatformString :: ByteString -> Q Exp
 mkPlatformString bs =
-  case bytesToPlatformString bs of
+  case fromBytes bs of
     Just afp -> lift afp
     Nothing -> error "invalid encoding"
 
@@ -275,11 +281,11 @@ pstr = qq mkPlatformString
 
 
 -- | Unpack a platform string to a list of platform words.
-unpackPlatformString :: PLATFORM_STRING -> [PLATFORM_WORD]
+unpack :: PLATFORM_STRING -> [PLATFORM_WORD]
 #ifdef WINDOWS
-unpackPlatformString (WindowsString ba) = WindowsChar <$> BS.unpack ba
+unpack (WindowsString ba) = WindowsChar <$> BS.unpack ba
 #else
-unpackPlatformString (PosixString ba) = PosixChar <$> BS.unpack ba
+unpack (PosixString ba) = PosixChar <$> BS.unpack ba
 #endif
 
 
@@ -288,11 +294,11 @@ unpackPlatformString (PosixString ba) = PosixChar <$> BS.unpack ba
 -- Note that using this in conjunction with 'unsafeFromChar' to
 -- convert from @[Char]@ to platform string is probably not what
 -- you want, because it will truncate unicode code points.
-packPlatformString :: [PLATFORM_WORD] -> PLATFORM_STRING
+pack :: [PLATFORM_WORD] -> PLATFORM_STRING
 #ifdef WINDOWS
-packPlatformString = WindowsString . BS.pack . fmap (\(WindowsChar w) -> w)
+pack = WindowsString . BS.pack . fmap (\(WindowsChar w) -> w)
 #else
-packPlatformString = PosixString . BS.pack . fmap (\(PosixChar w) -> w)
+pack = PosixString . BS.pack . fmap (\(PosixChar w) -> w)
 #endif
 
 

@@ -243,21 +243,21 @@ main = do
       )
 
     , ("encoding/decoding",
-      [ ("fromPlatformStringUtf (posix)"      , nf (APF.fromPlatformStringUtf @Maybe) posixPathAFPP)
-      , ("fromPlatformStringUtf (windows)"    , nf (AWF.fromPlatformStringUtf @Maybe) windowsPathAFPP)
-      , ("fromPlatformStringEnc (windows)"    , nf (AWF.fromPlatformStringEnc ucs2le) windowsPathAFPP)
+      [ ("decodeUtf (posix)"                  , nf (APF.decodeUtf @Maybe) posixPathAFPP)
+      , ("decodeUtf (windows)"                , nf (AWF.decodeUtf @Maybe) windowsPathAFPP)
+      , ("decodeWith (windows)"               , nf (AWF.decodeWith ucs2le) windowsPathAFPP)
 
-      , ("toPlatformStringUtf (posix)"        , nf (APF.toPlatformStringUtf @Maybe) posixPath)
-      , ("toPlatformStringUtf (windows)"      , nf (AWF.toPlatformStringUtf @Maybe) windowsPath)
-      , ("toPlatformStringEnc (windows)"      , nf (AWF.toPlatformStringEnc ucs2le) windowsPath)
+      , ("encodeUtf (posix)"                  , nf (APF.encodeUtf @Maybe) posixPath)
+      , ("encodeUtf (windows)"                , nf (AWF.encodeUtf @Maybe) windowsPath)
+      , ("encodeWith (windows)"               , nf (AWF.encodeWith ucs2le) windowsPath)
 
-      , ("unpackPlatformString (posix)"       , nf APF.unpackPlatformString posixPathAFPP)
-      , ("unpackPlatformString (windows)"     , nf AWF.unpackPlatformString windowsPathAFPP)
-      , ("packPlatformString (posix)"         , nf APF.packPlatformString (APF.unpackPlatformString posixPathAFPP))
-      , ("packPlatformString (windows)"       , nf AWF.packPlatformString (AWF.unpackPlatformString windowsPathAFPP))
+      , ("unpack PlatformString (posix)"       , nf APF.unpack posixPathAFPP)
+      , ("unpack PlatformString (windows)"     , nf AWF.unpack windowsPathAFPP)
+      , ("pack PlatformString (posix)"         , nf APF.pack (APF.unpack posixPathAFPP))
+      , ("pack PlatformString (windows)"       , nf AWF.pack (AWF.unpack windowsPathAFPP))
 
-      , ("bytesToPlatformString (posix)"      , nf (OSP.bytesToPlatformString @Maybe) (SBS.fromShort . OST.getPosixString $ posixPathAFPP))
-      , ("bytesToPlatformString (windows)"    , nf (WSP.bytesToPlatformString @Maybe) (SBS.fromShort . OST.getWindowsString $ windowsPathAFPP))
+      , ("fromBytes (posix)"                  , nf (OSP.fromBytes @Maybe) (SBS.fromShort . OST.getPosixString $ posixPathAFPP))
+      , ("fromBytes (windows)"                , nf (WSP.fromBytes @Maybe) (SBS.fromShort . OST.getWindowsString $ windowsPathAFPP))
       ]
       )
     ]

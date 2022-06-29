@@ -21,15 +21,13 @@ import Language.Haskell.TH.Syntax
 import System.IO
     ( TextEncoding )
 
-import System.OsPath.Encoding ( encodeWith, EncodingException(..) )
+import System.OsPath.Encoding ( encodeWithTE, EncodingException(..) )
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import System.OsString.Windows
 import qualified System.OsString.Windows as PF
 #else
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
-import System.OsString.Posix
 import qualified System.OsString.Posix as PF
 #endif
 
@@ -42,21 +40,21 @@ import qualified System.OsString.Posix as PF
 -- On unix this encodes as UTF8 (strictly), which is a good guess.
 --
 -- Throws a 'EncodingException' if encoding fails.
-toOsStringUtf :: MonadThrow m => String -> m OsString
-toOsStringUtf = fmap OsString . toPlatformStringUtf
+encodeUtf :: MonadThrow m => String -> m OsString
+encodeUtf = fmap OsString . PF.encodeUtf
 
--- | Like 'toOsStringUtf', except allows to provide encodings.
-toOsStringEnc :: TextEncoding  -- ^ unix text encoding
-              -> TextEncoding  -- ^ windows text encoding
-              -> String
-              -> Either EncodingException OsString
+-- | Encode an 'OsString' given the platform specific encodings.
+encodeWith :: TextEncoding  -- ^ unix text encoding
+           -> TextEncoding  -- ^ windows text encoding
+           -> String
+           -> Either EncodingException OsString
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-toOsStringEnc _ winEnc str = OsString <$> toPlatformStringEnc winEnc str
+encodeWith _ winEnc str = OsString <$> PF.encodeWith winEnc str
 #else
-toOsStringEnc unixEnc _ str = OsString <$> toPlatformStringEnc unixEnc str
+encodeWith unixEnc _ str = OsString <$> PF.encodeWith unixEnc str
 #endif
 
--- | Like 'toOsStringUtf', except this mimics the behavior of the base library when doing filesystem
+-- | Like 'encodeUtf', except this mimics the behavior of the base library when doing filesystem
 -- operations, which is:
 --
 -- 1. on unix, uses shady PEP 383 style encoding (based on the current locale,
@@ -67,8 +65,8 @@ toOsStringEnc unixEnc _ str = OsString <$> toPlatformStringEnc unixEnc str
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
-toOsStringFS :: String -> IO OsString
-toOsStringFS = fmap OsString . toPlatformStringFS
+encodeFS :: String -> IO OsString
+encodeFS = fmap OsString . PF.encodeFS
 
 
 -- | Partial unicode friendly decoding.
@@ -78,24 +76,24 @@ toOsStringFS = fmap OsString . toPlatformStringFS
 -- filenames on unix are encoding agnostic char arrays.
 --
 -- Throws a 'EncodingException' if decoding fails.
-fromOsStringUtf :: MonadThrow m => OsString -> m String
-fromOsStringUtf (OsString x) = fromPlatformStringUtf x
+decodeUtf :: MonadThrow m => OsString -> m String
+decodeUtf (OsString x) = PF.decodeUtf x
 
--- | Like 'fromOsStringUtf', except allows to provide encodings.
+-- | Decode an 'OsString' with the specified encoding.
 --
 -- The String is forced into memory to catch all exceptions.
-fromOsStringEnc :: TextEncoding  -- ^ unix text encoding
-                -> TextEncoding  -- ^ windows text encoding
-                -> OsString
-                -> Either EncodingException String
+decodeWith :: TextEncoding  -- ^ unix text encoding
+           -> TextEncoding  -- ^ windows text encoding
+           -> OsString
+           -> Either EncodingException String
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-fromOsStringEnc _ winEnc (OsString x) = fromPlatformStringEnc winEnc x
+decodeWith _ winEnc (OsString x) = PF.decodeWith winEnc x
 #else
-fromOsStringEnc unixEnc _ (OsString x) = fromPlatformStringEnc unixEnc x
+decodeWith unixEnc _ (OsString x) = PF.decodeWith unixEnc x
 #endif
 
 
--- | Like 'fromOsStringUtf', except this mimics the behavior of the base library when doing filesystem
+-- | Like 'decodeUtf', except this mimics the behavior of the base library when doing filesystem
 -- operations, which is:
 --
 -- 1. on unix, uses shady PEP 383 style encoding (based on the current locale,
@@ -106,8 +104,8 @@ fromOsStringEnc unixEnc _ (OsString x) = fromPlatformStringEnc unixEnc x
 -- Looking up the locale requires IO. If you're not worried about calls
 -- to 'setFileSystemEncoding', then 'unsafePerformIO' may be feasible (make sure
 -- to deeply evaluate the result to catch exceptions).
-fromOsStringFS :: OsString -> IO String
-fromOsStringFS (OsString x) = fromPlatformStringFS x
+decodeFS :: OsString -> IO String
+decodeFS (OsString x) = PF.decodeFS x
 
 
 -- | Constructs an @OsString@ from a ByteString.
@@ -115,17 +113,17 @@ fromOsStringFS (OsString x) = fromPlatformStringFS x
 -- On windows, this ensures valid UCS-2LE, on unix it is passed unchanged/unchecked.
 --
 -- Throws 'EncodingException' on invalid UCS-2LE on windows (although unlikely).
-bytesToOsString :: MonadThrow m
-                => ByteString
-                -> m OsString
-bytesToOsString = fmap OsString . bytesToPlatformString
+fromBytes :: MonadThrow m
+          => ByteString
+          -> m OsString
+fromBytes = fmap OsString . PF.fromBytes
 
 
 qq :: (ByteString -> Q Exp) -> QuasiQuoter
 qq quoteExp' =
   QuasiQuoter
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF16le ErrorOnCodingFailure)
+  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWithTE (mkUTF16le ErrorOnCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -134,7 +132,7 @@ qq quoteExp' =
       fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
   }
 #else
-  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWith (mkUTF8 ErrorOnCodingFailure)
+  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWithTE (mkUTF8 ErrorOnCodingFailure)
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -146,7 +144,7 @@ qq quoteExp' =
 
 mkOsString :: ByteString -> Q Exp
 mkOsString bs =
-  case bytesToOsString bs of
+  case fromBytes bs of
     Just afp -> lift afp
     Nothing -> error "invalid encoding"
 
@@ -157,8 +155,8 @@ osstr = qq mkOsString
 
 
 -- | Unpack an 'OsString' to a list of 'OsChar'.
-unpackOsString :: OsString -> [OsChar]
-unpackOsString (OsString x) = OsChar <$> unpackPlatformString x
+unpack :: OsString -> [OsChar]
+unpack (OsString x) = OsChar <$> PF.unpack x
 
 
 -- | Pack a list of 'OsChar' to an 'OsString'
@@ -166,8 +164,8 @@ unpackOsString (OsString x) = OsChar <$> unpackPlatformString x
 -- Note that using this in conjunction with 'unsafeFromChar' to
 -- convert from @[Char]@ to 'OsString' is probably not what
 -- you want, because it will truncate unicode code points.
-packOsString :: [OsChar] -> OsString
-packOsString = OsString . packPlatformString . fmap (\(OsChar x) -> x)
+pack :: [OsChar] -> OsString
+pack = OsString . PF.pack . fmap (\(OsChar x) -> x)
 
 
 -- | Truncates on unix to 1 and on Windows to 2 octets.
