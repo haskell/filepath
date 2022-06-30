@@ -6,14 +6,10 @@ module Main where
 
 import System.OsPath.Types
 import System.OsPath.Encoding ( ucs2le )
-import System.Environment
 import qualified System.OsString.Internal.Types as OST
 import qualified Data.ByteString.Short as SBS
 
-import TastyBench
-import Data.List
-import Data.Maybe
-import GHC.IO.Encoding
+import Test.Tasty.Bench
 
 import qualified System.FilePath.Posix as PF
 import qualified System.FilePath.Posix as WF
@@ -22,45 +18,9 @@ import qualified System.OsString.Windows as WSP
 import qualified System.OsPath.Posix as APF
 import qualified System.OsPath.Windows as AWF
 
-
-data Config = Config {
-    format  :: Format
-  , stdev   :: Double
-  , timeout :: Integer
-  }
-
-data Format = Print
-            | CSV
-  deriving (Read, Show)
-
-defaultConfig :: Config
-defaultConfig = Config defaultFormat defaultStdev defaultTimeout
-
-defaultFormat :: Format
-defaultFormat = Print
-
-defaultStdev :: Double
-defaultStdev = 0.02
-
-defaultTimeout :: Integer
-defaultTimeout = 800000
-
-parseConfig :: [String] -> Config
-parseConfig [] = defaultConfig
-parseConfig xs =
-  let format'  = maybe defaultFormat  (read . fromJust . stripPrefix "--format=" ) $ find ("--format="  `isPrefixOf`) xs
-      stdev'   = maybe defaultStdev   (read . fromJust . stripPrefix "--stdev="  ) $ find ("--stdev="   `isPrefixOf`) xs
-      timeout' = maybe defaultTimeout (read . fromJust . stripPrefix "--timeout=") $ find ("--timeout=" `isPrefixOf`) xs
-  in Config format' stdev' timeout'
-
-
 main :: IO ()
-main = do
-  setLocaleEncoding utf8
-  args <- getArgs
-  let config = parseConfig args
-  benchGroup config
-    [ ("filepath (string)",
+main = defaultMain
+    [ bgroup "filepath (string)" $ map (uncurry bench)
       [("splitExtension (posix)"      , nf PF.splitExtension posixPath)
       ,("splitExtension (windows)"    , nf WF.splitExtension windowsPath)
       ,("takeExtension (posix)"       , nf PF.takeExtension posixPath)
@@ -149,9 +109,8 @@ main = do
       ,("splitSearchPath (posix)"    , nf PF.splitSearchPath posixSearchPath)
       ,("splitSearchPath (windows)"  , nf WF.splitSearchPath windowsSearchPath)
       ]
-      )
 
-    , ("filepath (AFPP)",
+    , bgroup "filepath (AFPP)" $ map (uncurry bench)
       [ ("splitExtension (posix)"      , nf APF.splitExtension posixPathAFPP)
       , ("splitExtension (windows)"    , nf AWF.splitExtension windowsPathAFPP)
       , ("takeExtension (posix)"       , nf APF.takeExtension posixPathAFPP)
@@ -240,9 +199,8 @@ main = do
       , ("splitSearchPath (posix)"     , nf APF.splitSearchPath posixSearchPathAFPP)
       , ("splitSearchPath (windows)"   , nf AWF.splitSearchPath windowsSearchPathAFPP)
       ]
-      )
 
-    , ("encoding/decoding",
+    , bgroup "encoding/decoding" $ map (uncurry bench)
       [ ("decodeUtf (posix)"                  , nf (APF.decodeUtf @Maybe) posixPathAFPP)
       , ("decodeUtf (windows)"                , nf (AWF.decodeUtf @Maybe) windowsPathAFPP)
       , ("decodeWith (windows)"               , nf (AWF.decodeWith ucs2le) windowsPathAFPP)
@@ -259,7 +217,6 @@ main = do
       , ("fromBytes (posix)"                  , nf (OSP.fromBytes @Maybe) (SBS.fromShort . OST.getPosixString $ posixPathAFPP))
       , ("fromBytes (windows)"                , nf (WSP.fromBytes @Maybe) (SBS.fromShort . OST.getWindowsString $ windowsPathAFPP))
       ]
-      )
     ]
 
 
@@ -286,26 +243,3 @@ posixSearchPathAFPP = [OSP.pstr|:foo:bar:bath:baz:baz:tz:fooooooooooooooo:laaaaa
 
 windowsSearchPathAFPP :: WindowsString
 windowsSearchPathAFPP = [WSP.pstr|foo;bar;bath;baz;baz;tz;fooooooooooooooo;laaaaaaaaaaaaaaa;baaaaaaaaaaaaar;zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz;zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz;kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk;kkkkkkkkkkkkkkkkkk;h;h;h;a;s;r;a;h;gt;r;r;r;s;s.txt|]
-
-
-benchGroup :: Config -> [(String, [(String, Benchmarkable)])] -> IO ()
-benchGroup _ [] = pure ()
-benchGroup format ((name, benchs):xs) = do
-  putStrLn name
-  bench format benchs
-  benchGroup format xs
-
-bench :: Config -> [(String, Benchmarkable)] -> IO ()
-bench _ [] = pure ()
-bench config@Config{..} (x:xs) = do
-  let (name, benchmarkable) = x
-  case format of
-    CSV -> putStr (name ++ ",")
-    Print -> putStr ("    " ++ name ++ ": ")
-  est <- measureUntil CpuTime False (Timeout timeout "") (RelStDev stdev) benchmarkable
-  case format of
-    CSV -> putStr $ csvEstimate est
-    Print -> putStr $ "\n      " ++ prettyEstimate est
-  putStr "\n"
-  bench config xs
-

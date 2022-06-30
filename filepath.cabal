@@ -193,12 +193,12 @@ benchmark bench-filepath
   type:             exitcode-stdio-1.0
   main-is:          BenchFilePath.hs
   hs-source-dirs:   bench
-  other-modules:    TastyBench
   build-depends:
     , base
     , bytestring  >=0.11.3.0
     , deepseq
     , filepath
+    , tasty-bench
 
   if impl(ghc >=8.10)
     ghc-options: "-with-rtsopts=-A32m --nonmoving-gc"
