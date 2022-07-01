@@ -20,20 +20,17 @@ import Language.Haskell.TH.Syntax
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 
 import System.OsString.Internal.Types
-#ifdef WINDOWS
-import qualified System.OsPath.Windows as PF
-import System.IO
-    ( TextEncoding, utf16le )
-import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
-import qualified System.OsPath.Data.ByteString.Short as BS8
-#else
-import qualified System.OsPath.Posix as PF
 import System.OsPath.Encoding
+import Control.Monad (when)
 import System.IO
     ( TextEncoding )
+
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+import qualified System.OsPath.Windows as PF
+import GHC.IO.Encoding.UTF16 ( mkUTF16le )
+#else
+import qualified System.OsPath.Posix as PF
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
-import Control.Monad (when)
 #endif
 
 
