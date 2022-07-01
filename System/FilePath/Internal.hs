@@ -135,7 +135,6 @@ import GHC.IO (unsafePerformIO)
 import qualified Data.Char as C
 #ifdef WINDOWS
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
-import qualified GHC.Foreign as GHC
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import qualified GHC.Foreign as GHC
 import Data.Word ( Word16 )
