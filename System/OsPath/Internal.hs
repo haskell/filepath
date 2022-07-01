@@ -7,21 +7,34 @@ module System.OsPath.Internal where
 import {-# SOURCE #-} System.OsPath
     ( isValid )
 import System.OsPath.Types
-import System.OsString.Internal hiding ( fromBytes )
 import qualified System.OsString.Internal as OS
 
 import Control.Monad.Catch
     ( MonadThrow )
 import Data.ByteString
     ( ByteString )
-import Language.Haskell.TH
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
 import Language.Haskell.TH.Syntax
     ( Lift (..), lift )
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
+
+import System.OsString.Internal.Types
+#ifdef WINDOWS
+import qualified System.OsPath.Windows as PF
+import System.IO
+    ( TextEncoding, utf16le )
+import GHC.IO.Encoding.UTF16 ( mkUTF16le )
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
+import qualified System.OsPath.Data.ByteString.Short as BS8
+#else
+import qualified System.OsPath.Posix as PF
+import System.OsPath.Encoding
 import System.IO
     ( TextEncoding )
-import System.OsPath.Encoding ( EncodingException(..) )
+import GHC.IO.Encoding.UTF8 ( mkUTF8 )
+import Control.Monad (when)
+#endif
 
 
 
@@ -98,20 +111,37 @@ fromBytes :: MonadThrow m
 fromBytes = OS.fromBytes
 
 
-mkOsPath :: ByteString -> Q Exp
-mkOsPath bs =
-  case fromBytes bs of
-    Just afp' ->
-      if isValid afp'
-      then lift afp'
-      else error "invalid filepath"
-    Nothing -> error "invalid encoding"
 
 -- | QuasiQuote an 'OsPath'. This accepts Unicode characters
--- and encodes as UTF-8 on unix and UTF-16 on windows. Runs 'filepathIsValid'
+-- and encodes as UTF-8 on unix and UTF-16LE on windows. Runs 'isValid'
 -- on the input.
 osp :: QuasiQuoter
-osp = qq mkOsPath
+osp = QuasiQuoter
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+  { quoteExp = \s -> do
+      osp' <- either (fail . show) (pure . OsString) . PF.encodeWith (mkUTF16le ErrorOnCodingFailure) $ s
+      when (not $ isValid osp') $ fail ("filepath now valid: " <> show osp')
+      lift osp'
+  , quotePat  = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
+  , quoteType = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a type)"
+  , quoteDec  = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
+  }
+#else
+  { quoteExp = \s -> do
+      osp' <- either (fail . show) (pure . OsString) . PF.encodeWith (mkUTF8 ErrorOnCodingFailure) $ s
+      when (not $ isValid osp') $ fail ("filepath now valid: " <> show osp')
+      lift osp'
+  , quotePat  = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
+  , quoteType = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a type)"
+  , quoteDec  = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
+  }
+#endif
 
 
 -- | Unpack an 'OsPath' to a list of 'OsChar'.

@@ -21,8 +21,6 @@ module System.OsPath.Encoding
   , utf16le_b_encode
 
   -- * base encoding
-  , encodeWithTE
-  , decodeWithTE
   , encodeWithBasePosix
   , decodeWithBasePosix
   , encodeWithBaseWindows

@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 -- This template expects CPP definitions for:
 --
 --     WINDOWS defined? = no            | yes              | no
@@ -115,7 +116,6 @@ import System.OsString.Windows as PS
     , decodeWith
     , decodeFS
     , pack
-    , pstr
     , encodeUtf
     , encodeWith
     , encodeFS
@@ -123,9 +123,23 @@ import System.OsString.Windows as PS
     )
 import Data.Bifunctor ( bimap )
 import qualified System.OsPath.Windows.Internal as C
+import GHC.IO.Encoding.UTF16 ( mkUTF16le )
+import Language.Haskell.TH.Quote
+    ( QuasiQuoter (..) )
+import Language.Haskell.TH.Syntax
+    ( Lift (..), lift )
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
+import Control.Monad ( when )
 
 #elif defined(POSIX)
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
+import Control.Monad ( when )
+import Language.Haskell.TH.Quote
+    ( QuasiQuoter (..) )
+import Language.Haskell.TH.Syntax
+    ( Lift (..), lift )
 
+import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.OsPath.Types
 import System.OsString.Posix as PS
     ( unsafeFromChar
@@ -134,7 +148,6 @@ import System.OsString.Posix as PS
     , decodeWith
     , decodeFS
     , pack
-    , pstr
     , encodeUtf
     , encodeWith
     , encodeFS
@@ -158,7 +171,7 @@ import System.OsPath.Internal as PS
     )
 import System.OsPath.Types
     ( OsPath )
-import System.OsString
+import System.OsString ( unsafeFromChar, toChar )
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import qualified System.OsPath.Windows as C
