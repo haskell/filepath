@@ -117,7 +117,7 @@ osp = QuasiQuoter
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
   { quoteExp = \s -> do
       osp' <- either (fail . show) (pure . OsString) . PF.encodeWith (mkUTF16le ErrorOnCodingFailure) $ s
-      when (not $ isValid osp') $ fail ("filepath now valid: " <> show osp')
+      when (not $ isValid osp') $ fail ("filepath now valid: " ++ show osp')
       lift osp'
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
@@ -129,7 +129,7 @@ osp = QuasiQuoter
 #else
   { quoteExp = \s -> do
       osp' <- either (fail . show) (pure . OsString) . PF.encodeWith (mkUTF8 ErrorOnCodingFailure) $ s
-      when (not $ isValid osp') $ fail ("filepath now valid: " <> show osp')
+      when (not $ isValid osp') $ fail ("filepath now valid: " ++ show osp')
       lift osp'
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
