@@ -251,7 +251,7 @@ pstr =
   QuasiQuoter
 #ifdef WINDOWS
   { quoteExp = \s -> do
-      ps <- either (fail . show) pure $ encodeWith (mkUTF16le ErrorOnCodingFailure) $ s
+      ps <- either (fail . show) pure $ encodeWith (mkUTF16le ErrorOnCodingFailure) s
       lift ps
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
@@ -262,7 +262,7 @@ pstr =
   }
 #else
   { quoteExp = \s -> do
-      ps <- either (fail . show) pure $ encodeWith (mkUTF8 ErrorOnCodingFailure) $ s
+      ps <- either (fail . show) pure $ encodeWith (mkUTF8 ErrorOnCodingFailure) s
       lift ps
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"

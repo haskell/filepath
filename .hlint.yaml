@@ -3,3 +3,4 @@
 - ignore: {name: "Use if"}
 - ignore: {name: "Use fmap"}
 - ignore: {name: "Use uncurry"}
+- ignore: {name: "Use unless"}

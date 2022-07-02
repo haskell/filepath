@@ -16,7 +16,7 @@ pstr :: QuasiQuoter
 pstr =
   QuasiQuoter
   { quoteExp = \s -> do
-      ps <- either (fail . show) pure $ encodeWith (mkUTF16le ErrorOnCodingFailure) $ s
+      ps <- either (fail . show) pure $ encodeWith (mkUTF16le ErrorOnCodingFailure) s
       when (not $ isValid ps) $ fail ("filepath now valid: " ++ show ps)
       lift ps
   , quotePat  = \_ ->
