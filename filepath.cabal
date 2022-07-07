@@ -1,6 +1,6 @@
 cabal-version:      2.2
 name:               filepath
-version:            1.4.99.0
+version:            1.4.99.4
 
 -- NOTE: Don't forget to update ./changelog.md
 license:            BSD-3-Clause
@@ -48,8 +48,8 @@ description:
 extra-source-files:
   Generate.hs
   Makefile
-  System/OsPath/Common.hs
   System/FilePath/Internal.hs
+  System/OsPath/Common.hs
   System/OsString/Common.hs
   tests/bytestring-tests/Properties/Common.hs
 
@@ -69,6 +69,9 @@ source-repository head
 
 library
   exposed-modules:
+    System.FilePath
+    System.FilePath.Posix
+    System.FilePath.Windows
     System.OsPath
     System.OsPath.Data.ByteString.Short
     System.OsPath.Data.ByteString.Short.Internal
@@ -81,9 +84,6 @@ library
     System.OsPath.Types
     System.OsPath.Windows
     System.OsPath.Windows.Internal
-    System.FilePath
-    System.FilePath.Posix
-    System.FilePath.Windows
     System.OsString
     System.OsString.Internal
     System.OsString.Internal.Types
@@ -170,9 +170,9 @@ test-suite abstract-filepath
   main-is:          Test.hs
   hs-source-dirs:   tests tests/abstract-filepath
   other-modules:
-    OsPathSpec
     Arbitrary
     EncodingSpec
+    OsPathSpec
     TestUtil
 
   build-depends:

@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE TypeApplications #-}
 
 -- This template expects CPP definitions for:
 --     MODULE_NAME = Posix | Windows
@@ -127,17 +128,24 @@ import Data.List(stripPrefix, isSuffixOf, uncons)
 #define FILEPATH FilePath
 #else
 import Prelude (fromIntegral)
-import System.OsPath.Encoding ( encodeWithTE )
-import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
+import Control.Exception ( SomeException, evaluate, try, displayException )
+import Data.Bifunctor (first)
+import Control.DeepSeq (force)
+import GHC.IO (unsafePerformIO)
 import qualified Data.Char as C
 #ifdef WINDOWS
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
+import qualified GHC.Foreign as GHC
 import Data.Word ( Word16 )
 import System.OsPath.Data.ByteString.Short.Word16
+import System.OsPath.Data.ByteString.Short ( packCStringLen )
 #define CHAR Word16
 #define STRING ShortByteString
 #define FILEPATH ShortByteString
 #else
+import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
+import qualified GHC.Foreign as GHC
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import Data.Word ( Word8 )
 import System.OsPath.Data.ByteString.Short
@@ -1180,10 +1188,14 @@ snoc str = \c -> str <> [c]
 #else
 #ifdef WINDOWS
 fromString :: P.String -> STRING
-fromString = P.either (P.error . P.show) P.id . encodeWithTE (mkUTF16le ErrorOnCodingFailure)
+fromString str = P.either (P.error . P.show) P.id $ unsafePerformIO $ do
+  r <- try @SomeException $ GHC.withCStringLen (mkUTF16le ErrorOnCodingFailure) str $ \cstr -> packCStringLen cstr
+  evaluate $ force $ first displayException r
 #else
 fromString :: P.String -> STRING
-fromString = P.either (P.error . P.show) P.id . encodeWithTE (mkUTF8 ErrorOnCodingFailure)
+fromString str = P.either (P.error . P.show) P.id $ unsafePerformIO $ do
+  r <- try @SomeException $ GHC.withCStringLen (mkUTF8 ErrorOnCodingFailure) str $ \cstr -> packCStringLen cstr
+  evaluate $ force $ first displayException r
 #endif
 
 _a, _z, _A, _Z, _period, _quotedbl, _backslash, _slash, _question, _U, _N, _C, _colon, _semicolon, _US, _less, _greater, _bar, _asterisk, _nul, _space, _underscore :: CHAR

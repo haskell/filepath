@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module OsPathSpec where
 
@@ -13,6 +14,8 @@ import System.OsPath.Windows as Windows
 import System.OsPath.Encoding
 import qualified System.OsString.Internal.Types as OS
 import System.OsPath.Data.ByteString.Short ( toShort )
+import System.OsString.Posix as PosixS
+import System.OsString.Windows as WindowsS
 
 import Control.Exception
 import Data.ByteString ( ByteString )
@@ -190,6 +193,43 @@ tests =
            .&&. r4 === expected
            .&&. r5 === expected
            )
+    )
+  , ("QuasiQuoter (WindowsString)",
+    property $ do
+      let bs = WindowsString $ BS16.pack [0x0041,0x0042,0x0063,0x004b,0x005f,0x0028,0x30c4,0x0031,0x0032,0x0033,0x005f,0x0026,0x002a,0x002a]
+      let expected = [WindowsS.pstr|ABcK_(ツ123_&**|]
+      bs === expected
+    )
+  , ("QuasiQuoter (PosixString)",
+    property $ do
+      let bs = PosixString $ SBS.pack [0x41,0x42,0x63,0x4b,0x5f,0x28,0xe3,0x83,0x84,0x31,0x32,0x33,0x5f,0x26,0x2a,0x2a]
+      let expected = [PosixS.pstr|ABcK_(ツ123_&**|]
+      bs === expected
+    )
+  , ("QuasiQuoter (WindowsPath)",
+    property $ do
+      let bs = WindowsString $ BS16.pack [0x0041,0x0042,0x0063,0x004b,0x005f]
+      let expected = [Windows.pstr|ABcK_|]
+      bs === expected
+    )
+  , ("QuasiQuoter (PosixPath)",
+    property $ do
+      let bs = PosixString $ SBS.pack [0x41,0x42,0x63,0x4b,0x5f]
+      let expected = [Posix.pstr|ABcK_|]
+      bs === expected
+    )
+
+  , ("pack . unpack == id (Windows)",
+    property $ \ws@(WindowsString _) ->
+      Windows.pack (Windows.unpack ws) === ws
+    )
+  , ("pack . unpack == id (Posix)",
+    property $ \ws@(PosixString _) ->
+      Posix.pack (Posix.unpack ws) === ws
+    )
+  , ("pack . unpack == id (OsPath)",
+    property $ \ws@(OsString _) ->
+      OSP.pack (OSP.unpack ws) === ws
     )
 
 

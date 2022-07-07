@@ -10,10 +10,7 @@ import Control.Monad.Catch
     ( MonadThrow )
 import Data.ByteString
     ( ByteString )
-import System.OsPath.Data.ByteString.Short
-    ( fromShort )
 import Data.Char
-import Language.Haskell.TH
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
 import Language.Haskell.TH.Syntax
@@ -21,7 +18,7 @@ import Language.Haskell.TH.Syntax
 import System.IO
     ( TextEncoding )
 
-import System.OsPath.Encoding ( encodeWithTE, EncodingException(..) )
+import System.OsPath.Encoding ( EncodingException(..) )
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
@@ -119,11 +116,15 @@ fromBytes :: MonadThrow m
 fromBytes = fmap OsString . PF.fromBytes
 
 
-qq :: (ByteString -> Q Exp) -> QuasiQuoter
-qq quoteExp' =
+-- | QuasiQuote an 'OsString'. This accepts Unicode characters
+-- and encodes as UTF-8 on unix and UTF-16 on windows.
+osstr :: QuasiQuoter
+osstr =
   QuasiQuoter
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
-  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWithTE (mkUTF16le ErrorOnCodingFailure)
+  { quoteExp = \s -> do
+      osp <- either (fail . show) (pure . OsString) . PF.encodeWith (mkUTF16le ErrorOnCodingFailure) $ s
+      lift osp
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -132,7 +133,9 @@ qq quoteExp' =
       fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
   }
 #else
-  { quoteExp  = quoteExp' . fromShort . either (error . show) id . encodeWithTE (mkUTF8 ErrorOnCodingFailure)
+  { quoteExp = \s -> do
+      osp <- either (fail . show) (pure . OsString) . PF.encodeWith (mkUTF8 ErrorOnCodingFailure) $ s
+      lift osp
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
   , quoteType = \_ ->
@@ -141,17 +144,6 @@ qq quoteExp' =
       fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
   }
 #endif
-
-mkOsString :: ByteString -> Q Exp
-mkOsString bs =
-  case fromBytes bs of
-    Just afp -> lift afp
-    Nothing -> error "invalid encoding"
-
--- | QuasiQuote an 'OsString'. This accepts Unicode characters
--- and encodes as UTF-8 on unix and UTF-16 on windows.
-osstr :: QuasiQuoter
-osstr = qq mkOsString
 
 
 -- | Unpack an 'OsString' to a list of 'OsChar'.

@@ -55,7 +55,7 @@ import qualified Language.Haskell.TH.Syntax as TH
 -- FFI call, this overhead is generally much preferable to
 -- the memory fragmentation of pinned bytearrays
 
--- | Commonly used windows string as UTF16 bytes.
+-- | Commonly used windows string as wide character bytes.
 newtype WindowsString = WindowsString { getWindowsString :: BS.ShortByteString }
   deriving (Eq, Ord, Semigroup, Monoid, Typeable, Generic, NFData)
 

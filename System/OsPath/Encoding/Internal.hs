@@ -28,7 +28,7 @@ import Data.Bifunctor (first)
 import Data.Data (Typeable)
 import GHC.Show (Show (show))
 import Numeric (showHex)
-import Foreign.C (CString, CStringLen)
+import Foreign.C (CStringLen)
 import Data.Char (chr)
 import Foreign
 import Prelude (FilePath)
@@ -260,39 +260,19 @@ charsToCWchars = foldr (utf16Char . ord) []
 -- FFI
 --
 
--- | Marshal a Haskell string into a NUL terminated C wide string using
--- temporary storage.
---
--- * the Haskell string may /not/ contain any NUL characters
---
--- * the memory is freed when the subcomputation terminates (either
---   normally or via an exception), so the pointer to the temporary
---   storage must /not/ be used after this.
---
-withCWString :: String -> (Ptr Word16 -> IO a) -> IO a
-withCWString  = withArray0 wNUL . charsToCWchars
+withFilePathWin :: FilePath -> (Int -> Ptr Word16 -> IO a) -> IO a
+withFilePathWin = withArrayLen . charsToCWchars
 
-peekCWString    :: Ptr Word16 -> IO String
-peekCWString cp  = do
-  cs <- peekArray0 wNUL cp
+peekFilePathWin :: (Ptr Word16, Int) -> IO FilePath
+peekFilePathWin (cp, l) = do
+  cs <- peekArray l cp
   return (cWcharsToChars cs)
 
-withFilePathWin :: FilePath -> (Ptr Word16 -> IO a) -> IO a
-withFilePathWin = withCWString
+withFilePathPosix :: FilePath -> (CStringLen -> IO a) -> IO a
+withFilePathPosix fp f = getFileSystemEncoding >>= \enc -> GHC.withCStringLen enc fp f
 
-peekFilePathWin :: Ptr Word16 -> IO FilePath
-peekFilePathWin = peekCWString
-
-withFilePathPosix :: FilePath -> (CString -> IO a) -> IO a
-withFilePathPosix fp f = getFileSystemEncoding >>= \enc -> GHC.withCString enc fp f
-
-peekFilePathLenPosix :: CStringLen -> IO FilePath
-peekFilePathLenPosix fp = getFileSystemEncoding >>= \enc -> GHC.peekCStringLen enc fp
-
-
--- -----------------------------------------------------------------------------
--- Encoders / decoders
---
+peekFilePathPosix :: CStringLen -> IO FilePath
+peekFilePathPosix fp = getFileSystemEncoding >>= \enc -> GHC.peekCStringLen enc fp
 
 -- | Decode with the given 'TextEncoding'.
 decodeWithTE :: TextEncoding -> BS8.ShortByteString -> Either EncodingException String
@@ -306,21 +286,33 @@ encodeWithTE enc str = unsafePerformIO $ do
   r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> BS8.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 
--- | This mimics the filepath ddecoder base uses on unix.
+-- -----------------------------------------------------------------------------
+-- Encoders / decoders
+--
+
+-- | This mimics the filepath decoder base uses on unix,
+-- with the small distinction that we're not truncating at NUL bytes (because we're not at
+-- the outer FFI layer).
 decodeWithBasePosix :: BS8.ShortByteString -> IO String
-decodeWithBasePosix ba = BS8.useAsCStringLen ba $ \fp -> peekFilePathLenPosix fp
+decodeWithBasePosix ba = BS8.useAsCStringLen ba $ \fp -> peekFilePathPosix fp
 
--- | This mimics the filepath dencoder base uses on unix.
+-- | This mimics the filepath dencoder base uses on unix,
+-- with the small distinction that we're not truncating at NUL bytes (because we're not at
+-- the outer FFI layer).
 encodeWithBasePosix :: String -> IO BS8.ShortByteString
-encodeWithBasePosix str = withFilePathPosix str $ \cstr -> BS8.packCString cstr
+encodeWithBasePosix str = withFilePathPosix str $ \cstr -> BS8.packCStringLen cstr
 
--- | This mimics the filepath decoder base uses on windows.
-decodeWithBaseWindows :: BS16.ShortByteString -> String
-decodeWithBaseWindows = cWcharsToChars . BS16.unpack
+-- | This mimics the filepath decoder base uses on windows,
+-- with the small distinction that we're not truncating at NUL bytes (because we're not at
+-- the outer FFI layer).
+decodeWithBaseWindows :: BS16.ShortByteString -> IO String
+decodeWithBaseWindows ba = BS16.useAsCWStringLen ba $ \fp -> peekFilePathWin fp
 
--- | This mimics the filepath dencoder base uses on windows.
-encodeWithBaseWindows :: String -> BS8.ShortByteString
-encodeWithBaseWindows = BS16.pack . charsToCWchars
+-- | This mimics the filepath dencoder base uses on windows,
+-- with the small distinction that we're not truncating at NUL bytes (because we're not at
+-- the outer FFI layer).
+encodeWithBaseWindows :: String -> IO BS16.ShortByteString
+encodeWithBaseWindows str = withFilePathWin str $ \l cstr -> BS16.packCWStringLen (cstr, l)
 
 
 -- -----------------------------------------------------------------------------

@@ -30,8 +30,7 @@
 --   are often interpreted as UTF8) as per the
 --   <https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_170 POSIX specification>
 --   and are passed as @char[]@ to syscalls. 'OsPath' maintains no invariant
---   here. Some functions however, such as 'toOsPathUtf', may expect
---   or produce UTF8.
+--   here.
 --
 -- Apart from encoding, filepaths have additional restrictions per platform:
 --
@@ -50,14 +49,13 @@
 -- It is advised to follow these principles when dealing with filepaths\/filenames:
 --
 -- 1. Avoid interpreting filenames that the OS returns, unless absolutely necessary.
---    For example, the filepath separator is usually a predefined 'Word8', regardless of encoding.
+--    For example, the filepath separator is usually a predefined 'Word8'/'Word16', regardless of encoding.
 --    So even if we need to split filepaths, it might still not be necessary to understand the encoding
 --    of the filename.
 -- 2. When interpreting OS returned filenames consider that these might not be UTF8 on /unix/
---    or at worst don't have an ASCII compatible encoding. Some strategies here involve looking
---    up the current locale and using that for decoding ('fromOsPathFS' does this).
---    Otherwise it can be reasonable to assume UTF8 on unix ('fromOsPathUtf' does that) if your application specifically
---    mentions that it requires a UTF8 compatible system. If you know the encoding, you can just use 'fromOsPathEnc'.
+--    or at worst don't have an ASCII compatible encoding. The are 3 available strategies fer decoding/encoding:
+--    a) pick the best UTF (UTF-8 on unix, UTF-16LE on windows), b) decode with an explicitly defined 'TextEncoding',
+--    c) mimic the behavior of the @base@ library (permissive UTF16 on windows, current filesystem encoding on unix).
 -- 3. Avoid comparing @String@ based filepaths, because filenames of different encodings
 --    may have the same @String@ representation, although they're not the same byte-wise.
 

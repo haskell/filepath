@@ -66,7 +66,6 @@ import Data.Bifunctor ( first )
 import GHC.IO
     ( evaluate, unsafePerformIO )
 import qualified GHC.Foreign as GHC
-import Language.Haskell.TH
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
 import Language.Haskell.TH.Syntax
@@ -79,7 +78,7 @@ import System.OsPath.Encoding
 import System.IO
     ( TextEncoding, utf16le )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import qualified System.OsPath.Data.ByteString.Short.Word16 as BS
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
 import qualified System.OsPath.Data.ByteString.Short as BS8
 #else
 import System.OsPath.Encoding
@@ -142,7 +141,7 @@ encodeWith enc str = unsafePerformIO $ do
 #endif
 encodeFS :: String -> IO PLATFORM_STRING
 #ifdef WINDOWS
-encodeFS = pure . WindowsString . encodeWithBaseWindows
+encodeFS = fmap WindowsString . encodeWithBaseWindows
 #else
 encodeFS = fmap PosixString . encodeWithBasePosix
 #endif
@@ -193,7 +192,7 @@ decodeWith unixEnc (PosixString ba) = unsafePerformIO $ do
 
 
 #ifdef WINDOWS_DOC
--- | Like 'fromPlatformStringUtf', except this mimics the behavior of the base library when doing filesystem
+-- | Like 'decodeUtf', except this mimics the behavior of the base library when doing filesystem
 -- operations, which does permissive UTF-16 encoding, where coding errors generate
 -- Chars in the surrogate range.
 --
@@ -210,7 +209,7 @@ decodeWith unixEnc (PosixString ba) = unsafePerformIO $ do
 #endif
 decodeFS :: PLATFORM_STRING -> IO String
 #ifdef WINDOWS
-decodeFS (WindowsString ba) = pure $ decodeWithBaseWindows ba
+decodeFS (WindowsString ba) = decodeWithBaseWindows ba
 #else
 decodeFS (PosixString ba) = decodeWithBasePosix ba
 #endif
@@ -233,57 +232,52 @@ fromBytes :: MonadThrow m
           -> m PLATFORM_STRING
 #ifdef WINDOWS
 fromBytes bs =
-  let ws = WindowsString . BS.toShort $ bs
+  let ws = WindowsString . BS16.toShort $ bs
   in either throwM (const . pure $ ws) $ decodeWith ucs2le ws
 #else
 fromBytes = pure . PosixString . BS.toShort
 #endif
 
 
-qq :: (ByteString -> Q Exp) -> QuasiQuoter
-qq quoteExp' =
-  QuasiQuoter
-#ifdef WINDOWS
-  { quoteExp  = quoteExp' . BS.fromShort . either (error . show) id . encodeWithTE (mkUTF16le ErrorOnCodingFailure)
-  , quotePat  = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
-  , quoteType = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a type)"
-  , quoteDec  = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
-  }
-#else
-  { quoteExp  = quoteExp' . BS.fromShort . either (error . show) id . encodeWithTE (mkUTF8 ErrorOnCodingFailure)
-  , quotePat  = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
-  , quoteType = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a type)"
-  , quoteDec  = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
-  }
-#endif
-
-mkPlatformString :: ByteString -> Q Exp
-mkPlatformString bs =
-  case fromBytes bs of
-    Just afp -> lift afp
-    Nothing -> error "invalid encoding"
-
 #ifdef WINDOWS_DOC
 -- | QuasiQuote a 'WindowsString'. This accepts Unicode characters
--- and encodes as UTF-16 on windows.
+-- and encodes as UTF-16LE on windows.
 #else
 -- | QuasiQuote a 'PosixString'. This accepts Unicode characters
 -- and encodes as UTF-8 on unix.
 #endif
 pstr :: QuasiQuoter
-pstr = qq mkPlatformString
+pstr =
+  QuasiQuoter
+#ifdef WINDOWS
+  { quoteExp = \s -> do
+      ps <- either (fail . show) pure $ encodeWith (mkUTF16le ErrorOnCodingFailure) s
+      lift ps
+  , quotePat  = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
+  , quoteType = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a type)"
+  , quoteDec  = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
+  }
+#else
+  { quoteExp = \s -> do
+      ps <- either (fail . show) pure $ encodeWith (mkUTF8 ErrorOnCodingFailure) s
+      lift ps
+  , quotePat  = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
+  , quoteType = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a type)"
+  , quoteDec  = \_ ->
+      fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
+  }
+#endif
 
 
 -- | Unpack a platform string to a list of platform words.
 unpack :: PLATFORM_STRING -> [PLATFORM_WORD]
 #ifdef WINDOWS
-unpack (WindowsString ba) = WindowsChar <$> BS.unpack ba
+unpack (WindowsString ba) = WindowsChar <$> BS16.unpack ba
 #else
 unpack (PosixString ba) = PosixChar <$> BS.unpack ba
 #endif
@@ -296,7 +290,7 @@ unpack (PosixString ba) = PosixChar <$> BS.unpack ba
 -- you want, because it will truncate unicode code points.
 pack :: [PLATFORM_WORD] -> PLATFORM_STRING
 #ifdef WINDOWS
-pack = WindowsString . BS.pack . fmap (\(WindowsChar w) -> w)
+pack = WindowsString . BS16.pack . fmap (\(WindowsChar w) -> w)
 #else
 pack = PosixString . BS.pack . fmap (\(PosixChar w) -> w)
 #endif
