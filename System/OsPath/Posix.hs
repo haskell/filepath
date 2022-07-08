@@ -16,7 +16,7 @@ pstr =
   QuasiQuoter
   { quoteExp = \s -> do
       ps <- either (fail . show) pure $ encodeWith (mkUTF8 ErrorOnCodingFailure) s
-      when (not $ isValid ps) $ fail ("filepath now valid: " ++ show ps)
+      when (not $ isValid ps) $ fail ("filepath not valid: " ++ show ps)
       lift ps
   , quotePat  = \_ ->
       fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
