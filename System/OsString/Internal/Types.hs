@@ -68,7 +68,9 @@ instance Show WindowsString where
 pattern WS :: BS.ShortByteString -> WindowsString
 pattern WS { unWS } <- WindowsString unWS where
   WS a = WindowsString a
+#if __GLASGOW_HASKELL__ >= 802
 {-# COMPLETE WS #-}
+#endif
 
 
 instance Lift WindowsString where
@@ -93,7 +95,9 @@ instance Show PosixString where
 pattern PS :: BS.ShortByteString -> PosixString
 pattern PS { unPS } <- PosixString unPS where
   PS a = PosixString a
+#if __GLASGOW_HASKELL__ >= 802
 {-# COMPLETE PS #-}
+#endif
 
 instance Lift PosixString where
   lift (PosixString bs)
@@ -127,13 +131,17 @@ instance Show PosixChar where
 pattern WW :: Word16 -> WindowsChar
 pattern WW { unWW } <- WindowsChar unWW where
   WW a = WindowsChar a
+#if __GLASGOW_HASKELL__ >= 802
 {-# COMPLETE WW #-}
+#endif
 
 -- | Just a short bidirectional synonym for 'PosixChar' constructor.
 pattern PW :: Word8 -> PosixChar
 pattern PW { unPW } <- PosixChar unPW where
   PW a = PosixChar a
+#if __GLASGOW_HASKELL__ >= 802
 {-# COMPLETE PW #-}
+#endif
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 type PlatformChar = WindowsChar
