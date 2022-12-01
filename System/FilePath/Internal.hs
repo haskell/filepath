@@ -120,7 +120,7 @@ import qualified Data.List as L
 #ifndef OS_PATH
 import Data.String (fromString)
 import System.Environment(getEnv)
-import Prelude (String, map, FilePath, Eq, IO, id, last, init, reverse, dropWhile, null, break, takeWhile, take, all, elem, any, head, tail, span)
+import Prelude (String, map, FilePath, Eq, IO, id, last, init, reverse, dropWhile, null, break, takeWhile, take, all, elem, any, span)
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.List(stripPrefix, isSuffixOf, uncons)
 #define CHAR Char
@@ -672,9 +672,7 @@ hasTrailingPathSeparator x
 
 
 hasLeadingPathSeparator :: FILEPATH -> Bool
-hasLeadingPathSeparator x
-  | null x = False
-  | otherwise = isPathSeparator $ head x
+hasLeadingPathSeparator = maybe False (isPathSeparator . fst) . uncons
 
 
 -- | Add a trailing file path separator if one is not already present.
@@ -901,11 +899,21 @@ makeRelative root path
       where (a, b) = break isPathSeparator $ dropWhile isPathSeparator x
 
     -- on windows, need to drop '/' which is kind of absolute, but not a drive
-    dropAbs x | not (null x) && isPathSeparator (head x) && not (hasDrive x) = tail x
-    dropAbs x = dropDrive x
+    dropAbs x
+      | Just (hd, tl) <- uncons x
+      , isPathSeparator hd
+      , not (hasDrive x)
+      = tl
+      | otherwise
+      = dropDrive x
 
-    takeAbs x | not (null x) && isPathSeparator (head x) && not (hasDrive x) = singleton pathSeparator
-    takeAbs x = map (\y -> if isPathSeparator y then pathSeparator else toLower y) $ takeDrive x
+    takeAbs x
+      | Just (hd, _) <- uncons x
+      , isPathSeparator hd
+      , not (hasDrive x)
+      = singleton pathSeparator
+      | otherwise
+      = map (\y -> if isPathSeparator y then pathSeparator else toLower y) $ takeDrive x
 
 -- | Normalise a file
 --
