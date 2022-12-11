@@ -55,10 +55,10 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install dependencies (Ubuntu)
-      if: runner.os == "Linux"
+      if: runner.os == 'Linux'
       run: |
-        apt-get -y update
-        apt-get -y install libtinfo5 libtinfo6 libncurses5 libncurses6
+        sudo apt-get -y update
+        sudo apt-get -y install libtinfo5 libtinfo6 libncurses5 libncurses6
 
     - name: Install ghc/cabal
       run: |
