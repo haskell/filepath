@@ -14,12 +14,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        ghc: ['8.0.2', '8.2.2', '8.4.4', '8.6.5', '8.8.4', '8.10.7', '9.0.2', '9.2.5']
+        ghc: ['8.0.2', '8.2.2', '8.4.4', '8.6.5', '8.8.4', '8.10.7', '9.0.2', '9.2.5', '9.4.4']
         cabal: ['3.6.2.0']
         include:
-          - os: ubuntu-latest
-            ghc: 'HEAD'
-            cabal: 3.6.2.0
           - os: ubuntu-latest
             ghc: 'recommended'
           - os: ubuntu-latest
@@ -55,29 +52,23 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install dependencies (Ubuntu)
-      if: runner.os == "Linux"
+      if: runner.os == 'Linux'
       run: |
-        apt-get -y update
-        apt-get -y install libtinfo5 libtinfo6 libncurses5 libncurses6
+        sudo apt-get -y update
+        sudo apt-get -y install libtinfo5 libtinfo6 libncurses5 libncurses6
 
     - name: Install ghc/cabal
       run: |
         set -eux
-        if [ "${{ matrix.ghc }}" == 'HEAD' ] ; then
-          ghcup install ghc -u 'https://gitlab.haskell.org/api/v4/projects/1/jobs/artifacts/master/raw/ghc-x86_64-linux-deb10-unreg-validate.tar.xz?job=x86_64-linux-deb10-unreg-validate' head
-          ghcup set ghc head
-        else
-          ghcup install ghc ${{ matrix.ghc }}
-          ghcup set ghc ${{ matrix.ghc }}
-        fi
-        ghcup install cabal ${{ matrix.cabal }}
+        ghcup install ghc --set ${{ matrix.ghc }}
+        ghcup install cabal --set ${{ matrix.cabal }}
       shell: bash
 
     - name: Build
       run: |
         set -eux
-        [ "${{ matrix.ghc }}" == 'HEAD' ] ||
-          [ "${{ matrix.ghc }}" == 'recommended' ] ||
+        [ -e ~/.ghcup/env ] && source ~/.ghcup/env
+        [ "${{ matrix.ghc }}" == 'recommended' ] ||
           [ "${{ matrix.ghc }}" == 'latest' ] ||
           [ "$(ghc --numeric-version)" = "${{ matrix.ghc }}" ]
         cabal update
@@ -114,11 +105,13 @@ jobs:
         githubToken: ${{ github.token }}
         install: |
           apt-get update -y
-          apt-get install -y ghc libghc-quickcheck2-dev cpphs git make
+          apt-get install -y ghc cabal-install libghc-quickcheck2-dev cpphs git make
         run: |
-          ghc --version
-          ghc --make -o Main tests/filepath-tests/Test.hs -itests/ -itests/filepath-tests/ +RTS -s
-          ./Main +RTS -s
+          cabal update
+          cabal test
+          cabal haddock
+          cabal check
+          cabal sdist
 
   emulated-i386:
     runs-on: ubuntu-latest
@@ -128,12 +121,14 @@ jobs:
     - name: install
       run: |
           apt-get update -y
-          apt-get install -y ghc libghc-quickcheck2-dev cpphs git make
+          apt-get install -y ghc cabal-install libghc-quickcheck2-dev cpphs git make
       shell: bash
     - uses: actions/checkout@v1
     - name: test
       run: |
-          ghc --version
-          ghc --make -o Main tests/filepath-tests/Test.hs -itests/ -itests/filepath-tests/ +RTS -s
-          ./Main +RTS -s
+        cabal update
+        cabal test
+        cabal haddock
+        cabal check
+        cabal sdist
       shell: bash
