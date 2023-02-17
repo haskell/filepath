@@ -112,6 +112,7 @@ module System.OsPath.MODULE_NAME.Internal
 
 {- HLINT ignore "Use fewer imports" -}
 import Prelude (Char, Bool(..), Maybe(..), (.), (&&), (<=), not, fst, maybe, (||), (==), ($), otherwise, fmap, mempty, (>=), (/=), (++), snd)
+import Data.Bifunctor (first)
 import Data.Semigroup ((<>))
 import qualified Prelude as P
 import Data.Maybe(isJust)
@@ -129,7 +130,6 @@ import Data.List(stripPrefix, isSuffixOf, uncons, dropWhileEnd)
 #else
 import Prelude (fromIntegral)
 import Control.Exception ( SomeException, evaluate, try, displayException )
-import Data.Bifunctor (first)
 import Control.DeepSeq (force)
 import GHC.IO (unsafePerformIO)
 import qualified Data.Char as C
@@ -1145,8 +1145,7 @@ stripSuffix xs ys = reverse P.<$> stripPrefix (reverse xs) (reverse ys)
 
 
 unsnoc :: [a] -> Maybe ([a], a)
-unsnoc [] = Nothing
-unsnoc xs = Just (init xs, last xs)
+unsnoc = L.foldr (\x -> Just . maybe ([], x) (first (x :))) Nothing
 
 
 _period, _quotedbl, _backslash, _slash, _question, _U, _N, _C, _colon, _semicolon, _US, _less, _greater, _bar, _asterisk, _nul, _space, _underscore :: Char
