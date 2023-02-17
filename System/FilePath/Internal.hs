@@ -290,13 +290,24 @@ getSearchPath = fmap splitSearchPath (getEnv "PATH")
 -- > splitExtension "file.txt/boris.ext" == ("file.txt/boris",".ext")
 -- > splitExtension "file/path.txt.bob.fred" == ("file/path.txt.bob",".fred")
 -- > splitExtension "file/path.txt/" == ("file/path.txt/","")
+
+-- A naive implementation would be to use @splitFileName_@ first,
+-- then break filename into basename and extension, then recombine dir and basename.
+-- This is way too expensive, see @splitFileName_@ comment for discussion.
+--
+-- Instead we speculatively split on the extension separator first, then check
+-- whether results are well-formed.
 splitExtension :: FILEPATH -> (STRING, STRING)
-splitExtension x = if null nameDot
-                   then (x, mempty)
-                   else (dir <> init nameDot, extSeparator `cons` ext)
-    where
-        (dir,file)    = splitFileName_ x
-        (nameDot,ext) = breakEnd isExtSeparator file
+splitExtension x
+  -- Imagine x = "no-dots", then nameDot = ""
+  | null nameDot = (x, mempty)
+  -- Imagine x = "\\shared.with.dots\no-dots"
+  | isWindows && null (dropDrive nameDot) = (x, mempty)
+  -- Imagine x = "dir.with.dots/no-dots"
+  | any isPathSeparator ext = (x, mempty)
+  | otherwise = (init nameDot, extSeparator `cons` ext)
+  where
+    (nameDot, ext) = breakEnd isExtSeparator x
 
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
 --
