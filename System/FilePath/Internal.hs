@@ -120,7 +120,7 @@ import qualified Data.List as L
 #ifndef OS_PATH
 import Data.String (fromString)
 import System.Environment(getEnv)
-import Prelude (String, map, FilePath, Eq, IO, id, last, init, reverse, dropWhile, null, break, takeWhile, take, all, elem, any, span)
+import Prelude (String, map, FilePath, Eq, IO, id, last, init, reverse, dropWhile, null, break, take, all, elem, any, span)
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.List(stripPrefix, isSuffixOf, uncons, dropWhileEnd)
 #define CHAR Char
@@ -1129,13 +1129,9 @@ isAbsolute = not . isRelative
 #ifndef OS_PATH
 
 -----------------------------------------------------------------------------
--- takeWhileEnd (>2) [1,2,3,4,1,2,3,4] == [3,4])
-takeWhileEnd :: (a -> Bool) -> [a] -> [a]
-takeWhileEnd p = reverse . takeWhile p . reverse
-
 -- spanEnd (>2) [1,2,3,4,1,2,3,4] = ([1,2,3,4,1,2], [3,4])
 spanEnd :: (a -> Bool) -> [a] -> ([a], [a])
-spanEnd p xs = (dropWhileEnd p xs, takeWhileEnd p xs)
+spanEnd p = L.foldr (\x (pref, suff) -> if null pref && p x then (pref, x : suff) else (x : pref, suff)) ([], [])
 
 -- breakEnd (< 2) [1,2,3,4,1,2,3,4] == ([1,2,3,4,1],[2,3,4])
 breakEnd :: (a -> Bool) -> [a] -> ([a], [a])
