@@ -122,7 +122,7 @@ import Data.String (fromString)
 import System.Environment(getEnv)
 import Prelude (String, map, FilePath, Eq, IO, id, last, init, reverse, dropWhile, null, break, takeWhile, take, all, elem, any, span)
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
-import Data.List(stripPrefix, isSuffixOf, uncons)
+import Data.List(stripPrefix, isSuffixOf, uncons, dropWhileEnd)
 #define CHAR Char
 #define STRING String
 #define FILEPATH FilePath
@@ -1129,11 +1129,6 @@ isAbsolute = not . isRelative
 #ifndef OS_PATH
 
 -----------------------------------------------------------------------------
--- dropWhileEnd (>2) [1,2,3,4,1,2,3,4] == [1,2,3,4,1,2])
--- Note that Data.List.dropWhileEnd is only available in base >= 4.5.
-dropWhileEnd :: (a -> Bool) -> [a] -> [a]
-dropWhileEnd p = reverse . dropWhile p . reverse
-
 -- takeWhileEnd (>2) [1,2,3,4,1,2,3,4] == [3,4])
 takeWhileEnd :: (a -> Bool) -> [a] -> [a]
 takeWhileEnd p = reverse . takeWhile p . reverse
