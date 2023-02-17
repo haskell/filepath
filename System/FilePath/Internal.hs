@@ -506,12 +506,14 @@ readDriveUNC bs = case unpack bs of
 
 {- c:\ -}
 readDriveLetter :: STRING -> Maybe (FILEPATH, FILEPATH)
-readDriveLetter bs = case unpack bs of
-  (x:c:y:xs)
-    | c == _colon && isLetter x && isPathSeparator y -> Just $ addSlash (pack [x,_colon]) (pack (y:xs))
-  (x:c:xs)
-    | c == _colon && isLetter x -> Just (pack [x,_colon], pack xs)
-  _ -> Nothing
+readDriveLetter bs = case uncons2 bs of
+  Nothing -> Nothing
+  Just (x, c, ys)
+    | isLetter x, c == _colon -> Just $ case uncons ys of
+      Just (y, _)
+        | isPathSeparator y -> addSlash (pack [x,_colon]) ys
+      _ -> (pack [x,_colon], ys)
+    | otherwise -> Nothing
 
 {- \\sharename\ -}
 readDriveShare :: STRING -> Maybe (FILEPATH, FILEPATH)
@@ -1147,6 +1149,10 @@ stripSuffix xs ys = reverse P.<$> stripPrefix (reverse xs) (reverse ys)
 unsnoc :: [a] -> Maybe ([a], a)
 unsnoc = L.foldr (\x -> Just . maybe ([], x) (first (x :))) Nothing
 
+uncons2 :: [a] -> Maybe (a, a, [a])
+uncons2 [] = Nothing
+uncons2 [_] = Nothing
+uncons2 (x : y : zs) = Just (x, y, zs)
 
 _period, _quotedbl, _backslash, _slash, _question, _U, _N, _C, _colon, _semicolon, _US, _less, _greater, _bar, _asterisk, _nul, _space, _underscore :: Char
 _period = '.'

@@ -20,6 +20,7 @@ module System.OsPath.Data.ByteString.Short.Internal where
 
 import Control.Monad.ST
 import Control.Exception (assert, throwIO)
+import Data.Bits (Bits(..))
 import Data.ByteString.Short.Internal (ShortByteString(..), length)
 #if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup
@@ -284,15 +285,21 @@ writeWord16Array (MBA# mba#) (I# i#) (W16# w#) =
       ST (\s -> case writeWord8Array# mba# (i# +# 1#) msb# s of
           s' -> (# s', () #))
 
+indexWord8Array :: BA
+                -> Int      -- ^ Word8 index
+                -> Word8
+indexWord8Array (BA# ba#) (I# i#) = W8# (indexWord8Array# ba# i#)
+
 -- | This isn't strictly Word16 array read. Instead it's two Word8 array reads
 -- to avoid endianness issues due to primops doing automatic alignment based
 -- on host platform. We expect the byte array to be LE always.
 indexWord16Array :: BA
                  -> Int      -- ^ Word8 index (not Word16)
                  -> Word16
-indexWord16Array (BA# ba#) (I# i#) =
-  case (# indexWord8Array# ba# i#, indexWord8Array# ba# (i# +# 1#) #) of
-    (# lsb#, msb# #) -> W16# (decodeWord16LE# (# lsb#, msb# #))
+indexWord16Array ba i = fromIntegral lsb .|. (fromIntegral msb `shiftL` 8)
+  where
+    lsb = indexWord8Array ba i
+    msb = indexWord8Array ba (i + 1)
 
 #if !MIN_VERSION_base(4,16,0)
 
