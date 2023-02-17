@@ -115,7 +115,7 @@ import Prelude (Char, Bool(..), Maybe(..), (.), (&&), (<=), not, fst, maybe, (||
 import Data.Bifunctor (first)
 import Data.Semigroup ((<>))
 import qualified Prelude as P
-import Data.Maybe(isJust)
+import Data.Maybe(fromMaybe, isJust)
 import qualified Data.List as L
 
 #ifndef OS_PATH
@@ -604,11 +604,45 @@ splitFileName x = if null path
 -- directory to make a valid FILEPATH, and having a "./" appear would
 -- look strange and upset simple equality properties.  See
 -- e.g. replaceFileName.
+--
+-- A naive implementation is
+--
+-- splitFileName_ fp = (drv <> dir, file)
+--   where
+--     (drv, pth) = splitDrive fp
+--     (dir, file) = breakEnd isPathSeparator pth
+--
+-- but it is undesirable for two reasons:
+-- * splitDrive is very slow on Windows,
+-- * we unconditionally allocate 5 FilePath objects where only 2 would normally suffice.
+--
+-- In the implementation below we first speculatively split the input by the last path
+-- separator. In the vast majority of cases this is already the answer, except
+-- two exceptional cases explained below.
+--
 splitFileName_ :: FILEPATH -> (STRING, STRING)
-splitFileName_ fp = (drv <> dir, file)
+splitFileName_ fp
+  -- If dirSlash is empty, @fp@ is either a genuine filename without any dir,
+  -- or just a Windows drive name without slash like "c:".
+  -- Run readDriveLetter to figure out.
+  | isWindows
+  , null dirSlash
+  = fromMaybe (mempty, fp) (readDriveLetter fp)
+  -- Another Windows quirk is that @fp@ could have been a shared drive "\\share"
+  -- or UNC location "\\?\UNC\foo", where path separator is a part of the drive name.
+  -- We can test this by trying dropDrive and falling back to splitDrive.
+  | isWindows
+  , Just (s1, _s2, bs') <- uncons2 dirSlash
+  , isPathSeparator s1
+  -- If bs' is empty, then s2 as the last character of dirSlash must be a path separator,
+  -- so we are in the middle of shared drive.
+  -- Otherwise, since s1 is a path separator, we might be in the middle of UNC path.
+  , null bs' || maybe False (null . snd) (readDriveUNC dirSlash)
+  = (fp, mempty)
+  | otherwise
+  = (dirSlash, file)
   where
-    (drv, pth) = splitDrive fp
-    (dir, file) = breakEnd isPathSeparator pth
+    (dirSlash, file) = breakEnd isPathSeparator fp
 
 -- | Set the filename.
 --
