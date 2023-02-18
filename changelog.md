@@ -2,6 +2,12 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+## 1.4.100.1 *Feb 2023*
+
+* Fix regression in `System.FilePath.Windows.normalise` wrt [#187](https://github.com/haskell/filepath/issues/187)
+* Fix tests on GHC 9.4.4
+* Avoid head and tail
+
 ## 1.4.100.0 *July 2022*
 
 Implementation of the [Abstract FilePath Proposal](https://gitlab.haskell.org/ghc/ghc/-/wikis/proposal/abstract-file-path)
