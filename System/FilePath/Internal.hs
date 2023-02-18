@@ -963,7 +963,7 @@ normalise filepath =
            then singleton _period
            else joinDrive d p
 
-    addPathSeparator = isDirPath filepath
+    addPathSeparator = isDirPath pth
       && not (hasTrailingPathSeparator result)
       && not (isRelativeDrive drv)
 
