@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TypeApplications #-}
@@ -38,7 +39,11 @@ tests =
       let str = [toEnum 55296, toEnum 55297]
           encoded = encodeWithTE utf16le str
           decoded = decodeWithTE utf16le =<< encoded
+#if __GLASGOW_HASKELL__ >= 904
+      in decoded === Left (EncodingError ("recoverEncode: invalid argument (cannot encode character " <> show (head str) <> ")") Nothing))
+#else
       in decoded === Left (EncodingError "recoverEncode: invalid argument (invalid character)" Nothing))
+#endif
   , ("ucs2 handles invalid surrogate pairs",
      property $
       let str = [toEnum 55296, toEnum 55297]
@@ -64,7 +69,11 @@ tests =
       let str = [toEnum 0xDFF0, toEnum 0xDFF2]
           encoded = encodeWithTE (mkUTF8 RoundtripFailure) str
           decoded = decodeWithTE (mkUTF8 RoundtripFailure) =<< encoded
+#if __GLASGOW_HASKELL__ >= 904
+      in decoded === Left (EncodingError ("recoverEncode: invalid argument (cannot encode character " <> show (head str) <> ")") Nothing))
+#else
       in decoded === Left (EncodingError "recoverEncode: invalid argument (invalid character)" Nothing))
+#endif
 
   , ("cannot roundtrip arbitrary bytes through utf-16 (with RoundtripFailure)",
      property $
