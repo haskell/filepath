@@ -8,9 +8,9 @@ license-file:       LICENSE
 author:             Neil Mitchell <ndmitchell@gmail.com>
 maintainer:         Julian Ospald <hasufell@posteo.de>
 copyright:          Neil Mitchell 2005-2020, Julain Ospald 2021-2022
-bug-reports:        https://gitlab.haskell.org/haskell/filepath/-/issues
+bug-reports:        https://github.com/haskell/filepath/issues
 homepage:
-  https://gitlab.haskell.org/haskell/filepath/-/blob/master/README.md
+  https://github.com/haskell/filepath/blob/master/README.md
 
 category:           System
 build-type:         Simple
@@ -69,7 +69,7 @@ flag cpphs
 
 source-repository head
   type:     git
-  location: https://gitlab.haskell.org/haskell/filepath
+  location: https://github.com/haskell/filepath
 
 library
   exposed-modules:
