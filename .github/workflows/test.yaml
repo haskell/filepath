@@ -13,73 +13,43 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        ghc: ['8.0.2', '8.2.2', '8.4.4', '8.6.5', '8.8.4', '8.10.7', '9.0.2', '9.2.5']
-        cabal: ['3.6.2.0']
+        os: [ubuntu-latest]
+        ghc: ['8.0.2', '8.2.2', '8.4.4', '8.6.5', '8.8.4', '8.10.7', '9.0.2', '9.2.5', '9.2.6', '9.4.4']
+        cabal: ['3.8.1.0']
         include:
-          - os: ubuntu-latest
-            ghc: 'HEAD'
-            cabal: 3.6.2.0
-          - os: ubuntu-latest
-            ghc: 'recommended'
-          - os: ubuntu-latest
-            ghc: 'latest'
-            cabal: 3.6.2.0
-        exclude:
           - os: macOS-latest
-            ghc: '8.0.2'
+            ghc: '9.2.6'
           - os: macOS-latest
-            ghc: '8.2.2'
-          - os: macOS-latest
-            ghc: '8.4.4'
-          - os: macOS-latest
-            ghc: '8.6.5'
-          - os: macOS-latest
-            ghc: '8.8.4'
-          - os: macOS-latest
-            ghc: '9.0.2'
+            ghc: '9.4.4'
           - os: windows-latest
-            ghc: '8.0.2'
+            ghc: '9.2.6'
           - os: windows-latest
-            ghc: '8.2.2'
-          - os: windows-latest
-            ghc: '8.4.4'
-          - os: windows-latest
-            ghc: '8.6.5'
-          - os: windows-latest
-            ghc: '8.8.4'
-          - os: windows-latest
-            ghc: '9.0.2'
-
+            ghc: '9.4.4'
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+
+    - name: Workaround runner image issue
+      if: runner.os == 'Linux'
+      # https://github.com/actions/runner-images/issues/7061
+      run: sudo chown -R $USER /usr/local/.ghcup
 
     - name: Install dependencies (Ubuntu)
-      if: runner.os == "Linux"
+      if: runner.os == 'Linux'
       run: |
-        apt-get -y update
-        apt-get -y install libtinfo5 libtinfo6 libncurses5 libncurses6
+        sudo apt-get -y update
+        sudo apt-get -y install libtinfo5 libtinfo6 libncurses5 libncurses6
 
     - name: Install ghc/cabal
       run: |
         set -eux
-        if [ "${{ matrix.ghc }}" == 'HEAD' ] ; then
-          ghcup install ghc -u 'https://gitlab.haskell.org/api/v4/projects/1/jobs/artifacts/master/raw/ghc-x86_64-linux-deb10-unreg-validate.tar.xz?job=x86_64-linux-deb10-unreg-validate' head
-          ghcup set ghc head
-        else
-          ghcup install ghc ${{ matrix.ghc }}
-          ghcup set ghc ${{ matrix.ghc }}
-        fi
+        ghcup install ghc --set ${{ matrix.ghc }}
         ghcup install cabal ${{ matrix.cabal }}
       shell: bash
 
     - name: Build
       run: |
         set -eux
-        [ "${{ matrix.ghc }}" == 'HEAD' ] ||
-          [ "${{ matrix.ghc }}" == 'recommended' ] ||
-          [ "${{ matrix.ghc }}" == 'latest' ] ||
-          [ "$(ghc --numeric-version)" = "${{ matrix.ghc }}" ]
+        [ "$(ghc --numeric-version)" = "${{ matrix.ghc }}" ]
         cabal update
         cabal build --enable-tests --enable-benchmarks
         cabal test
@@ -97,43 +67,84 @@ jobs:
         make all
         git diff --exit-code
 
-  emulated:
+  i386:
     needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        arch: ['s390x', 'ppc64le', 'armv7', 'aarch64']
-    steps:
-    - uses: actions/checkout@v2
-    - uses: uraimo/run-on-arch-action@v2.1.1
-      timeout-minutes: 60
-      with:
-        arch: ${{ matrix.arch }}
-        distro: ubuntu20.04
-        githubToken: ${{ github.token }}
-        install: |
-          apt-get update -y
-          apt-get install -y ghc libghc-quickcheck2-dev cpphs git make
-        run: |
-          ghc --version
-          ghc --make -o Main tests/filepath-tests/Test.hs -itests/ -itests/filepath-tests/ +RTS -s
-          ./Main +RTS -s
-
-  emulated-i386:
     runs-on: ubuntu-latest
     container:
       image: i386/ubuntu:bionic
     steps:
-    - name: install
+    - name: Install
       run: |
-          apt-get update -y
-          apt-get install -y ghc libghc-quickcheck2-dev cpphs git make
-      shell: bash
+        apt-get update -y
+        apt-get install -y autoconf build-essential zlib1g-dev libgmp-dev curl libncurses5 libtinfo5 libncurses5-dev libtinfo-dev
+        curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_INSTALL_NO_STACK=1 sh
     - uses: actions/checkout@v1
-    - name: test
+    - name: Test
       run: |
-          ghc --version
-          ghc --make -o Main tests/filepath-tests/Test.hs -itests/ -itests/filepath-tests/ +RTS -s
-          ./Main +RTS -s
-      shell: bash
+        source ~/.ghcup/env
+        cabal update
+        cabal test
+
+  # We use github.com/haskell self-hosted runners for ARM testing.
+  # If they become unavailable in future, put ['armv7', 'aarch64']
+  # back to emulation jobs above.
+  arm:
+    needs: build
+    runs-on: [self-hosted, Linux, ARM64]
+    strategy:
+      fail-fast: true
+      matrix:
+        arch: [arm32v7, arm64v8]
+    steps:
+      - uses: docker://hasufell/arm64v8-ubuntu-haskell:focal
+        name: Cleanup
+        with:
+          args: "find . -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +"
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - if: matrix.arch == 'arm32v7'
+        uses: docker://hasufell/arm32v7-ubuntu-haskell:focal
+        name: Run build (arm32v7 linux)
+        with:
+          args: sh -c "ghcup install ghc 9.2.2 && cabal -w ghc-9.2.2 update && cabal -w ghc-9.2.2 test"
+
+      - if: matrix.arch == 'arm64v8'
+        uses: docker://hasufell/arm64v8-ubuntu-haskell:focal
+        name: Run build (arm64v8 linux)
+        with:
+          args: sh -c "ghcup install ghc 9.2.2 && cabal -w ghc-9.2.2 update && cabal -w ghc-9.2.2 test"
+
+  darwin_arm:
+    runs-on: ${{ matrix.os }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: 10.13
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: [self-hosted, macOS, ARM64]
+            ghc: 8.10.7
+          - os: [self-hosted, macOS, ARM64]
+            ghc: 9.2.6
+          - os: [self-hosted, macOS, ARM64]
+            ghc: 9.4.4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run build
+        run: |
+          bash .github/scripts/brew.sh git coreutils llvm@11 autoconf automake
+          export PATH="$HOME/.brew/bin:$HOME/.brew/sbin:$HOME/.brew/opt/llvm@11/bin:$PATH"
+          export CC="$HOME/.brew/opt/llvm@11/bin/clang"
+          export CXX="$HOME/.brew/opt/llvm@11/bin/clang++"
+          export LD=ld
+          export AR="$HOME/.brew/opt/llvm@11/bin/llvm-ar"
+          export RANLIB="$HOME/.brew/opt/llvm@11/bin/llvm-ranlib"
+          . .github/scripts/env.sh
+          curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_INSTALL_NO_STACK=1 BOOTSTRAP_HASKELL_GHC_VERSION=${{ matrix.ghc }} BOOTSTRAP_HASKELL_ADJUST_BASHRC=yes sh
+          cabal test
+        env:
+          HOMEBREW_CHANGE_ARCH_TO_ARM: 1
