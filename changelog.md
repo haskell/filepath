@@ -2,6 +2,10 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+## 1.4.100.2 *Feb 2023*
+
+* Speed up `splitFileName`, `splitExtension`, `readDriveLetter` and various other helpers (up to 20x faster) by @Bodigrim
+
 ## 1.4.100.1 *Feb 2023*
 
 * Fix regression in `System.FilePath.Windows.normalise` wrt [#187](https://github.com/haskell/filepath/issues/187)
