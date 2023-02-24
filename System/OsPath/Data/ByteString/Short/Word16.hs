@@ -46,6 +46,7 @@ module System.OsPath.Data.ByteString.Short.Word16 (
     last,
     tail,
     uncons,
+    uncons2,
     head,
     init,
     unsnoc,
@@ -259,6 +260,18 @@ uncons = \(assertEven -> sbs) ->
         | otherwise -> let h = indexWord16Array (asBA sbs) 0
                            t = create nl $ \mba -> copyByteArray (asBA sbs) 2 mba 0 nl
                        in Just (h, t)
+
+-- | /O(n)/ Extract first two elements and the rest of a ByteString,
+-- returning Nothing if it is shorter than two elements.
+uncons2 :: ShortByteString -> Maybe (Word16, Word16, ShortByteString)
+uncons2 = \(assertEven -> sbs) ->
+  let l  = BS.length sbs
+      nl = l - 4
+  in if | l <= 2 -> Nothing
+        | otherwise -> let h  = indexWord16Array (asBA sbs) 0
+                           h' = indexWord16Array (asBA sbs) 2
+                           t  = create nl $ \mba -> copyByteArray (asBA sbs) 4 mba 0 nl
+                       in Just (h, h', t)
 
 -- | /O(1)/ Extract the first element of a ShortByteString, which must be at least one Word16.
 -- An exception will be thrown in the case of an empty ShortByteString.

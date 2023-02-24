@@ -112,24 +112,24 @@ module System.OsPath.MODULE_NAME.Internal
 
 {- HLINT ignore "Use fewer imports" -}
 import Prelude (Char, Bool(..), Maybe(..), (.), (&&), (<=), not, fst, maybe, (||), (==), ($), otherwise, fmap, mempty, (>=), (/=), (++), snd)
+import Data.Bifunctor (first)
 import Data.Semigroup ((<>))
 import qualified Prelude as P
-import Data.Maybe(isJust)
+import Data.Maybe(fromMaybe, isJust)
 import qualified Data.List as L
 
 #ifndef OS_PATH
 import Data.String (fromString)
 import System.Environment(getEnv)
-import Prelude (String, map, FilePath, Eq, IO, id, last, init, reverse, dropWhile, null, break, takeWhile, take, all, elem, any, span)
+import Prelude (String, map, FilePath, Eq, IO, id, last, init, reverse, dropWhile, null, break, take, all, elem, any, span)
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
-import Data.List(stripPrefix, isSuffixOf, uncons)
+import Data.List(stripPrefix, isSuffixOf, uncons, dropWhileEnd)
 #define CHAR Char
 #define STRING String
 #define FILEPATH FilePath
 #else
 import Prelude (fromIntegral)
 import Control.Exception ( SomeException, evaluate, try, displayException )
-import Data.Bifunctor (first)
 import Control.DeepSeq (force)
 import GHC.IO (unsafePerformIO)
 import qualified Data.Char as C
@@ -290,13 +290,24 @@ getSearchPath = fmap splitSearchPath (getEnv "PATH")
 -- > splitExtension "file.txt/boris.ext" == ("file.txt/boris",".ext")
 -- > splitExtension "file/path.txt.bob.fred" == ("file/path.txt.bob",".fred")
 -- > splitExtension "file/path.txt/" == ("file/path.txt/","")
+
+-- A naive implementation would be to use @splitFileName_@ first,
+-- then break filename into basename and extension, then recombine dir and basename.
+-- This is way too expensive, see @splitFileName_@ comment for discussion.
+--
+-- Instead we speculatively split on the extension separator first, then check
+-- whether results are well-formed.
 splitExtension :: FILEPATH -> (STRING, STRING)
-splitExtension x = if null nameDot
-                   then (x, mempty)
-                   else (dir <> init nameDot, singleton extSeparator <> ext)
-    where
-        (dir,file)    = splitFileName_ x
-        (nameDot,ext) = breakEnd isExtSeparator file
+splitExtension x
+  -- Imagine x = "no-dots", then nameDot = ""
+  | null nameDot = (x, mempty)
+  -- Imagine x = "\\shared.with.dots\no-dots"
+  | isWindows && null (dropDrive nameDot) = (x, mempty)
+  -- Imagine x = "dir.with.dots/no-dots"
+  | any isPathSeparator ext = (x, mempty)
+  | otherwise = (init nameDot, extSeparator `cons` ext)
+  where
+    (nameDot, ext) = breakEnd isExtSeparator x
 
 -- | Get the extension of a file, returns @\"\"@ for no extension, @.ext@ otherwise.
 --
@@ -358,7 +369,7 @@ addExtension file xs = case uncons xs of
   Just (x, _) -> joinDrive a res
     where
         res = if isExtSeparator x then b <> xs
-              else b <> singleton extSeparator <> xs
+              else b <> (extSeparator `cons` xs)
 
         (a,b) = splitDrive file
 
@@ -383,7 +394,7 @@ isExtensionOf :: STRING -> FILEPATH -> Bool
 isExtensionOf ext = \fp -> case uncons ext of
   Just (x, _)
     | x == _period -> isSuffixOf ext . takeExtensions $ fp
-  _ -> isSuffixOf (singleton _period <> ext) . takeExtensions $ fp
+  _ -> isSuffixOf (_period `cons` ext) . takeExtensions $ fp
 
 -- | Drop the given extension from a FILEPATH, and the @\".\"@ preceding it.
 --   Returns 'Nothing' if the FILEPATH does not have the given extension, or
@@ -403,7 +414,7 @@ isExtensionOf ext = \fp -> case uncons ext of
 -- > stripExtension ""     x          == Just x
 stripExtension :: STRING -> FILEPATH -> Maybe FILEPATH
 stripExtension ext path = case uncons ext of
-  Just (x, _) -> let dotExt = if isExtSeparator x then ext else singleton _period <> ext
+  Just (x, _) -> let dotExt = if isExtSeparator x then ext else _period `cons` ext
                  in stripSuffix dotExt path
   Nothing -> Just path
 
@@ -506,19 +517,21 @@ readDriveUNC bs = case unpack bs of
 
 {- c:\ -}
 readDriveLetter :: STRING -> Maybe (FILEPATH, FILEPATH)
-readDriveLetter bs = case unpack bs of
-  (x:c:y:xs)
-    | c == _colon && isLetter x && isPathSeparator y -> Just $ addSlash (pack [x,_colon]) (pack (y:xs))
-  (x:c:xs)
-    | c == _colon && isLetter x -> Just (pack [x,_colon], pack xs)
-  _ -> Nothing
+readDriveLetter bs = case uncons2 bs of
+  Nothing -> Nothing
+  Just (x, c, ys)
+    | isLetter x, c == _colon -> Just $ case uncons ys of
+      Just (y, _)
+        | isPathSeparator y -> addSlash (pack [x,_colon]) ys
+      _ -> (pack [x,_colon], ys)
+    | otherwise -> Nothing
 
 {- \\sharename\ -}
 readDriveShare :: STRING -> Maybe (FILEPATH, FILEPATH)
 readDriveShare bs = case unpack bs of
   (s1:s2:xs) | isPathSeparator s1 && isPathSeparator s2 -> 
     let (a, b) = readDriveShareName (pack xs)
-    in Just (singleton s1 <> singleton s2 <> a,b)
+    in Just (s1 `cons` (s2 `cons` a), b)
   _ -> Nothing
 
 {- assume you have already seen \\ -}
@@ -594,7 +607,7 @@ splitFileName x = if null path
     else (path, file)
   where
     (path, file) = splitFileName_ x
-    dotSlash = singleton _period <> singleton _slash
+    dotSlash = _period `cons` singleton _slash
 
 -- version of splitFileName where, if the FILEPATH has no directory
 -- component, the returned directory is "" rather than "./".  This
@@ -602,11 +615,45 @@ splitFileName x = if null path
 -- directory to make a valid FILEPATH, and having a "./" appear would
 -- look strange and upset simple equality properties.  See
 -- e.g. replaceFileName.
+--
+-- A naive implementation is
+--
+-- splitFileName_ fp = (drv <> dir, file)
+--   where
+--     (drv, pth) = splitDrive fp
+--     (dir, file) = breakEnd isPathSeparator pth
+--
+-- but it is undesirable for two reasons:
+-- * splitDrive is very slow on Windows,
+-- * we unconditionally allocate 5 FilePath objects where only 2 would normally suffice.
+--
+-- In the implementation below we first speculatively split the input by the last path
+-- separator. In the vast majority of cases this is already the answer, except
+-- two exceptional cases explained below.
+--
 splitFileName_ :: FILEPATH -> (STRING, STRING)
-splitFileName_ fp = (drv <> dir, file)
+splitFileName_ fp
+  -- If dirSlash is empty, @fp@ is either a genuine filename without any dir,
+  -- or just a Windows drive name without slash like "c:".
+  -- Run readDriveLetter to figure out.
+  | isWindows
+  , null dirSlash
+  = fromMaybe (mempty, fp) (readDriveLetter fp)
+  -- Another Windows quirk is that @fp@ could have been a shared drive "\\share"
+  -- or UNC location "\\?\UNC\foo", where path separator is a part of the drive name.
+  -- We can test this by trying dropDrive and falling back to splitDrive.
+  | isWindows
+  , Just (s1, _s2, bs') <- uncons2 dirSlash
+  , isPathSeparator s1
+  -- If bs' is empty, then s2 as the last character of dirSlash must be a path separator,
+  -- so we are in the middle of shared drive.
+  -- Otherwise, since s1 is a path separator, we might be in the middle of UNC path.
+  , null bs' || maybe False (null . snd) (readDriveUNC dirSlash)
+  = (fp, mempty)
+  | otherwise
+  = (dirSlash, file)
   where
-    (drv, pth) = splitDrive fp
-    (dir, file) = breakEnd isPathSeparator pth
+    (dirSlash, file) = breakEnd isPathSeparator fp
 
 -- | Set the filename.
 --
@@ -736,7 +783,7 @@ combineAlways a b | null a = b
                       [a1, a2] | isWindows
                                , isLetter a1
                                , a2 == _colon -> a <> b
-                      _ -> a <> singleton pathSeparator <> b
+                      _ -> a <> (pathSeparator `cons` b)
 
 
 -- | Combine two paths with a path separator.
@@ -1068,7 +1115,7 @@ makeValid path
   | isPosix = map (\x -> if x == _nul then _underscore else x) path
   | isJust (readDriveShare drv) && all isPathSeparator drv = take 2 drv <> fromString "drive"
   | isJust (readDriveUNC drv) && not (hasTrailingPathSeparator drv) =
-      makeValid (drv <> singleton pathSeparator <> pth)
+      makeValid (drv <> (pathSeparator `cons` pth))
   | otherwise = joinDrive drv $ validElements $ validCHARs pth
 
   where
@@ -1129,18 +1176,9 @@ isAbsolute = not . isRelative
 #ifndef OS_PATH
 
 -----------------------------------------------------------------------------
--- dropWhileEnd (>2) [1,2,3,4,1,2,3,4] == [1,2,3,4,1,2])
--- Note that Data.List.dropWhileEnd is only available in base >= 4.5.
-dropWhileEnd :: (a -> Bool) -> [a] -> [a]
-dropWhileEnd p = reverse . dropWhile p . reverse
-
--- takeWhileEnd (>2) [1,2,3,4,1,2,3,4] == [3,4])
-takeWhileEnd :: (a -> Bool) -> [a] -> [a]
-takeWhileEnd p = reverse . takeWhile p . reverse
-
 -- spanEnd (>2) [1,2,3,4,1,2,3,4] = ([1,2,3,4,1,2], [3,4])
 spanEnd :: (a -> Bool) -> [a] -> ([a], [a])
-spanEnd p xs = (dropWhileEnd p xs, takeWhileEnd p xs)
+spanEnd p = L.foldr (\x (pref, suff) -> if null pref && p x then (pref, x : suff) else (x : pref, suff)) ([], [])
 
 -- breakEnd (< 2) [1,2,3,4,1,2,3,4] == ([1,2,3,4,1],[2,3,4])
 breakEnd :: (a -> Bool) -> [a] -> ([a], [a])
@@ -1152,11 +1190,16 @@ breakEnd p = spanEnd (not . p)
 stripSuffix :: Eq a => [a] -> [a] -> Maybe [a]
 stripSuffix xs ys = reverse P.<$> stripPrefix (reverse xs) (reverse ys)
 
+cons :: a -> [a] -> [a]
+cons = (:)
 
 unsnoc :: [a] -> Maybe ([a], a)
-unsnoc [] = Nothing
-unsnoc xs = Just (init xs, last xs)
+unsnoc = L.foldr (\x -> Just . maybe ([], x) (first (x :))) Nothing
 
+uncons2 :: [a] -> Maybe (a, a, [a])
+uncons2 [] = Nothing
+uncons2 [_] = Nothing
+uncons2 (x : y : zs) = Just (x, y, zs)
 
 _period, _quotedbl, _backslash, _slash, _question, _U, _N, _C, _colon, _semicolon, _US, _less, _greater, _bar, _asterisk, _nul, _space, _underscore :: Char
 _period = '.'
