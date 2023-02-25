@@ -648,12 +648,15 @@ splitFileName_ fp
   -- If bs' is empty, then s2 as the last character of dirSlash must be a path separator,
   -- so we are in the middle of shared drive.
   -- Otherwise, since s1 is a path separator, we might be in the middle of UNC path.
-  , null bs' || maybe False (null . snd) (readDriveUNC dirSlash)
+  , null bs' || maybe False isIncompleteUNC (readDriveUNC dirSlash)
   = (fp, mempty)
   | otherwise
   = (dirSlash, file)
   where
     (dirSlash, file) = breakEnd isPathSeparator fp
+
+    isIncompleteUNC (pref, suff) = null suff && not (hasPenultimateColon pref)
+    hasPenultimateColon = maybe False (maybe False ((== _colon) . snd) . unsnoc . fst) . unsnoc
 
 -- | Set the filename.
 --
