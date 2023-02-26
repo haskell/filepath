@@ -456,6 +456,8 @@ tests =
     ,("AFP_P.splitFileName (\"/\") == ((\"/\"), (\"\"))", property $ AFP_P.splitFileName ("/") == (("/"), ("")))
     ,("W.splitFileName \"c:\" == (\"c:\", \"\")", property $ W.splitFileName "c:" == ("c:", ""))
     ,("AFP_W.splitFileName (\"c:\") == ((\"c:\"), (\"\"))", property $ AFP_W.splitFileName ("c:") == (("c:"), ("")))
+    ,("W.splitFileName \"\\\\\\\\?\\\\A:\\\\fred\" == (\"\\\\\\\\?\\\\A:\\\\\", \"fred\")", property $ W.splitFileName "\\\\?\\A:\\fred" == ("\\\\?\\A:\\", "fred"))
+    ,("AFP_W.splitFileName (\"\\\\\\\\?\\\\A:\\\\fred\") == ((\"\\\\\\\\?\\\\A:\\\\\"), (\"fred\"))", property $ AFP_W.splitFileName ("\\\\?\\A:\\fred") == (("\\\\?\\A:\\"), ("fred")))
     ,("P.replaceFileName \"/directory/other.txt\" \"file.ext\" == \"/directory/file.ext\"", property $ P.replaceFileName "/directory/other.txt" "file.ext" == "/directory/file.ext")
     ,("W.replaceFileName \"/directory/other.txt\" \"file.ext\" == \"/directory/file.ext\"", property $ W.replaceFileName "/directory/other.txt" "file.ext" == "/directory/file.ext")
     ,("AFP_P.replaceFileName (\"/directory/other.txt\") (\"file.ext\") == (\"/directory/file.ext\")", property $ AFP_P.replaceFileName ("/directory/other.txt") ("file.ext") == ("/directory/file.ext"))

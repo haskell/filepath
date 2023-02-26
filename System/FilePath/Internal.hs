@@ -601,6 +601,7 @@ isDrive x = not (null x) && null (dropDrive x)
 -- > splitFileName "bob" == ("./", "bob")
 -- > Posix:   splitFileName "/" == ("/","")
 -- > Windows: splitFileName "c:" == ("c:","")
+-- > Windows: splitFileName "\\\\?\\A:\\fred" == ("\\\\?\\A:\\","fred")
 splitFileName :: FILEPATH -> (STRING, STRING)
 splitFileName x = if null path
     then (dotSlash, file)
