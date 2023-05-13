@@ -21,8 +21,7 @@ import Control.Exception
 import Data.ByteString ( ByteString )
 import qualified Data.ByteString as BS
 import Test.QuickCheck
-import Test.QuickCheck.Checkers
-import qualified Test.QuickCheck.Classes as QC
+import qualified Test.QuickCheck.Classes.Base as QC
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import GHC.IO.Encoding ( setFileSystemEncoding )
@@ -33,6 +32,7 @@ import qualified Data.ByteString.Char8 as C
 import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
 import qualified System.OsPath.Data.ByteString.Short as SBS
 import Data.Char ( ord )
+import Data.Proxy ( Proxy(..) )
 
 import Arbitrary
 
@@ -233,24 +233,20 @@ tests =
     )
 
 
-  ] ++ testBatch (QC.ord (\(a :: OsPath) -> pure a))
-    ++ testBatch (QC.monoid (undefined :: OsPath))
+  ] ++ QC.lawsProperties (QC.ordLaws (Proxy @OsPath))
+    ++ QC.lawsProperties (QC.monoidLaws (Proxy @OsPath))
 
-    ++ testBatch (QC.ord (\(a :: OsString) -> pure a))
-    ++ testBatch (QC.monoid (undefined :: OsString))
+    ++ QC.lawsProperties (QC.ordLaws (Proxy @OsString))
+    ++ QC.lawsProperties (QC.monoidLaws (Proxy @OsString))
 
-    ++ testBatch (QC.ord (\(a :: WindowsString) -> pure a))
-    ++ testBatch (QC.monoid (undefined :: WindowsString))
+    ++ QC.lawsProperties (QC.ordLaws (Proxy @WindowsString))
+    ++ QC.lawsProperties (QC.monoidLaws (Proxy @WindowsString))
 
-    ++ testBatch (QC.ord (\(a :: PosixString) -> pure a))
-    ++ testBatch (QC.monoid (undefined :: PosixString))
+    ++ QC.lawsProperties (QC.ordLaws (Proxy @PosixString))
+    ++ QC.lawsProperties (QC.monoidLaws (Proxy @PosixString))
 
-    ++ testBatch (QC.ord (\(a :: PlatformString) -> pure a))
-    ++ testBatch (QC.monoid (undefined :: PlatformString))
-
--- | Allows to insert a 'TestBatch' into a Spec.
-testBatch :: TestBatch -> [(String, Property)]
-testBatch (_, tests') = tests'
+    ++ QC.lawsProperties (QC.ordLaws (Proxy @PlatformString))
+    ++ QC.lawsProperties (QC.monoidLaws (Proxy @PlatformString))
 
 
 padEven :: ByteString -> ByteString

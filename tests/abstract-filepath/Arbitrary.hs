@@ -12,27 +12,15 @@ import Data.ByteString ( ByteString )
 import qualified Data.ByteString as ByteString
 import Test.QuickCheck
 
-import Test.QuickCheck.Checkers
-
-
 
 instance Arbitrary OsString where
   arbitrary = fmap fromJust $ encodeUtf <$> listOf filepathChar
 
-instance EqProp OsString where
-  (=-=) = eq
-
 instance Arbitrary PosixString where
   arbitrary = fmap fromJust $ Posix.encodeUtf <$> listOf filepathChar
 
-instance EqProp PosixString where
-  (=-=) = eq
-
 instance Arbitrary WindowsString where
   arbitrary = fmap fromJust $ Windows.encodeUtf <$> listOf filepathChar
-
-instance EqProp WindowsString where
-  (=-=) = eq
 
 
 newtype NonNullString = NonNullString { nonNullString :: String }
