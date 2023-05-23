@@ -149,25 +149,19 @@ import Data.Bits
     ( shiftR )
 import Data.Word
 import Prelude hiding
-    ( all
+    ( Foldable(..)
+    , all
     , any
     , reverse
     , break
     , concat
     , drop
     , dropWhile
-    , elem
     , filter
-    , foldl
-    , foldl1
-    , foldr
-    , foldr1
     , head
     , init
     , last
-    , length
     , map
-    , null
     , replicate
     , span
     , splitAt
