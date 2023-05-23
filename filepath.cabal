@@ -200,8 +200,4 @@ benchmark bench-filepath
     , filepath
     , tasty-bench
 
-  if impl(ghc >=8.10)
-    ghc-options: "-with-rtsopts=-A32m --nonmoving-gc"
-
-  else
-    ghc-options: -with-rtsopts=-A32m
+  ghc-options: -with-rtsopts=-A32m
