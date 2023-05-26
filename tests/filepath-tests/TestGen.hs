@@ -814,6 +814,8 @@ tests =
     ,("AFP_W.normalise (\"c:\\\\file/bob\\\\\") == (\"C:\\\\file\\\\bob\\\\\")", property $ AFP_W.normalise ("c:\\file/bob\\") == ("C:\\file\\bob\\"))
     ,("W.normalise \"c:\\\\\" == \"C:\\\\\"", property $ W.normalise "c:\\" == "C:\\")
     ,("AFP_W.normalise (\"c:\\\\\") == (\"C:\\\\\")", property $ AFP_W.normalise ("c:\\") == ("C:\\"))
+    ,("W.normalise \"c:\\\\\\\\\\\\\\\\\" == \"C:\\\\\"", property $ W.normalise "c:\\\\\\\\" == "C:\\")
+    ,("AFP_W.normalise (\"c:\\\\\\\\\\\\\\\\\") == (\"C:\\\\\")", property $ AFP_W.normalise ("c:\\\\\\\\") == ("C:\\"))
     ,("W.normalise \"C:.\\\\\" == \"C:\"", property $ W.normalise "C:.\\" == "C:")
     ,("AFP_W.normalise (\"C:.\\\\\") == (\"C:\")", property $ AFP_W.normalise ("C:.\\") == ("C:"))
     ,("W.normalise \"\\\\\\\\server\\\\test\" == \"\\\\\\\\server\\\\test\"", property $ W.normalise "\\\\server\\test" == "\\\\server\\test")

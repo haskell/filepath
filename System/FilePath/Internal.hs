@@ -984,6 +984,7 @@ makeRelative root path
 -- > Posix:   normalise "./bob/fred/" == "bob/fred/"
 -- > Windows: normalise "c:\\file/bob\\" == "C:\\file\\bob\\"
 -- > Windows: normalise "c:\\" == "C:\\"
+-- > Windows: normalise "c:\\\\\\\\" == "C:\\"
 -- > Windows: normalise "C:.\\" == "C:"
 -- > Windows: normalise "\\\\server\\test" == "\\\\server\\test"
 -- > Windows: normalise "//server/test" == "\\\\server\\test"
@@ -1035,9 +1036,12 @@ normaliseDrive :: FILEPATH -> FILEPATH
 normaliseDrive bs
   | null bs = mempty
   | isPosix = pack [pathSeparator]
-  | otherwise = if isJust $ readDriveLetter x2
-         then map toUpper x2
-         else x2
+  | Just (drv, _) <- readDriveLetter x2
+                  = case unpack drv of
+                      (x:_:[]) -> pack [toUpper x, _colon]
+                      (x:_) -> pack [toUpper x, _colon, pathSeparator]
+                      _ -> P.error "impossible"
+  | otherwise = x2
     where
         x2 = map repSlash bs
         repSlash x = if isPathSeparator x then pathSeparator else x
