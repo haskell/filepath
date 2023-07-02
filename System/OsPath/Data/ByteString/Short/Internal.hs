@@ -4,6 +4,7 @@
 {-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE UnliftedFFITypes         #-}
 
 -- |
 -- Module      :  System.OsPath.Data.ByteString.Short.Internal
@@ -25,6 +26,13 @@ import Data.ByteString.Short.Internal (ShortByteString(..), length)
 #if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup
   ( Semigroup((<>)) )
+import Foreign.C.Types
+  ( CSize(..)
+  , CInt(..)
+  )
+import Data.ByteString.Internal
+  ( accursedUnutterablePerformIO
+  )
 #endif
 #if !MIN_VERSION_bytestring(0,10,9)
 import Foreign.Marshal.Alloc (allocaBytes)
@@ -441,3 +449,29 @@ errorEmptySBS fun = moduleError fun "empty ShortByteString"
 moduleError :: HasCallStack => String -> String -> a
 moduleError fun msg = error (moduleErrorMsg fun msg)
 {-# NOINLINE moduleError #-}
+
+compareByteArraysOff :: BA  -- ^ array 1
+                     -> Int -- ^ offset for array 1
+                     -> BA  -- ^ array 2
+                     -> Int -- ^ offset for array 2
+                     -> Int -- ^ length to compare
+                     -> Int -- ^ like memcmp
+#if MIN_VERSION_base(4,11,0)
+compareByteArraysOff (BA# ba1#) (I# ba1off#) (BA# ba2#) (I# ba2off#) (I# len#) =
+  I# (compareByteArrays#  ba1# ba1off# ba2# ba2off# len#)
+#else
+compareByteArraysOff (BA# ba1#) ba1off (BA# ba2#) ba2off len =
+  assert (ba1off + len <= (I# (sizeofByteArray# ba1#)))
+  $ assert (ba2off + len <= (I# (sizeofByteArray# ba2#)))
+  $ fromIntegral $ accursedUnutterablePerformIO $
+    c_memcmp_ByteArray ba1#
+                       ba1off
+                       ba2#
+                       ba2off
+                       (fromIntegral len)
+
+
+foreign import ccall unsafe "static sbs_memcmp_off"
+  c_memcmp_ByteArray :: ByteArray# -> Int -> ByteArray# -> Int -> CSize -> IO CInt
+#endif
+

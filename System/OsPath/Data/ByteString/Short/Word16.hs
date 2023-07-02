@@ -2,8 +2,10 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE MagicHash #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fexpose-all-unfoldings #-}
 
@@ -143,10 +145,11 @@ module System.OsPath.Data.ByteString.Short.Word16 (
     useAsCWStringLen
   )
 where
-import System.OsPath.Data.ByteString.Short ( append, intercalate, concat, stripSuffix, stripPrefix, isInfixOf, isPrefixOf, isSuffixOf, breakSubstring, length, empty, null, ShortByteString(..), fromShort, toShort )
+import System.OsPath.Data.ByteString.Short ( append, intercalate, concat, stripSuffix, stripPrefix, isPrefixOf, isSuffixOf, length, empty, null, ShortByteString(..), fromShort, toShort )
 import System.OsPath.Data.ByteString.Short.Internal
 import Data.Bits
-    ( shiftR )
+    ( shiftR
+    )
 import Data.Word
 import Prelude hiding
     ( Foldable(..)
@@ -172,6 +175,7 @@ import Prelude hiding
 import qualified Data.Foldable as Foldable
 import GHC.ST ( ST )
 import GHC.Stack ( HasCallStack )
+import GHC.Exts ( inline )
 
 import qualified Data.ByteString.Short.Internal as BS
 import qualified Data.List as List
@@ -645,6 +649,28 @@ splitWith p = \(assertEven -> sbs) -> if
             (a, b)
               | BS.null b -> [a]
               | otherwise -> a : go (tail b)
+
+
+-- | Check whether one string is a substring of another.
+isInfixOf :: ShortByteString -> ShortByteString -> Bool
+isInfixOf sbs = \s -> null sbs || not (null $ snd $ GHC.Exts.inline breakSubstring sbs s)
+
+
+-- algorithm: https://github.com/haskell/filepath/issues/195#issuecomment-1605633713
+breakSubstring :: ShortByteString -- ^ String to search for
+               -> ShortByteString -- ^ String to search in
+               -> (ShortByteString, ShortByteString) -- ^ Head and tail of string broken at substring
+breakSubstring bPat@(asBA -> pat) bInp@(asBA -> inp) = go 0
+ where
+    lpat = BS.length bPat
+    linp = BS.length bInp
+    go ix
+      | let ix' = ix * 2
+      , linp >= ix' + lpat =
+          if | compareByteArraysOff pat 0 inp ix' lpat == 0 -> splitAt ix bInp
+             | otherwise -> go (ix + 1)
+      | otherwise
+      = (bInp, mempty)
 
 
 -- ---------------------------------------------------------------------
