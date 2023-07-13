@@ -2,6 +2,10 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+## 1.4.100.4 *Jul 2023*
+
+* Fix isInfixOf and breakSubString in Word16, wrt [#195](https://github.com/haskell/filepath/issues/195)
+
 ## 1.4.100.3 *Feb 2023*
 
 * Fix a regression in `splitFileName` wrt [#189](https://github.com/haskell/filepath/pull/189)
