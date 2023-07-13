@@ -21,6 +21,7 @@
 module Properties.ShortByteString.Word16 (tests) where
 import System.OsPath.Data.ByteString.Short.Internal (_nul, isSpace)
 import qualified System.OsPath.Data.ByteString.Short.Word16 as B
+import qualified System.OsPath.Data.ByteString.Short as BS
 #else
 module Properties.ShortByteString (tests) where
 import qualified System.OsPath.Data.ByteString.Short as B
@@ -147,6 +148,28 @@ tests =
     once $ numWord mempty === 0)
   , ("mempty []",
     once $ B.unpack mempty === [])
+
+#ifdef WORD16
+  , ("isInfixOf works correctly under UTF16",
+    once $
+      let foo    = BS.pack [0xbb, 0x03]
+          foo'   = BS.pack [0xd2, 0xbb]
+          bar    = BS.pack [0xd2, 0xbb, 0x03, 0xad]
+          bar'   = BS.pack [0xd2, 0xbb, 0x03, 0xad, 0xd2, 0xbb, 0x03, 0xad, 0xbb, 0x03, 0x00, 0x00]
+      in [B.isInfixOf foo bar, B.isInfixOf foo' bar, B.isInfixOf foo bar'] === [False, True, True]
+    )
+#endif
+  , ("break breakSubstring",
+    property $ \(toElem -> c) x -> B.break (== c) x === B.breakSubstring (B.singleton c) x
+    )
+  , ("breakSubstring",
+    property $ \x y -> not (B.null x) ==> B.null (snd (B.breakSubstring x y)) === not (B.isInfixOf x y)
+    )
+  , ("breakSubstring empty",
+    property $ \x -> B.breakSubstring B.empty x === (B.empty, x)
+    )
+  , ("isInfixOf",
+    property $ \x y -> B.isInfixOf x y === L.isInfixOf (B.unpack x) (B.unpack y))
 
   , ("mconcat" ,
    property $ \xs -> B.unpack (mconcat xs) === mconcat (map B.unpack xs))
