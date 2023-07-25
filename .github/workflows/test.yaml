@@ -50,12 +50,19 @@ jobs:
         set -eux
         [ "$(ghc --numeric-version)" = "${{ matrix.ghc }}" ]
         cabal update
-        cabal build --enable-tests --enable-benchmarks
-        cabal test
-        cabal bench
-        cabal haddock
+        cabal build --enable-tests --enable-benchmarks all
+        cabal test filepath
+        cabal bench filepath
+        cabal haddock filepath
+        (
+        cd filepath
         cabal check
-        cabal sdist
+        )
+        (
+        cd filepath-internals
+        cabal check
+        )
+        cabal sdist all
       shell: bash
 
     - if: matrix.os == 'ubuntu-latest'
@@ -64,7 +71,7 @@ jobs:
         set -eux
         export "PATH=$HOME/.cabal/bin:$PATH"
         cabal install --overwrite-policy=always --install-method=copy cpphs
-        make all
+        make -C filepath all
         git diff --exit-code
 
   i386:
@@ -82,8 +89,8 @@ jobs:
       run: |
         . ~/.ghcup/env
         cabal update
-        cabal test
-        cabal bench
+        cabal test filepath
+        cabal bench filepath
 
   # We use github.com/haskell self-hosted runners for ARM testing.
   # If they become unavailable in future, put ['armv7', 'aarch64']
@@ -107,13 +114,13 @@ jobs:
         uses: docker://hasufell/arm32v7-ubuntu-haskell:focal
         name: Run build (arm32v7 linux)
         with:
-          args: sh -c "cabal update && ghcup install ghc --isolate=/usr --force 9.2.2 && cabal test -w ghc-9.2.2 && cabal bench -w ghc-9.2.2"
+          args: sh -c "cabal update && ghcup install ghc --isolate=/usr --force 9.2.2 && cabal test -w ghc-9.2.2 filepath && cabal bench -w ghc-9.2.2 filepath"
 
       - if: matrix.arch == 'arm64v8'
         uses: docker://hasufell/arm64v8-ubuntu-haskell:focal
         name: Run build (arm64v8 linux)
         with:
-          args: sh -c "cabal update && ghcup install ghc --isolate=/usr --force 9.2.2 && cabal test -w ghc-9.2.2 && cabal bench -w ghc-9.2.2"
+          args: sh -c "cabal update && ghcup install ghc --isolate=/usr --force 9.2.2 && cabal test -w ghc-9.2.2 filepath && cabal bench -w ghc-9.2.2 filepath"
 
   darwin_arm:
     runs-on: ${{ matrix.os }}
@@ -144,7 +151,7 @@ jobs:
           export RANLIB="$HOME/.brew/opt/llvm@11/bin/llvm-ranlib"
           . .github/scripts/env.sh
           curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_INSTALL_NO_STACK=1 BOOTSTRAP_HASKELL_GHC_VERSION=${{ matrix.ghc }} BOOTSTRAP_HASKELL_ADJUST_BASHRC=yes sh
-          cabal test
-          cabal bench
+          cabal test filepath
+          cabal bench filepath
         env:
           HOMEBREW_CHANGE_ARCH_TO_ARM: 1
