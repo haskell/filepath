@@ -14,8 +14,8 @@ import System.OsPath.Windows as Windows
 import System.OsPath.Encoding
 import qualified System.OsString.Internal.Types as OS
 import System.OsPath.Data.ByteString.Short ( toShort )
-import System.OsString.Posix as PosixS
-import System.OsString.Windows as WindowsS
+import System.OsString.Posix as PosixS hiding (map)
+import System.OsString.Windows as WindowsS hiding (map)
 
 import Control.Exception
 import Data.ByteString ( ByteString )

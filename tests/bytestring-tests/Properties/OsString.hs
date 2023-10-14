@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 #undef WORD16
-#undef WIN
 #undef POSIX
-#undef OSWORD
+#undef WIN
+#define OSWORD
 #include "Common.hs"
 

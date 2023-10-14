@@ -24,6 +24,8 @@ module System.OsString
   , encodeWith
   , encodeFS
   , osstr
+  , empty
+  , singleton
   , pack
 
   -- * OsString deconstruction
@@ -40,6 +42,87 @@ module System.OsString
 
   -- * Word deconstruction
   , toChar
+
+  -- * Basic interface
+  , snoc
+  , cons
+  , last
+  , tail
+  , uncons
+  , head
+  , init
+  , unsnoc
+  , null
+  , length
+
+  -- * Transforming OsString
+  , map
+  , reverse
+  , intercalate
+
+  -- * Reducing OsStrings (folds)
+  , foldl
+  , foldl'
+  , foldl1
+  , foldl1'
+  , foldr
+  , foldr'
+  , foldr1
+  , foldr1'
+
+  -- * Special folds
+  , all
+  , any
+  , concat
+
+  -- * Generating and unfolding OsStrings
+  , replicate
+  , unfoldr
+  , unfoldrN
+
+  -- * Substrings
+  -- ** Breaking strings
+  , take
+  , takeEnd
+  , takeWhileEnd
+  , takeWhile
+  , drop
+  , dropEnd
+  , dropWhileEnd
+  , dropWhile
+  , break
+  , breakEnd
+  , span
+  , spanEnd
+  , splitAt
+  , split
+  , splitWith
+  , stripSuffix
+  , stripPrefix
+
+  -- * Predicates
+  , isInfixOf
+  , isPrefixOf
+  , isSuffixOf
+  -- ** Search for arbitrary susbstrings
+  , breakSubstring
+
+  -- * Searching OsStrings
+  -- ** Searching by equality
+  , elem
+  , find
+  , filter
+  , partition
+
+  -- * Indexing OsStrings
+  , index
+  , indexMaybe
+  , (!?)
+  , elemIndex
+  , elemIndices
+  , count
+  , findIndex
+  , findIndices
   )
 where
 
@@ -51,10 +134,73 @@ import System.OsString.Internal
     , encodeFS
     , osstr
     , pack
+    , empty
+    , singleton
     , decodeUtf
     , decodeWith
     , decodeFS
     , unpack
+    , snoc
+    , cons
+    , last
+    , tail
+    , uncons
+    , head
+    , init
+    , unsnoc
+    , null
+    , length
+    , map
+    , reverse
+    , intercalate
+    , foldl
+    , foldl'
+    , foldl1
+    , foldl1'
+    , foldr
+    , foldr'
+    , foldr1
+    , foldr1'
+    , all
+    , any
+    , concat
+    , replicate
+    , unfoldr
+    , unfoldrN
+    , take
+    , takeEnd
+    , takeWhileEnd
+    , takeWhile
+    , drop
+    , dropEnd
+    , dropWhileEnd
+    , dropWhile
+    , break
+    , breakEnd
+    , span
+    , spanEnd
+    , splitAt
+    , split
+    , splitWith
+    , stripSuffix
+    , stripPrefix
+    , isInfixOf
+    , isPrefixOf
+    , isSuffixOf
+    , breakSubstring
+    , elem
+    , find
+    , filter
+    , partition
+    , index
+    , indexMaybe
+    , (!?)
+    , elemIndex
+    , elemIndices
+    , count
+    , findIndex
+    , findIndices
     )
 import System.OsString.Internal.Types
     ( OsString, OsChar )
+import Prelude hiding (last, tail, head, init, null, length, map, reverse, foldl, foldr, foldl1, foldr1, all, any, concat, replicate, take, takeWhile, drop, dropWhile, break, span, splitAt, elem, filter)

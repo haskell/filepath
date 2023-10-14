@@ -5,6 +5,10 @@
 
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 -- We are happy to sacrifice optimizations in exchange for faster compilation,
@@ -15,19 +19,45 @@
   -fmax-simplifier-iterations=1 -fsimplifier-phases=0
   -fno-call-arity -fno-case-merge -fno-cmm-elim-common-blocks -fno-cmm-sink
   -fno-cpr-anal -fno-cse -fno-do-eta-reduction -fno-float-in -fno-full-laziness
-  -fno-loopification -fno-specialise -fno-strictness #-}
+  -fno-loopification -fno-specialise -fno-strictness -Wno-unused-imports -Wno-unused-top-binds #-}
+
+#ifdef OSWORD
+module Properties.OsString (tests) where
+import System.OsString.Internal.Types (OsString(..), OsChar(..), getOsChar)
+import qualified System.OsString as B
+import qualified System.OsString as BS
+import qualified System.OsPath.Data.ByteString.Short.Internal as BSI (_nul, isSpace)
+
+#else
 
 #ifdef WORD16
+#ifdef WIN
+module Properties.WindowsString (tests) where
+import qualified System.OsString.Windows as B
+import qualified System.OsString.Windows as BS
+#else
 module Properties.ShortByteString.Word16 (tests) where
 import System.OsPath.Data.ByteString.Short.Internal (_nul, isSpace)
 import qualified System.OsPath.Data.ByteString.Short.Word16 as B
 import qualified System.OsPath.Data.ByteString.Short as BS
+#endif
+#else
+#ifdef POSIX
+module Properties.PosixString (tests) where
+import qualified System.OsString.Posix as B
+import qualified System.OsString.Posix as BS
 #else
 module Properties.ShortByteString (tests) where
 import qualified System.OsPath.Data.ByteString.Short as B
-import qualified Data.Char as C
 #endif
+#endif
+#endif
+
 import Data.ByteString.Short (ShortByteString)
+
+import qualified Data.Char as C
+import qualified System.OsPath.Data.ByteString.Short.Word16 as B16
+import qualified System.OsPath.Data.ByteString.Short as B8
 
 import Data.Word
 
@@ -40,7 +70,157 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic ( monadicIO, run )
 import Text.Show.Functions ()
 
+import System.OsString.Internal.Types (WindowsString(..), WindowsChar(..), getWindowsChar, PosixChar(..), PosixString(..), getPosixChar, OsString(..), OsChar(..), getOsChar)
+import qualified System.OsString.Posix as PBS
+import qualified System.OsString.Windows as WBS
+import qualified System.OsString as OBS
+import qualified System.OsPath.Data.ByteString.Short.Internal as BSI (_nul, isSpace)
+
+
+instance Arbitrary PosixString where
+  arbitrary = do
+    bs <- sized sizedByteString'
+    n  <- choose (0, 2)
+    return (PBS.drop n bs) -- to give us some with non-0 offset
+   where
+    sizedByteString' :: Int -> Gen PosixString
+    sizedByteString' n = do m <- choose(0, n)
+                            fmap (PosixString . B8.pack) $ vectorOf m arbitrary
+
+instance Arbitrary PosixChar where
+  arbitrary = fmap PosixChar (arbitrary @Word8)
+
+instance CoArbitrary PosixChar where
+  coarbitrary s = coarbitrary (PBS.toChar s)
+
+instance CoArbitrary PosixString where
+  coarbitrary s = coarbitrary (PBS.unpack s)
+
+deriving instance Num PosixChar
+
+deriving instance Bounded PosixChar
+
+instance Arbitrary WindowsString where
+  arbitrary = do
+    bs <- sized sizedByteString'
+    n  <- choose (0, 2)
+    return (WBS.drop n bs) -- to give us some with non-0 offset
+   where
+    sizedByteString' :: Int -> Gen WindowsString
+    sizedByteString' n = do m <- choose(0, n)
+                            fmap (WindowsString . B16.pack) $ vectorOf m arbitrary
+
+instance Arbitrary WindowsChar where
+  arbitrary = fmap WindowsChar (arbitrary @Word16)
+
+instance CoArbitrary WindowsChar where
+  coarbitrary s = coarbitrary (WBS.toChar s)
+
+instance CoArbitrary WindowsString where
+  coarbitrary s = coarbitrary (WBS.unpack s)
+
+deriving instance Num WindowsChar
+
+deriving instance Bounded WindowsChar
+
+isSpaceWin :: WindowsChar -> Bool
+isSpaceWin = BSI.isSpace . getWindowsChar
+
+numWordWin :: WindowsString -> Int
+numWordWin = B16.numWord16 . getWindowsString
+
+
+swapWWin :: WindowsChar -> WindowsChar
+swapWWin = WindowsChar . byteSwap16 . getWindowsChar
+
+isSpacePosix :: PosixChar -> Bool
+isSpacePosix = C.isSpace . word8ToChar . getPosixChar
+
+numWordPosix :: PosixString -> Int
+numWordPosix = B8.length . getPosixString
+
+
+swapWPosix :: PosixChar -> PosixChar
+swapWPosix = id
+
+#ifdef OSWORD
+isSpace :: OsChar -> Bool
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+isSpace = isSpaceWin . getOsChar
+#else
+isSpace = isSpacePosix . getOsChar
+#endif
+
+numWord :: OsString -> Int
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+numWord = numWordWin . getOsString
+#else
+numWord = numWordPosix . getOsString
+#endif
+
+toElem :: OsChar -> OsChar
+toElem = id
+
+swapW :: OsChar -> OsChar
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+swapW = OsChar . swapWWin . getOsChar
+#else
+swapW = OsChar . swapWPosix . getOsChar
+#endif
+
+instance Arbitrary OsString where
+  arbitrary = OsString <$> arbitrary
+
+instance Arbitrary OsChar where
+  arbitrary = OsChar <$> arbitrary
+
+instance CoArbitrary OsChar where
+  coarbitrary s = coarbitrary (OBS.toChar s)
+
+instance CoArbitrary OsString where
+  coarbitrary s = coarbitrary (OBS.unpack s)
+
+deriving instance Num OsChar
+deriving instance Bounded OsChar
+
+instance Arbitrary ShortByteString where
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+  arbitrary = getWindowsString <$> arbitrary
+#else
+  arbitrary = getPosixString <$> arbitrary
+#endif
+
+#else
+
 #ifdef WORD16
+
+instance Arbitrary ShortByteString where
+  arbitrary = do
+    bs <- sized sizedByteString
+    n  <- choose (0, 2)
+    return (B16.drop n bs) -- to give us some with non-0 offset
+   where
+    sizedByteString :: Int -> Gen ShortByteString
+    sizedByteString n = do m <- choose(0, n)
+                           fmap B16.pack $ vectorOf m arbitrary
+
+instance CoArbitrary ShortByteString where
+  coarbitrary s = coarbitrary (B16.unpack s)
+#ifdef WIN
+
+isSpace :: WindowsChar -> Bool
+isSpace = isSpaceWin
+
+numWord :: WindowsString -> Int
+numWord = numWordWin
+
+toElem :: WindowsChar -> WindowsChar
+toElem = id
+
+swapW :: WindowsChar -> WindowsChar
+swapW = swapWWin
+
+#else
 numWord :: ShortByteString -> Int
 numWord = B.numWord16
 
@@ -50,18 +230,22 @@ toElem = id
 swapW :: Word16 -> Word16
 swapW = byteSwap16
 
-sizedByteString :: Int -> Gen ShortByteString
-sizedByteString n = do m <- choose(0, n)
-                       fmap B.pack $ vectorOf m arbitrary
 
-instance Arbitrary ShortByteString where
-  arbitrary = do
-    bs <- sized sizedByteString
-    n  <- choose (0, 2)
-    return (B.drop n bs) -- to give us some with non-0 offset
+#endif
+#else
+#ifdef POSIX
 
-instance CoArbitrary ShortByteString where
-  coarbitrary s = coarbitrary (B.unpack s)
+isSpace :: PosixChar -> Bool
+isSpace = isSpacePosix
+
+numWord :: PosixString -> Int
+numWord = numWordPosix
+
+toElem :: PosixChar -> PosixChar
+toElem = id
+
+swapW :: PosixChar -> PosixChar
+swapW = swapWPosix
 
 #else
 _nul :: Word8
@@ -70,12 +254,9 @@ _nul = 0x00
 isSpace :: Word8 -> Bool
 isSpace = C.isSpace . word8ToChar
 
--- | Total conversion to char.
-word8ToChar :: Word8 -> Char
-word8ToChar = C.chr . fromIntegral
 
 numWord :: ShortByteString -> Int
-numWord = B.length
+numWord = B8.length
 
 toElem :: Word8 -> Word8
 toElem = id
@@ -84,20 +265,23 @@ swapW :: Word8 -> Word8
 swapW = id
 
 
-sizedByteString :: Int -> Gen ShortByteString
-sizedByteString n = do m <- choose(0, n)
-                       fmap B.pack $ vectorOf m arbitrary
+
+#endif
 
 instance Arbitrary ShortByteString where
   arbitrary = do
-    bs <- sized sizedByteString
+    bs <- sized sizedByteString'
     n  <- choose (0, 2)
-    return (B.drop n bs) -- to give us some with non-0 offset
-  shrink = map B.pack . shrink . B.unpack
+    return (B8.drop n bs) -- to give us some with non-0 offset
+   where
+    sizedByteString' :: Int -> Gen ShortByteString
+    sizedByteString' n = do m <- choose(0, n)
+                            fmap B8.pack $ vectorOf m arbitrary
+  shrink = map B8.pack . shrink . B8.unpack
 
 instance CoArbitrary ShortByteString where
-  coarbitrary s = coarbitrary (B.unpack s)
-
+  coarbitrary s = coarbitrary (B8.unpack s)
+#endif
 #endif
 
 
@@ -132,7 +316,7 @@ tests =
   , ("compare LT empty",
    property $ \x -> not (B.null x) ==> compare B.empty x == LT)
   , ("compare GT concat",
-   property $ \x y -> not (B.null y) ==> compare (x <> y) x == GT)
+   property $ \x y -> not (B.null y) ==> compare (x `mappend` y) x == GT)
   , ("compare char" ,
    property $ \(toElem -> c) (toElem -> d) -> compare (swapW c) (swapW d) == compare (B.singleton c) (B.singleton d))
   , ("compare unsigned",
@@ -150,6 +334,16 @@ tests =
     once $ B.unpack mempty === [])
 
 #ifdef WORD16
+#ifdef WIN
+  , ("isInfixOf works correctly under UTF16",
+    once $
+      let foo    = WindowsString $ B8.pack [0xbb, 0x03]
+          foo'   = WindowsString $ B8.pack [0xd2, 0xbb]
+          bar    = WindowsString $ B8.pack [0xd2, 0xbb, 0x03, 0xad]
+          bar'   = WindowsString $ B8.pack [0xd2, 0xbb, 0x03, 0xad, 0xd2, 0xbb, 0x03, 0xad, 0xbb, 0x03, 0x00, 0x00]
+      in [B.isInfixOf foo bar, B.isInfixOf foo' bar, B.isInfixOf foo bar'] === [False, True, True]
+    )
+#else
   , ("isInfixOf works correctly under UTF16",
     once $
       let foo    = BS.pack [0xbb, 0x03]
@@ -158,6 +352,7 @@ tests =
           bar'   = BS.pack [0xd2, 0xbb, 0x03, 0xad, 0xd2, 0xbb, 0x03, 0xad, 0xbb, 0x03, 0x00, 0x00]
       in [B.isInfixOf foo bar, B.isInfixOf foo' bar, B.isInfixOf foo bar'] === [False, True, True]
     )
+#endif
 #endif
   , ("break breakSubstring",
     property $ \(toElem -> c) x -> B.break (== c) x === B.breakSubstring (B.singleton c) x
@@ -193,7 +388,7 @@ tests =
   , ("mappend" ,
    property $ \x y -> B.unpack (mappend x y) === B.unpack x `mappend` B.unpack y)
   , ("<>" ,
-   property $ \x y -> B.unpack (x <> y) === B.unpack x <> B.unpack y)
+   property $ \x y -> B.unpack (x `mappend` y) === B.unpack x `mappend` B.unpack y)
   , ("stimes" ,
    property $ \(Positive n) x -> stimes (n :: Int) (x :: ShortByteString) === mtimesDefault n x)
 
@@ -407,14 +602,15 @@ tests =
   -- property $ \n f (toElem -> a) -> B.unpack (B.take (fromIntegral n) (B.unfoldr (fmap (first toElem) . f) a)) ===
   --    take n (unfoldr (fmap (first toElem) . f) a))
   --
-#ifdef WORD16
+#if defined(WORD16) && !defined(WIN) && !defined(OSWORD) && !defined(POSIX)
   , ("useAsCWString str packCWString == str" ,
    property $ \x -> not (B.any (== _nul) x)
       ==> monadicIO $ run (B.useAsCWString x B.packCWString >>= \x' -> pure (x == x')))
   , ("useAsCWStringLen str packCWStringLen == str" ,
    property $ \x -> not (B.any (== _nul) x)
       ==> monadicIO $ run (B.useAsCWStringLen x B.packCWStringLen >>= \x' -> pure (x == x')))
-#else
+#endif
+#if !defined(WORD16) && !defined(WIN) && !defined(OSWORD) && !defined(POSIX)
   , ("useAsCString str packCString == str" ,
    property $ \x -> not (B.any (== _nul) x)
       ==> monadicIO $ run (B.useAsCString x B.packCString >>= \x' -> pure (x == x')))
@@ -439,3 +635,7 @@ splitWith f ys = go [] ys
 unsnoc :: [a] -> Maybe ([a], a)
 unsnoc [] = Nothing
 unsnoc xs = Just (init xs, last xs)
+
+-- | Total conversion to char.
+word8ToChar :: Word8 -> Char
+word8ToChar = C.chr . fromIntegral
