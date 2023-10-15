@@ -2,6 +2,8 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RankNTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+
 -- This template expects CPP definitions for:
 --     MODULE_NAME = Posix | Windows
 --     IS_WINDOWS  = False | True
@@ -138,6 +140,7 @@ import System.OsString.Internal.Types (
 #endif
   )
 
+import Data.Coerce
 import Data.Char
 import Control.Monad.Catch
     ( MonadThrow, throwM )
@@ -162,8 +165,7 @@ import System.OsPath.Encoding
 import System.IO
     ( TextEncoding, utf16le )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
-import qualified System.OsPath.Data.ByteString.Short as BS8
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BS
 #else
 import System.OsPath.Encoding
 import System.IO
@@ -174,6 +176,8 @@ import qualified System.OsPath.Data.ByteString.Short as BS
 import GHC.Stack (HasCallStack)
 import Prelude hiding (last, tail, head, init, null, length, map, reverse, foldl, foldr, foldl1, foldr1, all, any, concat, replicate, take, takeWhile, drop, dropWhile, break, span, splitAt, elem, filter)
 import Data.Bifunctor ( bimap )
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
+import qualified System.OsPath.Data.ByteString.Short as BS8
 
 
 
@@ -415,21 +419,13 @@ toChar (PosixChar w) = chr $ fromIntegral w
 --
 -- @since 1.4.200.0
 snoc :: PLATFORM_STRING -> PLATFORM_WORD -> PLATFORM_STRING
-#ifdef WINDOWS
-snoc (WindowsString s) (WindowsChar w) = WindowsString (BS16.snoc s w)
-#else
-snoc (PosixString s) (PosixChar w) = PosixString (BS.snoc s w)
-#endif
+snoc = coerce BS.snoc
 
 -- | /O(n)/ 'cons' is analogous to (:) for lists.
 --
 -- @since 1.4.200.0
 cons :: PLATFORM_WORD -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-cons (WindowsChar w) (WindowsString s) = WindowsString (BS16.cons w s)
-#else
-cons (PosixChar w) (PosixString s) = PosixString (BS.cons w s)
-#endif
+cons = coerce BS.cons
 
 
 -- | /O(1)/ Extract the last element of a OsString, which must be finite and non-empty.
@@ -439,11 +435,7 @@ cons (PosixChar w) (PosixString s) = PosixString (BS.cons w s)
 --
 -- @since 1.4.200.0
 last :: HasCallStack => PLATFORM_STRING -> PLATFORM_WORD
-#ifdef WINDOWS
-last (WindowsString s) = WindowsChar (BS16.last s)
-#else
-last (PosixString s) = PosixChar (BS.last s)
-#endif
+last = coerce BS.last
 
 -- | /O(n)/ Extract the elements after the head of a OsString, which must be non-empty.
 -- An exception will be thrown in the case of an empty OsString.
@@ -452,22 +444,14 @@ last (PosixString s) = PosixChar (BS.last s)
 --
 -- @since 1.4.200.0
 tail :: HasCallStack => PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-tail (WindowsString s) = WindowsString (BS16.tail s)
-#else
-tail (PosixString s) = PosixString (BS.tail s)
-#endif
+tail = coerce BS.tail
 
 -- | /O(n)/ Extract the 'head' and 'tail' of a OsString, returning 'Nothing'
 -- if it is empty.
 --
 -- @since 1.4.200.0
 uncons :: PLATFORM_STRING -> Maybe (PLATFORM_WORD, PLATFORM_STRING)
-#ifdef WINDOWS
-uncons (WindowsString s) = (bimap WindowsChar WindowsString) <$> (BS16.uncons s)
-#else
-uncons (PosixString s) = (bimap PosixChar PosixString) <$> (BS.uncons s)
-#endif
+uncons = coerce BS.uncons
 
 -- | /O(1)/ Extract the first element of a OsString, which must be non-empty.
 -- An exception will be thrown in the case of an empty OsString.
@@ -476,11 +460,7 @@ uncons (PosixString s) = (bimap PosixChar PosixString) <$> (BS.uncons s)
 --
 -- @since 1.4.200.0
 head :: HasCallStack => PLATFORM_STRING -> PLATFORM_WORD
-#ifdef WINDOWS
-head (WindowsString s) = WindowsChar (BS16.head s)
-#else
-head (PosixString s) = PosixChar (BS.head s)
-#endif
+head = coerce BS.head
 
 -- | /O(n)/ Return all the elements of a 'OsString' except the last one.
 -- An exception will be thrown in the case of an empty OsString.
@@ -489,63 +469,39 @@ head (PosixString s) = PosixChar (BS.head s)
 --
 -- @since 1.4.200.0
 init :: HasCallStack => PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-init (WindowsString s) = WindowsString (BS16.init s)
-#else
-init (PosixString s) = PosixString (BS.init s)
-#endif
+init = coerce BS.init
 
 -- | /O(n)/ Extract the 'init' and 'last' of a OsString, returning 'Nothing'
 -- if it is empty.
 --
 -- @since 1.4.200.0
 unsnoc :: PLATFORM_STRING -> Maybe (PLATFORM_STRING, PLATFORM_WORD)
-#ifdef WINDOWS
-unsnoc (WindowsString s) = (bimap WindowsString WindowsChar) <$> (BS16.unsnoc s)
-#else
-unsnoc (PosixString s) = (bimap PosixString PosixChar) <$> (BS.unsnoc s)
-#endif
+unsnoc = coerce BS.unsnoc
 
 -- | /O(1)/. The empty 'OsString'.
 --
 -- @since 1.4.200.0
 null :: PLATFORM_STRING -> Bool
-#ifdef WINDOWS
-null (WindowsString s) = BS16.null s
-#else
-null (PosixString s) = BS.null s
-#endif
+null = coerce BS.null
 
 -- | /O(1)/ The length of a 'OsString'.
 --
 -- @since 1.4.200.0
 length :: PLATFORM_STRING -> Int
-#ifdef WINDOWS
-length (WindowsString s) = BS16.length s
-#else
-length (PosixString s) = BS.length s
-#endif
+length = coerce BS.length
 
 -- | /O(n)/ 'map' @f xs@ is the OsString obtained by applying @f@ to each
 -- element of @xs@.
 --
 -- @since 1.4.200.0
 map :: (PLATFORM_WORD -> PLATFORM_WORD) -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-map f (WindowsString s) = WindowsString (BS16.map (getWindowsChar . f . WindowsChar) s)
-#else
-map f (PosixString s) = PosixString (BS.map (getPosixChar . f . PosixChar) s)
-#endif
+map = coerce BS.map
 
 -- | /O(n)/ 'reverse' @xs@ efficiently returns the elements of @xs@ in reverse order.
 --
 -- @since 1.4.200.0
 reverse :: PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-reverse (WindowsString s) = WindowsString (BS16.reverse s)
-#else
-reverse (PosixString s) = PosixString (BS.reverse s)
-#endif
+reverse = coerce BS.reverse
 
 -- | /O(n)/ The 'intercalate' function takes a 'OsString' and a list of
 -- 'OsString's and concatenates the list after interspersing the first
@@ -553,11 +509,7 @@ reverse (PosixString s) = PosixString (BS.reverse s)
 --
 -- @since 1.4.200.0
 intercalate :: PLATFORM_STRING -> [PLATFORM_STRING] -> PLATFORM_STRING
-#ifdef WINDOWS
-intercalate (WindowsString s) xs = WindowsString (BS16.intercalate s (fmap getWindowsString xs))
-#else
-intercalate (PosixString s) xs = PosixString (BS.intercalate s (fmap getPosixString xs))
-#endif
+intercalate = coerce BS.intercalate
 
 -- | 'foldl', applied to a binary operator, a starting value (typically
 -- the left-identity of the operator), and a OsString, reduces the
@@ -566,9 +518,9 @@ intercalate (PosixString s) xs = PosixString (BS.intercalate s (fmap getPosixStr
 -- @since 1.4.200.0
 foldl :: (a -> PLATFORM_WORD -> a) -> a -> PLATFORM_STRING -> a
 #ifdef WINDOWS
-foldl f a (WindowsString s) = BS16.foldl (\a' c -> f a' (WindowsChar c)) a s
+foldl f a (WindowsString s) = BS16.foldl (coerce f) a s
 #else
-foldl f a (PosixString s) = BS.foldl (\a' c -> f a' (PosixChar c)) a s
+foldl f a (PosixString s) = BS8.foldl (coerce f) a s
 #endif
 
 -- | 'foldl'' is like 'foldl', but strict in the accumulator.
@@ -577,9 +529,9 @@ foldl f a (PosixString s) = BS.foldl (\a' c -> f a' (PosixChar c)) a s
 foldl'
   :: (a -> PLATFORM_WORD -> a) -> a -> PLATFORM_STRING -> a
 #ifdef WINDOWS
-foldl' f a (WindowsString s) = BS16.foldl' (\a' c -> f a' (WindowsChar c)) a s
+foldl' f a (WindowsString s) = BS16.foldl' (coerce f) a s
 #else
-foldl' f a (PosixString s) = BS.foldl' (\a' c -> f a' (PosixChar c)) a s
+foldl' f a (PosixString s) = BS8.foldl' (coerce f) a s
 #endif
 
 -- | 'foldl1' is a variant of 'foldl' that has no starting value
@@ -588,11 +540,7 @@ foldl' f a (PosixString s) = BS.foldl' (\a' c -> f a' (PosixChar c)) a s
 --
 -- @since 1.4.200.0
 foldl1 :: (PLATFORM_WORD -> PLATFORM_WORD -> PLATFORM_WORD) -> PLATFORM_STRING -> PLATFORM_WORD
-#ifdef WINDOWS
-foldl1 f (WindowsString s) = WindowsChar $ BS16.foldl1 (\a' c -> getWindowsChar $ f (WindowsChar a') (WindowsChar c)) s
-#else
-foldl1 f (PosixString s) = PosixChar $ BS.foldl1 (\a' c -> getPosixChar $ f (PosixChar a') (PosixChar c)) s
-#endif
+foldl1 = coerce BS.foldl1
 
 -- | 'foldl1'' is like 'foldl1', but strict in the accumulator.
 -- An exception will be thrown in the case of an empty OsString.
@@ -600,11 +548,7 @@ foldl1 f (PosixString s) = PosixChar $ BS.foldl1 (\a' c -> getPosixChar $ f (Pos
 -- @since 1.4.200.0
 foldl1'
   :: (PLATFORM_WORD -> PLATFORM_WORD -> PLATFORM_WORD) -> PLATFORM_STRING -> PLATFORM_WORD
-#ifdef WINDOWS
-foldl1' f (WindowsString s) = WindowsChar $ BS16.foldl1' (\a' c -> getWindowsChar $ f (WindowsChar a') (WindowsChar c)) s
-#else
-foldl1' f (PosixString s) = PosixChar $ BS.foldl1' (\a' c -> getPosixChar $ f (PosixChar a') (PosixChar c)) s
-#endif
+foldl1' = coerce BS.foldl1'
 
 -- | 'foldr', applied to a binary operator, a starting value
 -- (typically the right-identity of the operator), and a OsString,
@@ -613,9 +557,9 @@ foldl1' f (PosixString s) = PosixChar $ BS.foldl1' (\a' c -> getPosixChar $ f (P
 -- @since 1.4.200.0
 foldr :: (PLATFORM_WORD -> a -> a) -> a -> PLATFORM_STRING -> a
 #ifdef WINDOWS
-foldr f a (WindowsString s) = BS16.foldr (\c a' -> f (WindowsChar c) a') a s
+foldr f a (WindowsString s) = BS16.foldr (coerce f) a s
 #else
-foldr f a (PosixString s) = BS.foldr (\c a' -> f (PosixChar c) a') a s
+foldr f a (PosixString s) = BS8.foldr (coerce f) a s
 #endif
 
 -- | 'foldr'' is like 'foldr', but strict in the accumulator.
@@ -624,9 +568,9 @@ foldr f a (PosixString s) = BS.foldr (\c a' -> f (PosixChar c) a') a s
 foldr'
   :: (PLATFORM_WORD -> a -> a) -> a -> PLATFORM_STRING -> a
 #ifdef WINDOWS
-foldr' f a (WindowsString s) = BS16.foldr' (\c a' -> f (WindowsChar c) a') a s
+foldr' f a (WindowsString s) = BS16.foldr' (coerce f) a s
 #else
-foldr' f a (PosixString s) = BS.foldr' (\c a' -> f (PosixChar c) a') a s
+foldr' f a (PosixString s) = BS8.foldr' (coerce f) a s
 #endif
 
 -- | 'foldr1' is a variant of 'foldr' that has no starting value argument,
@@ -635,11 +579,7 @@ foldr' f a (PosixString s) = BS.foldr' (\c a' -> f (PosixChar c) a') a s
 --
 -- @since 1.4.200.0
 foldr1 :: (PLATFORM_WORD -> PLATFORM_WORD -> PLATFORM_WORD) -> PLATFORM_STRING -> PLATFORM_WORD
-#ifdef WINDOWS
-foldr1 f (WindowsString s) = WindowsChar $ BS16.foldr1 (\c a' -> getWindowsChar $ f (WindowsChar c) (WindowsChar a')) s
-#else
-foldr1 f (PosixString s) = PosixChar $ BS.foldr1 (\c a' -> getPosixChar $ f (PosixChar c) (PosixChar a')) s
-#endif
+foldr1 = coerce BS.foldr1
 
 -- | 'foldr1'' is a variant of 'foldr1', but is strict in the
 -- accumulator.
@@ -649,33 +589,21 @@ foldr1 f (PosixString s) = PosixChar $ BS.foldr1 (\c a' -> getPosixChar $ f (Pos
 -- @since 1.4.200.0
 foldr1'
   :: (PLATFORM_WORD -> PLATFORM_WORD -> PLATFORM_WORD) -> PLATFORM_STRING -> PLATFORM_WORD
-#ifdef WINDOWS
-foldr1' f (WindowsString s) = WindowsChar $ BS16.foldr1' (\c a' -> getWindowsChar $ f (WindowsChar c) (WindowsChar a')) s
-#else
-foldr1' f (PosixString s) = PosixChar $ BS.foldr1' (\c a' -> getPosixChar $ f (PosixChar c) (PosixChar a')) s
-#endif
+foldr1' = coerce BS.foldr1'
 
 -- | /O(n)/ Applied to a predicate and a 'OsString', 'all' determines
 -- if all elements of the 'OsString' satisfy the predicate.
 --
 -- @since 1.4.200.0
 all :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> Bool
-#ifdef WINDOWS
-all f (WindowsString s) = BS16.all (f . WindowsChar) s
-#else
-all f (PosixString s) = BS.all (f . PosixChar) s
-#endif
+all = coerce BS.all
 
 -- | /O(n)/ Applied to a predicate and a 'OsString', 'any' determines if
 -- any element of the 'OsString' satisfies the predicate.
 --
 -- @since 1.4.200.0
 any :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> Bool
-#ifdef WINDOWS
-any f (WindowsString s) = BS16.any (f . WindowsChar) s
-#else
-any f (PosixString s) = BS.any (f . PosixChar) s
-#endif
+any = coerce BS.any
 
 -- /O(n)/ Concatenate a list of OsStrings.
 --
@@ -690,11 +618,7 @@ concat = mconcat
 --
 -- @since 1.4.200.0
 replicate :: Int -> PLATFORM_WORD -> PLATFORM_STRING
-#ifdef WINDOWS
-replicate i (WindowsChar w) = WindowsString $ BS16.replicate i w
-#else
-replicate i (PosixChar w) = PosixString $ BS.replicate i w
-#endif
+replicate = coerce BS.replicate
 
 -- | /O(n)/, where /n/ is the length of the result.  The 'unfoldr'
 -- function is analogous to the List \'unfoldr\'.  'unfoldr' builds a
@@ -719,7 +643,7 @@ unfoldr :: (a -> Maybe (PLATFORM_WORD, a)) -> a -> PLATFORM_STRING
 #ifdef WINDOWS
 unfoldr f a = WindowsString $ BS16.unfoldr (fmap (first getWindowsChar) . f) a
 #else
-unfoldr f a = PosixString $ BS.unfoldr (fmap (first getPosixChar) . f) a
+unfoldr f a = PosixString $ BS8.unfoldr (fmap (first getPosixChar) . f) a
 #endif
 
 -- | /O(n)/ Like 'unfoldr', 'unfoldrN' builds a OsString from a seed
@@ -736,7 +660,7 @@ unfoldrN :: forall a. Int -> (a -> Maybe (PLATFORM_WORD, a)) -> a -> (PLATFORM_S
 #ifdef WINDOWS
 unfoldrN n f a = first WindowsString $ BS16.unfoldrN n (fmap (first getWindowsChar) . f) a
 #else
-unfoldrN n f a = first PosixString $ BS.unfoldrN n (fmap (first getPosixChar) . f) a
+unfoldrN n f a = first PosixString $ BS8.unfoldrN n (fmap (first getPosixChar) . f) a
 #endif
 
 -- | /O(n)/ 'take' @n@, applied to a OsString @xs@, returns the prefix
@@ -744,11 +668,7 @@ unfoldrN n f a = first PosixString $ BS.unfoldrN n (fmap (first getPosixChar) . 
 --
 -- @since 1.4.200.0
 take :: Int -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-take n (WindowsString s) = WindowsString $ BS16.take n s
-#else
-take n (PosixString s) = PosixString $ BS.take n s
-#endif
+take = coerce BS.take
 
 -- | /O(n)/ @'takeEnd' n xs@ is equivalent to @'drop' ('length' xs - n) xs@.
 -- Takes @n@ elements from end of bytestring.
@@ -762,11 +682,7 @@ take n (PosixString s) = PosixString $ BS.take n s
 --
 -- @since 1.4.200.0
 takeEnd :: Int -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-takeEnd n (WindowsString s) = WindowsString $ BS16.takeEnd n s
-#else
-takeEnd n (PosixString s) = PosixString $ BS.takeEnd n s
-#endif
+takeEnd = coerce BS.takeEnd
 
 -- | Returns the longest (possibly empty) suffix of elements
 -- satisfying the predicate.
@@ -775,11 +691,7 @@ takeEnd n (PosixString s) = PosixString $ BS.takeEnd n s
 --
 -- @since 1.4.200.0
 takeWhileEnd :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-takeWhileEnd f (WindowsString s) = WindowsString $ BS16.takeWhileEnd (f . WindowsChar) s
-#else
-takeWhileEnd f (PosixString s) = PosixString $ BS.takeWhileEnd (f . PosixChar) s
-#endif
+takeWhileEnd = coerce BS.takeWhileEnd
 
 -- | Similar to 'Prelude.takeWhile',
 -- returns the longest (possibly empty) prefix of elements
@@ -787,21 +699,13 @@ takeWhileEnd f (PosixString s) = PosixString $ BS.takeWhileEnd (f . PosixChar) s
 --
 -- @since 1.4.200.0
 takeWhile :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-takeWhile f (WindowsString s) = WindowsString $ BS16.takeWhile (f . WindowsChar) s
-#else
-takeWhile f (PosixString s) = PosixString $ BS.takeWhile (f . PosixChar) s
-#endif
+takeWhile = coerce BS.takeWhile
 
 -- | /O(n)/ 'drop' @n@ @xs@ returns the suffix of @xs@ after the first n elements, or 'empty' if @n > 'length' xs@.
 --
 -- @since 1.4.200.0
 drop :: Int -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-drop n (WindowsString s) = WindowsString $ BS16.drop n s
-#else
-drop n (PosixString s) = PosixString $ BS.drop n s
-#endif
+drop = coerce BS.drop
 
 -- | /O(n)/ @'dropEnd' n xs@ is equivalent to @'take' ('length' xs - n) xs@.
 -- Drops @n@ elements from end of bytestring.
@@ -815,11 +719,7 @@ drop n (PosixString s) = PosixString $ BS.drop n s
 --
 -- @since 1.4.200.0
 dropEnd :: Int -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-dropEnd n (WindowsString s) = WindowsString $ BS16.dropEnd n s
-#else
-dropEnd n (PosixString s) = PosixString $ BS.dropEnd n s
-#endif
+dropEnd = coerce BS.dropEnd
 
 -- | Similar to 'Prelude.dropWhile',
 -- drops the longest (possibly empty) prefix of elements
@@ -827,11 +727,7 @@ dropEnd n (PosixString s) = PosixString $ BS.dropEnd n s
 --
 -- @since 1.4.200.0
 dropWhile :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-dropWhile f (WindowsString s) = WindowsString $ BS16.dropWhile (f . WindowsChar) s
-#else
-dropWhile f (PosixString s) = PosixString $ BS.dropWhile (f . PosixChar) s
-#endif
+dropWhile = coerce BS.dropWhile
 
 -- | Similar to 'Prelude.dropWhileEnd',
 -- drops the longest (possibly empty) suffix of elements
@@ -841,11 +737,7 @@ dropWhile f (PosixString s) = PosixString $ BS.dropWhile (f . PosixChar) s
 --
 -- @since 1.4.200.0
 dropWhileEnd :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-dropWhileEnd f (WindowsString s) = WindowsString $ BS16.dropWhileEnd (f . WindowsChar) s
-#else
-dropWhileEnd f (PosixString s) = PosixString $ BS.dropWhileEnd (f . PosixChar) s
-#endif
+dropWhileEnd = coerce BS.dropWhileEnd
 
 -- | Returns the longest (possibly empty) suffix of elements which __do not__
 -- satisfy the predicate and the remainder of the string.
@@ -854,11 +746,7 @@ dropWhileEnd f (PosixString s) = PosixString $ BS.dropWhileEnd (f . PosixChar) s
 --
 -- @since 1.4.200.0
 breakEnd :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-#ifdef WINDOWS
-breakEnd f (WindowsString s) = bimap WindowsString WindowsString $ BS16.breakEnd (f . WindowsChar) s
-#else
-breakEnd f (PosixString s) = bimap PosixString PosixString $ BS.breakEnd (f . PosixChar) s
-#endif
+breakEnd = coerce BS.breakEnd
 
 -- | Similar to 'Prelude.break',
 -- returns the longest (possibly empty) prefix of elements which __do not__
@@ -868,11 +756,7 @@ breakEnd f (PosixString s) = bimap PosixString PosixString $ BS.breakEnd (f . Po
 --
 -- @since 1.4.200.0
 break :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-#ifdef WINDOWS
-break f (WindowsString s) = bimap WindowsString WindowsString $ BS16.break (f . WindowsChar) s
-#else
-break f (PosixString s) = bimap PosixString PosixString $ BS.break (f . PosixChar) s
-#endif
+break = coerce BS.break
 
 -- | Similar to 'Prelude.span',
 -- returns the longest (possibly empty) prefix of elements
@@ -882,11 +766,7 @@ break f (PosixString s) = bimap PosixString PosixString $ BS.break (f . PosixCha
 --
 -- @since 1.4.200.0
 span :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-#ifdef WINDOWS
-span f (WindowsString s) = bimap WindowsString WindowsString $ BS16.span (f . WindowsChar) s
-#else
-span f (PosixString s) = bimap PosixString PosixString $ BS.span (f . PosixChar) s
-#endif
+span = coerce BS.span
 
 -- | Returns the longest (possibly empty) suffix of elements
 -- satisfying the predicate and the remainder of the string.
@@ -905,21 +785,13 @@ span f (PosixString s) = bimap PosixString PosixString $ BS.span (f . PosixChar)
 --
 -- @since 1.4.200.0
 spanEnd :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-#ifdef WINDOWS
-spanEnd f (WindowsString s) = bimap WindowsString WindowsString $ BS16.spanEnd (f . WindowsChar) s
-#else
-spanEnd f (PosixString s) = bimap PosixString PosixString $ BS.spanEnd (f . PosixChar) s
-#endif
+spanEnd = coerce BS.spanEnd
 
 -- | /O(n)/ 'splitAt' @n sbs@ is equivalent to @('take' n sbs, 'drop' n sbs)@.
 --
 -- @since 1.4.200.0
 splitAt :: Int -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-#ifdef WINDOWS
-splitAt n (WindowsString s) = bimap WindowsString WindowsString $ BS16.splitAt n s
-#else
-splitAt n (PosixString s) = bimap PosixString PosixString $ BS.splitAt n s
-#endif
+splitAt = coerce BS.splitAt
 
 -- | /O(n)/ Break a 'OsString' into pieces separated by the byte
 -- argument, consuming the delimiter. I.e.
@@ -936,11 +808,7 @@ splitAt n (PosixString s) = bimap PosixString PosixString $ BS.splitAt n s
 --
 -- @since 1.4.200.0
 split :: PLATFORM_WORD -> PLATFORM_STRING -> [PLATFORM_STRING]
-#ifdef WINDOWS
-split (WindowsChar w) (WindowsString s) = WindowsString <$> BS16.split w s
-#else
-split (PosixChar w) (PosixString s) = PosixString <$> BS.split w s
-#endif
+split = coerce BS.split
 
 -- | /O(n)/ Splits a 'OsString' into components delimited by
 -- separators, where the predicate returns True for a separator element.
@@ -952,11 +820,7 @@ split (PosixChar w) (PosixString s) = PosixString <$> BS.split w s
 --
 -- @since 1.4.200.0
 splitWith :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> [PLATFORM_STRING]
-#ifdef WINDOWS
-splitWith f (WindowsString s) = WindowsString <$> BS16.splitWith (f . WindowsChar) s
-#else
-splitWith f (PosixString s) = PosixString <$> BS.splitWith (f . PosixChar) s
-#endif
+splitWith = coerce BS.splitWith
 
 -- | /O(n)/ The 'stripSuffix' function takes two OsStrings and returns 'Just'
 -- the remainder of the second iff the first is its suffix, and otherwise
@@ -964,11 +828,7 @@ splitWith f (PosixString s) = PosixString <$> BS.splitWith (f . PosixChar) s
 --
 -- @since 1.4.200.0
 stripSuffix :: PLATFORM_STRING -> PLATFORM_STRING -> Maybe PLATFORM_STRING
-#ifdef WINDOWS
-stripSuffix (WindowsString a) (WindowsString b) = WindowsString <$> BS16.stripSuffix a b
-#else
-stripSuffix (PosixString a) (PosixString b) = PosixString <$> BS.stripSuffix a b
-#endif
+stripSuffix = coerce BS.stripSuffix
 
 -- | /O(n)/ The 'stripPrefix' function takes two OsStrings and returns 'Just'
 -- the remainder of the second iff the first is its prefix, and otherwise
@@ -976,32 +836,20 @@ stripSuffix (PosixString a) (PosixString b) = PosixString <$> BS.stripSuffix a b
 --
 -- @since 1.4.200.0
 stripPrefix :: PLATFORM_STRING -> PLATFORM_STRING -> Maybe PLATFORM_STRING
-#ifdef WINDOWS
-stripPrefix (WindowsString a) (WindowsString b) = WindowsString <$> BS16.stripPrefix a b
-#else
-stripPrefix (PosixString a) (PosixString b) = PosixString <$> BS.stripPrefix a b
-#endif
+stripPrefix = coerce BS.stripPrefix
 
 
 -- | Check whether one string is a substring of another.
 --
 -- @since 1.4.200.0
 isInfixOf :: PLATFORM_STRING -> PLATFORM_STRING -> Bool
-#ifdef WINDOWS
-isInfixOf (WindowsString a) (WindowsString b) = BS16.isInfixOf a b
-#else
-isInfixOf (PosixString a) (PosixString b) = BS.isInfixOf a b
-#endif
+isInfixOf = coerce BS.isInfixOf
 
 -- |/O(n)/ The 'isPrefixOf' function takes two OsStrings and returns 'True'
 --
 -- @since 1.4.200.0
 isPrefixOf :: PLATFORM_STRING -> PLATFORM_STRING -> Bool
-#ifdef WINDOWS
-isPrefixOf (WindowsString a) (WindowsString b) = BS16.isPrefixOf a b
-#else
-isPrefixOf (PosixString a) (PosixString b) = BS.isPrefixOf a b
-#endif
+isPrefixOf = coerce BS.isPrefixOf
 
 -- | /O(n)/ The 'isSuffixOf' function takes two OsStrings and returns 'True'
 -- iff the first is a suffix of the second.
@@ -1012,11 +860,7 @@ isPrefixOf (PosixString a) (PosixString b) = BS.isPrefixOf a b
 --
 -- @since 1.4.200.0
 isSuffixOf :: PLATFORM_STRING -> PLATFORM_STRING -> Bool
-#ifdef WINDOWS
-isSuffixOf (WindowsString a) (WindowsString b) = BS16.isSuffixOf a b
-#else
-isSuffixOf (PosixString a) (PosixString b) = BS.isSuffixOf a b
-#endif
+isSuffixOf = coerce BS.isSuffixOf
 
 
 -- | Break a string on a substring, returning a pair of the part of the
@@ -1045,21 +889,13 @@ isSuffixOf (PosixString a) (PosixString b) = BS.isSuffixOf a b
 --
 -- @since 1.4.200.0
 breakSubstring :: PLATFORM_STRING -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-#ifdef WINDOWS
-breakSubstring (WindowsString a) (WindowsString b) = bimap WindowsString WindowsString $ BS16.breakSubstring a b
-#else
-breakSubstring (PosixString a) (PosixString b) = bimap PosixString PosixString $ BS.breakSubstring a b
-#endif
+breakSubstring = coerce BS.breakSubstring
 
 -- | /O(n)/ 'elem' is the 'OsString' membership predicate.
 --
 -- @since 1.4.200.0
 elem :: PLATFORM_WORD -> PLATFORM_STRING -> Bool
-#ifdef WINDOWS
-elem (WindowsChar w) (WindowsString s) = BS16.elem w s
-#else
-elem (PosixChar w) (PosixString s) = BS.elem w s
-#endif
+elem = coerce BS.elem
 
 -- | /O(n)/ The 'find' function takes a predicate and a OsString,
 -- and returns the first element in matching the predicate, or 'Nothing'
@@ -1069,11 +905,7 @@ elem (PosixChar w) (PosixString s) = BS.elem w s
 --
 -- @since 1.4.200.0
 find :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> Maybe PLATFORM_WORD
-#ifdef WINDOWS
-find f (WindowsString s) = WindowsChar <$> BS16.find (f . WindowsChar) s
-#else
-find f (PosixString s) = PosixChar <$> BS.find (f . PosixChar) s
-#endif
+find = coerce BS.find
 
 -- | /O(n)/ 'filter', applied to a predicate and a OsString,
 -- returns a OsString containing those characters that satisfy the
@@ -1081,11 +913,7 @@ find f (PosixString s) = PosixChar <$> BS.find (f . PosixChar) s
 --
 -- @since 1.4.200.0
 filter :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> PLATFORM_STRING
-#ifdef WINDOWS
-filter f (WindowsString s) = WindowsString $ BS16.filter (f . WindowsChar) s
-#else
-filter f (PosixString s) = PosixString $ BS.filter (f . PosixChar) s
-#endif
+filter = coerce BS.filter
 
 -- | /O(n)/ The 'partition' function takes a predicate a OsString and returns
 -- the pair of OsStrings with elements which do and do not satisfy the
@@ -1095,21 +923,13 @@ filter f (PosixString s) = PosixString $ BS.filter (f . PosixChar) s
 --
 -- @since 1.4.200.0
 partition :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-#ifdef WINDOWS
-partition f (WindowsString s) = bimap WindowsString WindowsString $ BS16.partition (f . WindowsChar) s
-#else
-partition f (PosixString s) = bimap PosixString PosixString $ BS.partition (f . PosixChar) s
-#endif
+partition = coerce BS.partition
 
 -- | /O(1)/ 'OsString' index (subscript) operator, starting from 0.
 --
 -- @since 1.4.200.0
 index :: HasCallStack => PLATFORM_STRING -> Int -> PLATFORM_WORD
-#ifdef WINDOWS
-index (WindowsString s) n = WindowsChar $ BS16.index s n
-#else
-index (PosixString s) n = PosixChar $ BS.index s n
-#endif
+index = coerce BS.index
 
 -- | /O(1)/ 'OsString' index, starting from 0, that returns 'Just' if:
 --
@@ -1117,11 +937,7 @@ index (PosixString s) n = PosixChar $ BS.index s n
 --
 -- @since 1.4.200.0
 indexMaybe :: PLATFORM_STRING -> Int -> Maybe PLATFORM_WORD
-#ifdef WINDOWS
-indexMaybe (WindowsString s) n = WindowsChar <$> BS16.indexMaybe s n
-#else
-indexMaybe (PosixString s) n = PosixChar <$> BS.indexMaybe s n
-#endif
+indexMaybe = coerce BS.indexMaybe
 
 -- | /O(1)/ 'OsString' index, starting from 0, that returns 'Just' if:
 --
@@ -1137,32 +953,20 @@ indexMaybe (PosixString s) n = PosixChar <$> BS.indexMaybe s n
 --
 -- @since 1.4.200.0
 elemIndex :: PLATFORM_WORD -> PLATFORM_STRING -> Maybe Int
-#ifdef WINDOWS
-elemIndex (WindowsChar w) (WindowsString s) = BS16.elemIndex w s
-#else
-elemIndex (PosixChar w) (PosixString s) = BS.elemIndex w s
-#endif
+elemIndex = coerce BS.elemIndex
 
 -- | /O(n)/ The 'elemIndices' function extends 'elemIndex', by returning
 -- the indices of all elements equal to the query element, in ascending order.
 --
 -- @since 1.4.200.0
 elemIndices :: PLATFORM_WORD -> PLATFORM_STRING -> [Int]
-#ifdef WINDOWS
-elemIndices (WindowsChar w) (WindowsString s) = BS16.elemIndices w s
-#else
-elemIndices (PosixChar w) (PosixString s) = BS.elemIndices w s
-#endif
+elemIndices = coerce BS.elemIndices
 
 -- | count returns the number of times its argument appears in the OsString
 --
 -- @since 1.4.200.0
 count :: PLATFORM_WORD -> PLATFORM_STRING -> Int
-#ifdef WINDOWS
-count (WindowsChar w) (WindowsString s) = BS16.count w s
-#else
-count (PosixChar w) (PosixString s) = BS.count w s
-#endif
+count = coerce BS.count
 
 -- | /O(n)/ The 'findIndex' function takes a predicate and a 'OsString' and
 -- returns the index of the first element in the OsString
@@ -1170,19 +974,11 @@ count (PosixChar w) (PosixString s) = BS.count w s
 --
 -- @since 1.4.200.0
 findIndex :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> Maybe Int
-#ifdef WINDOWS
-findIndex f (WindowsString s) = BS16.findIndex (f . WindowsChar) s
-#else
-findIndex f (PosixString s) = BS.findIndex (f . PosixChar) s
-#endif
+findIndex = coerce BS.findIndex
 
 -- | /O(n)/ The 'findIndices' function extends 'findIndex', by returning the
 -- indices of all elements satisfying the predicate, in ascending order.
 --
 -- @since 1.4.200.0
 findIndices :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> [Int]
-#ifdef WINDOWS
-findIndices f (WindowsString s) = BS16.findIndices (f . WindowsChar) s
-#else
-findIndices f (PosixString s) = BS.findIndices (f . PosixChar) s
-#endif
+findIndices = coerce BS.findIndices
