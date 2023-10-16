@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 
 -- This template expects CPP definitions for:
@@ -367,11 +368,7 @@ pstr =
 
 -- | Unpack a platform string to a list of platform words.
 unpack :: PLATFORM_STRING -> [PLATFORM_WORD]
-#ifdef WINDOWS
-unpack (WindowsString ba) = WindowsChar <$> BS16.unpack ba
-#else
-unpack (PosixString ba) = PosixChar <$> BS.unpack ba
-#endif
+unpack = coerce BS.unpack
 
 
 -- | Pack a list of platform words to a platform string.
@@ -380,18 +377,10 @@ unpack (PosixString ba) = PosixChar <$> BS.unpack ba
 -- convert from @[Char]@ to platform string is probably not what
 -- you want, because it will truncate unicode code points.
 pack :: [PLATFORM_WORD] -> PLATFORM_STRING
-#ifdef WINDOWS
-pack = WindowsString . BS16.pack . fmap (\(WindowsChar w) -> w)
-#else
-pack = PosixString . BS.pack . fmap (\(PosixChar w) -> w)
-#endif
+pack = coerce BS.pack
 
 singleton :: PLATFORM_WORD -> PLATFORM_STRING
-#ifdef WINDOWS
-singleton = WindowsString . BS16.singleton . getWindowsChar
-#else
-singleton = PosixString . BS.singleton . getPosixChar
-#endif
+singleton = coerce BS.singleton
 
 empty :: PLATFORM_STRING
 empty = mempty
@@ -516,23 +505,15 @@ intercalate = coerce BS.intercalate
 -- OsString using the binary operator, from left to right.
 --
 -- @since 1.4.200.0
-foldl :: (a -> PLATFORM_WORD -> a) -> a -> PLATFORM_STRING -> a
-#ifdef WINDOWS
-foldl f a (WindowsString s) = BS16.foldl (coerce f) a s
-#else
-foldl f a (PosixString s) = BS8.foldl (coerce f) a s
-#endif
+foldl :: forall a. (a -> PLATFORM_WORD -> a) -> a -> PLATFORM_STRING -> a
+foldl = coerce (BS.foldl @a)
 
 -- | 'foldl'' is like 'foldl', but strict in the accumulator.
 --
 -- @since 1.4.200.0
 foldl'
-  :: (a -> PLATFORM_WORD -> a) -> a -> PLATFORM_STRING -> a
-#ifdef WINDOWS
-foldl' f a (WindowsString s) = BS16.foldl' (coerce f) a s
-#else
-foldl' f a (PosixString s) = BS8.foldl' (coerce f) a s
-#endif
+  :: forall a. (a -> PLATFORM_WORD -> a) -> a -> PLATFORM_STRING -> a
+foldl' = coerce (BS.foldl' @a)
 
 -- | 'foldl1' is a variant of 'foldl' that has no starting value
 -- argument, and thus must be applied to non-empty 'OsString's.
@@ -555,23 +536,15 @@ foldl1' = coerce BS.foldl1'
 -- reduces the OsString using the binary operator, from right to left.
 --
 -- @since 1.4.200.0
-foldr :: (PLATFORM_WORD -> a -> a) -> a -> PLATFORM_STRING -> a
-#ifdef WINDOWS
-foldr f a (WindowsString s) = BS16.foldr (coerce f) a s
-#else
-foldr f a (PosixString s) = BS8.foldr (coerce f) a s
-#endif
+foldr :: forall a. (PLATFORM_WORD -> a -> a) -> a -> PLATFORM_STRING -> a
+foldr = coerce (BS.foldr @a)
 
 -- | 'foldr'' is like 'foldr', but strict in the accumulator.
 --
 -- @since 1.4.200.0
 foldr'
-  :: (PLATFORM_WORD -> a -> a) -> a -> PLATFORM_STRING -> a
-#ifdef WINDOWS
-foldr' f a (WindowsString s) = BS16.foldr' (coerce f) a s
-#else
-foldr' f a (PosixString s) = BS8.foldr' (coerce f) a s
-#endif
+  :: forall a. (PLATFORM_WORD -> a -> a) -> a -> PLATFORM_STRING -> a
+foldr' = coerce (BS.foldr' @a)
 
 -- | 'foldr1' is a variant of 'foldr' that has no starting value argument,
 -- and thus must be applied to non-empty 'OsString's
@@ -639,12 +612,8 @@ replicate = coerce BS.replicate
 -- > == pack [0, 1, 2, 3, 4, 5]
 --
 -- @since 1.4.200.0
-unfoldr :: (a -> Maybe (PLATFORM_WORD, a)) -> a -> PLATFORM_STRING
-#ifdef WINDOWS
-unfoldr f a = WindowsString $ BS16.unfoldr (fmap (first getWindowsChar) . f) a
-#else
-unfoldr f a = PosixString $ BS8.unfoldr (fmap (first getPosixChar) . f) a
-#endif
+unfoldr :: forall a. (a -> Maybe (PLATFORM_WORD, a)) -> a -> PLATFORM_STRING
+unfoldr = coerce (BS.unfoldr @a)
 
 -- | /O(n)/ Like 'unfoldr', 'unfoldrN' builds a OsString from a seed
 -- value.  However, the length of the result is limited by the first
@@ -657,11 +626,7 @@ unfoldr f a = PosixString $ BS8.unfoldr (fmap (first getPosixChar) . f) a
 --
 -- @since 1.4.200.0
 unfoldrN :: forall a. Int -> (a -> Maybe (PLATFORM_WORD, a)) -> a -> (PLATFORM_STRING, Maybe a)
-#ifdef WINDOWS
-unfoldrN n f a = first WindowsString $ BS16.unfoldrN n (fmap (first getWindowsChar) . f) a
-#else
-unfoldrN n f a = first PosixString $ BS8.unfoldrN n (fmap (first getPosixChar) . f) a
-#endif
+unfoldrN = coerce (BS.unfoldrN @a)
 
 -- | /O(n)/ 'take' @n@, applied to a OsString @xs@, returns the prefix
 -- of @xs@ of length @n@, or @xs@ itself if @n > 'length' xs@.

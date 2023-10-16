@@ -151,7 +151,7 @@ osstr =
 
 -- | Unpack an 'OsString' to a list of 'OsChar'.
 unpack :: OsString -> [OsChar]
-unpack (OsString x) = OsChar <$> PF.unpack x
+unpack = coerce PF.unpack
 
 
 -- | Pack a list of 'OsChar' to an 'OsString'
@@ -160,18 +160,18 @@ unpack (OsString x) = OsChar <$> PF.unpack x
 -- convert from @[Char]@ to 'OsString' is probably not what
 -- you want, because it will truncate unicode code points.
 pack :: [OsChar] -> OsString
-pack = OsString . PF.pack . fmap (\(OsChar x) -> x)
+pack = coerce PF.pack
 
 empty :: OsString
 empty = mempty
 
 singleton :: OsChar -> OsString
-singleton = OsString . PF.singleton . getOsChar
+singleton = coerce PF.singleton
 
 
 -- | Truncates on unix to 1 and on Windows to 2 octets.
 unsafeFromChar :: Char -> OsChar
-unsafeFromChar = OsChar . PF.unsafeFromChar
+unsafeFromChar = coerce PF.unsafeFromChar
 
 -- | Converts back to a unicode codepoint (total).
 toChar :: OsChar -> Char
