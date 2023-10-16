@@ -174,7 +174,7 @@ import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import qualified System.OsPath.Data.ByteString.Short as BS
 #endif
 import GHC.Stack (HasCallStack)
-import Prelude hiding (last, tail, head, init, null, length, map, reverse, foldl, foldr, foldl1, foldr1, all, any, concat, replicate, take, takeWhile, drop, dropWhile, break, span, splitAt, elem, filter)
+import Prelude (Bool, Int, Maybe(..), IO, String, Either(..), fmap, ($), (.), mconcat, fromEnum, fromInteger, mempty, fromIntegral, fail, (<$>), show, either, pure, const, flip)
 import Data.Bifunctor ( bimap )
 import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
 import qualified System.OsPath.Data.ByteString.Short as BS8

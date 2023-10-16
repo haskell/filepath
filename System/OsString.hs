@@ -203,4 +203,4 @@ import System.OsString.Internal
     )
 import System.OsString.Internal.Types
     ( OsString, OsChar )
-import Prelude hiding (last, tail, head, init, null, length, map, reverse, foldl, foldr, foldl1, foldr1, all, any, concat, replicate, take, takeWhile, drop, dropWhile, break, span, splitAt, elem, filter)
+import Prelude ()
