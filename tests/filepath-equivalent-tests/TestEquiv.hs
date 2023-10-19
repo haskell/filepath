@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Main where
 
@@ -11,6 +10,7 @@ import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 import qualified Legacy.System.FilePath.Windows as LW
 import qualified Legacy.System.FilePath.Posix as LP
+import Data.Char (isAsciiLower, isAsciiUpper)
 
 
 main :: IO ()
@@ -189,7 +189,14 @@ equivalentTests =
     )
     ,
     ( "normalise (windows)"
-    , property $ \p -> W.normalise p == LW.normalise p
+    , property $ \p -> case p of
+                         (l:':':rs)
+                           -- new filepath normalises "a:////////" to "A:\\"
+                           -- see https://github.com/haskell/filepath/commit/cb4890aa03a5ee61f16f7a08dd2d964fffffb385
+                           | isAsciiLower l || isAsciiUpper l
+                           , let (seps, path) = span LW.isPathSeparator rs
+                           , length seps > 1 -> let np = l : ':' : LW.pathSeparator : path in W.normalise np == LW.normalise np
+                         _ -> W.normalise p == LW.normalise p
     )
     ,
     ( "equalFilePath (windows)"
