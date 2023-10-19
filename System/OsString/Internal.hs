@@ -1,6 +1,8 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE UnliftedFFITypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 
 module System.OsString.Internal where
 
@@ -28,7 +30,6 @@ import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import qualified System.OsString.Posix as PF
 #endif
 import GHC.Stack (HasCallStack)
-import Data.Bifunctor
 import Data.Coerce (coerce)
 
 
@@ -281,14 +282,14 @@ intercalate = coerce PF.intercalate
 -- OsString using the binary operator, from left to right.
 --
 -- @since 1.4.200.0
-foldl :: (a -> OsChar -> a) -> a -> OsString -> a
-foldl f a (OsString s) = PF.foldl (coerce f) a s
+foldl :: forall a. (a -> OsChar -> a) -> a -> OsString -> a
+foldl = coerce (PF.foldl @a)
 
 -- | 'foldl'' is like 'foldl', but strict in the accumulator.
 --
 -- @since 1.4.200.0
-foldl' :: (a -> OsChar -> a) -> a -> OsString -> a
-foldl' f a (OsString s) = PF.foldl' (coerce f) a s
+foldl' :: forall a. (a -> OsChar -> a) -> a -> OsString -> a
+foldl' = coerce (PF.foldl' @a)
 
 -- | 'foldl1' is a variant of 'foldl' that has no starting value
 -- argument, and thus must be applied to non-empty 'OsString's.
@@ -311,14 +312,14 @@ foldl1' = coerce PF.foldl1'
 -- reduces the OsString using the binary operator, from right to left.
 --
 -- @since 1.4.200.0
-foldr :: (OsChar -> a -> a) -> a -> OsString -> a
-foldr f a (OsString s) = PF.foldr (coerce f) a s
+foldr :: forall a. (OsChar -> a -> a) -> a -> OsString -> a
+foldr = coerce (PF.foldr @a)
 
 -- | 'foldr'' is like 'foldr', but strict in the accumulator.
 --
 -- @since 1.4.200.0
-foldr' :: (OsChar -> a -> a) -> a -> OsString -> a
-foldr' f a (OsString s) = PF.foldr' (coerce f) a s
+foldr' :: forall a. (OsChar -> a -> a) -> a -> OsString -> a
+foldr' = coerce (PF.foldr' @a)
 
 -- | 'foldr1' is a variant of 'foldr' that has no starting value argument,
 -- and thus must be applied to non-empty 'OsString's
@@ -383,8 +384,8 @@ replicate = coerce PF.replicate
 -- > == pack [0, 1, 2, 3, 4, 5]
 --
 -- @since 1.4.200.0
-unfoldr :: (a -> Maybe (OsChar, a)) -> a -> OsString
-unfoldr f a = OsString $ PF.unfoldr (fmap (first getOsChar) . f) a
+unfoldr :: forall a. (a -> Maybe (OsChar, a)) -> a -> OsString
+unfoldr = coerce (PF.unfoldr @a)
 
 -- | /O(n)/ Like 'unfoldr', 'unfoldrN' builds a OsString from a seed
 -- value.  However, the length of the result is limited by the first
@@ -397,7 +398,7 @@ unfoldr f a = OsString $ PF.unfoldr (fmap (first getOsChar) . f) a
 --
 -- @since 1.4.200.0
 unfoldrN :: forall a. Int -> (a -> Maybe (OsChar, a)) -> a -> (OsString, Maybe a)
-unfoldrN n f a = first OsString $ PF.unfoldrN n (fmap (first getOsChar) . f) a
+unfoldrN = coerce (PF.unfoldrN @a)
 
 -- | /O(n)/ 'take' @n@, applied to a OsString @xs@, returns the prefix
 -- of @xs@ of length @n@, or @xs@ itself if @n > 'length' xs@.

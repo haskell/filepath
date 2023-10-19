@@ -166,13 +166,13 @@ import System.OsPath.Encoding
 import System.IO
     ( TextEncoding, utf16le )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import qualified System.OsPath.Data.ByteString.Short.Word16 as BS
+import qualified System.OsPath.Data.ByteString.Short.Word16 as BSP
 #else
 import System.OsPath.Encoding
 import System.IO
     ( TextEncoding, utf8 )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
-import qualified System.OsPath.Data.ByteString.Short as BS
+import qualified System.OsPath.Data.ByteString.Short as BSP
 #endif
 import GHC.Stack (HasCallStack)
 import Prelude (Bool, Int, Maybe(..), IO, String, Either(..), fmap, ($), (.), mconcat, fromEnum, fromInteger, mempty, fromIntegral, fail, (<$>), show, either, pure, const, flip)
@@ -211,7 +211,7 @@ encodeWith enc str = unsafePerformIO $ do
   r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WindowsString <$> BS8.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
-  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> PosixString <$> BS.packCStringLen cstr
+  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> PosixString <$> BSP.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
 
@@ -278,7 +278,7 @@ decodeWith :: TextEncoding
        -> PLATFORM_STRING
        -> Either EncodingException String
 decodeWith unixEnc (PosixString ba) = unsafePerformIO $ do
-  r <- try @SomeException $ BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
+  r <- try @SomeException $ BSP.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
 
@@ -327,7 +327,7 @@ fromBytes bs =
   let ws = WindowsString . BS16.toShort $ bs
   in either throwM (const . pure $ ws) $ decodeWith ucs2le ws
 #else
-fromBytes = pure . PosixString . BS.toShort
+fromBytes = pure . PosixString . BSP.toShort
 #endif
 
 
@@ -368,7 +368,7 @@ pstr =
 
 -- | Unpack a platform string to a list of platform words.
 unpack :: PLATFORM_STRING -> [PLATFORM_WORD]
-unpack = coerce BS.unpack
+unpack = coerce BSP.unpack
 
 
 -- | Pack a list of platform words to a platform string.
@@ -377,10 +377,10 @@ unpack = coerce BS.unpack
 -- convert from @[Char]@ to platform string is probably not what
 -- you want, because it will truncate unicode code points.
 pack :: [PLATFORM_WORD] -> PLATFORM_STRING
-pack = coerce BS.pack
+pack = coerce BSP.pack
 
 singleton :: PLATFORM_WORD -> PLATFORM_STRING
-singleton = coerce BS.singleton
+singleton = coerce BSP.singleton
 
 empty :: PLATFORM_STRING
 empty = mempty
@@ -408,13 +408,13 @@ toChar (PosixChar w) = chr $ fromIntegral w
 --
 -- @since 1.4.200.0
 snoc :: PLATFORM_STRING -> PLATFORM_WORD -> PLATFORM_STRING
-snoc = coerce BS.snoc
+snoc = coerce BSP.snoc
 
 -- | /O(n)/ 'cons' is analogous to (:) for lists.
 --
 -- @since 1.4.200.0
 cons :: PLATFORM_WORD -> PLATFORM_STRING -> PLATFORM_STRING
-cons = coerce BS.cons
+cons = coerce BSP.cons
 
 
 -- | /O(1)/ Extract the last element of a OsString, which must be finite and non-empty.
@@ -424,7 +424,7 @@ cons = coerce BS.cons
 --
 -- @since 1.4.200.0
 last :: HasCallStack => PLATFORM_STRING -> PLATFORM_WORD
-last = coerce BS.last
+last = coerce BSP.last
 
 -- | /O(n)/ Extract the elements after the head of a OsString, which must be non-empty.
 -- An exception will be thrown in the case of an empty OsString.
@@ -433,14 +433,14 @@ last = coerce BS.last
 --
 -- @since 1.4.200.0
 tail :: HasCallStack => PLATFORM_STRING -> PLATFORM_STRING
-tail = coerce BS.tail
+tail = coerce BSP.tail
 
 -- | /O(n)/ Extract the 'head' and 'tail' of a OsString, returning 'Nothing'
 -- if it is empty.
 --
 -- @since 1.4.200.0
 uncons :: PLATFORM_STRING -> Maybe (PLATFORM_WORD, PLATFORM_STRING)
-uncons = coerce BS.uncons
+uncons = coerce BSP.uncons
 
 -- | /O(1)/ Extract the first element of a OsString, which must be non-empty.
 -- An exception will be thrown in the case of an empty OsString.
@@ -449,7 +449,7 @@ uncons = coerce BS.uncons
 --
 -- @since 1.4.200.0
 head :: HasCallStack => PLATFORM_STRING -> PLATFORM_WORD
-head = coerce BS.head
+head = coerce BSP.head
 
 -- | /O(n)/ Return all the elements of a 'OsString' except the last one.
 -- An exception will be thrown in the case of an empty OsString.
@@ -458,39 +458,39 @@ head = coerce BS.head
 --
 -- @since 1.4.200.0
 init :: HasCallStack => PLATFORM_STRING -> PLATFORM_STRING
-init = coerce BS.init
+init = coerce BSP.init
 
 -- | /O(n)/ Extract the 'init' and 'last' of a OsString, returning 'Nothing'
 -- if it is empty.
 --
 -- @since 1.4.200.0
 unsnoc :: PLATFORM_STRING -> Maybe (PLATFORM_STRING, PLATFORM_WORD)
-unsnoc = coerce BS.unsnoc
+unsnoc = coerce BSP.unsnoc
 
 -- | /O(1)/. The empty 'OsString'.
 --
 -- @since 1.4.200.0
 null :: PLATFORM_STRING -> Bool
-null = coerce BS.null
+null = coerce BSP.null
 
 -- | /O(1)/ The length of a 'OsString'.
 --
 -- @since 1.4.200.0
 length :: PLATFORM_STRING -> Int
-length = coerce BS.length
+length = coerce BSP.length
 
 -- | /O(n)/ 'map' @f xs@ is the OsString obtained by applying @f@ to each
 -- element of @xs@.
 --
 -- @since 1.4.200.0
 map :: (PLATFORM_WORD -> PLATFORM_WORD) -> PLATFORM_STRING -> PLATFORM_STRING
-map = coerce BS.map
+map = coerce BSP.map
 
 -- | /O(n)/ 'reverse' @xs@ efficiently returns the elements of @xs@ in reverse order.
 --
 -- @since 1.4.200.0
 reverse :: PLATFORM_STRING -> PLATFORM_STRING
-reverse = coerce BS.reverse
+reverse = coerce BSP.reverse
 
 -- | /O(n)/ The 'intercalate' function takes a 'OsString' and a list of
 -- 'OsString's and concatenates the list after interspersing the first
@@ -498,7 +498,7 @@ reverse = coerce BS.reverse
 --
 -- @since 1.4.200.0
 intercalate :: PLATFORM_STRING -> [PLATFORM_STRING] -> PLATFORM_STRING
-intercalate = coerce BS.intercalate
+intercalate = coerce BSP.intercalate
 
 -- | 'foldl', applied to a binary operator, a starting value (typically
 -- the left-identity of the operator), and a OsString, reduces the
@@ -506,14 +506,14 @@ intercalate = coerce BS.intercalate
 --
 -- @since 1.4.200.0
 foldl :: forall a. (a -> PLATFORM_WORD -> a) -> a -> PLATFORM_STRING -> a
-foldl = coerce (BS.foldl @a)
+foldl = coerce (BSP.foldl @a)
 
 -- | 'foldl'' is like 'foldl', but strict in the accumulator.
 --
 -- @since 1.4.200.0
 foldl'
   :: forall a. (a -> PLATFORM_WORD -> a) -> a -> PLATFORM_STRING -> a
-foldl' = coerce (BS.foldl' @a)
+foldl' = coerce (BSP.foldl' @a)
 
 -- | 'foldl1' is a variant of 'foldl' that has no starting value
 -- argument, and thus must be applied to non-empty 'OsString's.
@@ -521,7 +521,7 @@ foldl' = coerce (BS.foldl' @a)
 --
 -- @since 1.4.200.0
 foldl1 :: (PLATFORM_WORD -> PLATFORM_WORD -> PLATFORM_WORD) -> PLATFORM_STRING -> PLATFORM_WORD
-foldl1 = coerce BS.foldl1
+foldl1 = coerce BSP.foldl1
 
 -- | 'foldl1'' is like 'foldl1', but strict in the accumulator.
 -- An exception will be thrown in the case of an empty OsString.
@@ -529,7 +529,7 @@ foldl1 = coerce BS.foldl1
 -- @since 1.4.200.0
 foldl1'
   :: (PLATFORM_WORD -> PLATFORM_WORD -> PLATFORM_WORD) -> PLATFORM_STRING -> PLATFORM_WORD
-foldl1' = coerce BS.foldl1'
+foldl1' = coerce BSP.foldl1'
 
 -- | 'foldr', applied to a binary operator, a starting value
 -- (typically the right-identity of the operator), and a OsString,
@@ -537,14 +537,14 @@ foldl1' = coerce BS.foldl1'
 --
 -- @since 1.4.200.0
 foldr :: forall a. (PLATFORM_WORD -> a -> a) -> a -> PLATFORM_STRING -> a
-foldr = coerce (BS.foldr @a)
+foldr = coerce (BSP.foldr @a)
 
 -- | 'foldr'' is like 'foldr', but strict in the accumulator.
 --
 -- @since 1.4.200.0
 foldr'
   :: forall a. (PLATFORM_WORD -> a -> a) -> a -> PLATFORM_STRING -> a
-foldr' = coerce (BS.foldr' @a)
+foldr' = coerce (BSP.foldr' @a)
 
 -- | 'foldr1' is a variant of 'foldr' that has no starting value argument,
 -- and thus must be applied to non-empty 'OsString's
@@ -552,31 +552,29 @@ foldr' = coerce (BS.foldr' @a)
 --
 -- @since 1.4.200.0
 foldr1 :: (PLATFORM_WORD -> PLATFORM_WORD -> PLATFORM_WORD) -> PLATFORM_STRING -> PLATFORM_WORD
-foldr1 = coerce BS.foldr1
+foldr1 = coerce BSP.foldr1
 
 -- | 'foldr1'' is a variant of 'foldr1', but is strict in the
 -- accumulator.
 --
---
--- @since 1.4.200.0
 -- @since 1.4.200.0
 foldr1'
   :: (PLATFORM_WORD -> PLATFORM_WORD -> PLATFORM_WORD) -> PLATFORM_STRING -> PLATFORM_WORD
-foldr1' = coerce BS.foldr1'
+foldr1' = coerce BSP.foldr1'
 
 -- | /O(n)/ Applied to a predicate and a 'OsString', 'all' determines
 -- if all elements of the 'OsString' satisfy the predicate.
 --
 -- @since 1.4.200.0
 all :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> Bool
-all = coerce BS.all
+all = coerce BSP.all
 
 -- | /O(n)/ Applied to a predicate and a 'OsString', 'any' determines if
 -- any element of the 'OsString' satisfies the predicate.
 --
 -- @since 1.4.200.0
 any :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> Bool
-any = coerce BS.any
+any = coerce BSP.any
 
 -- /O(n)/ Concatenate a list of OsStrings.
 --
@@ -591,7 +589,7 @@ concat = mconcat
 --
 -- @since 1.4.200.0
 replicate :: Int -> PLATFORM_WORD -> PLATFORM_STRING
-replicate = coerce BS.replicate
+replicate = coerce BSP.replicate
 
 -- | /O(n)/, where /n/ is the length of the result.  The 'unfoldr'
 -- function is analogous to the List \'unfoldr\'.  'unfoldr' builds a
@@ -613,7 +611,7 @@ replicate = coerce BS.replicate
 --
 -- @since 1.4.200.0
 unfoldr :: forall a. (a -> Maybe (PLATFORM_WORD, a)) -> a -> PLATFORM_STRING
-unfoldr = coerce (BS.unfoldr @a)
+unfoldr = coerce (BSP.unfoldr @a)
 
 -- | /O(n)/ Like 'unfoldr', 'unfoldrN' builds a OsString from a seed
 -- value.  However, the length of the result is limited by the first
@@ -626,14 +624,14 @@ unfoldr = coerce (BS.unfoldr @a)
 --
 -- @since 1.4.200.0
 unfoldrN :: forall a. Int -> (a -> Maybe (PLATFORM_WORD, a)) -> a -> (PLATFORM_STRING, Maybe a)
-unfoldrN = coerce (BS.unfoldrN @a)
+unfoldrN = coerce (BSP.unfoldrN @a)
 
 -- | /O(n)/ 'take' @n@, applied to a OsString @xs@, returns the prefix
 -- of @xs@ of length @n@, or @xs@ itself if @n > 'length' xs@.
 --
 -- @since 1.4.200.0
 take :: Int -> PLATFORM_STRING -> PLATFORM_STRING
-take = coerce BS.take
+take = coerce BSP.take
 
 -- | /O(n)/ @'takeEnd' n xs@ is equivalent to @'drop' ('length' xs - n) xs@.
 -- Takes @n@ elements from end of bytestring.
@@ -647,7 +645,7 @@ take = coerce BS.take
 --
 -- @since 1.4.200.0
 takeEnd :: Int -> PLATFORM_STRING -> PLATFORM_STRING
-takeEnd = coerce BS.takeEnd
+takeEnd = coerce BSP.takeEnd
 
 -- | Returns the longest (possibly empty) suffix of elements
 -- satisfying the predicate.
@@ -656,7 +654,7 @@ takeEnd = coerce BS.takeEnd
 --
 -- @since 1.4.200.0
 takeWhileEnd :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> PLATFORM_STRING
-takeWhileEnd = coerce BS.takeWhileEnd
+takeWhileEnd = coerce BSP.takeWhileEnd
 
 -- | Similar to 'Prelude.takeWhile',
 -- returns the longest (possibly empty) prefix of elements
@@ -664,13 +662,13 @@ takeWhileEnd = coerce BS.takeWhileEnd
 --
 -- @since 1.4.200.0
 takeWhile :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> PLATFORM_STRING
-takeWhile = coerce BS.takeWhile
+takeWhile = coerce BSP.takeWhile
 
 -- | /O(n)/ 'drop' @n@ @xs@ returns the suffix of @xs@ after the first n elements, or 'empty' if @n > 'length' xs@.
 --
 -- @since 1.4.200.0
 drop :: Int -> PLATFORM_STRING -> PLATFORM_STRING
-drop = coerce BS.drop
+drop = coerce BSP.drop
 
 -- | /O(n)/ @'dropEnd' n xs@ is equivalent to @'take' ('length' xs - n) xs@.
 -- Drops @n@ elements from end of bytestring.
@@ -684,7 +682,7 @@ drop = coerce BS.drop
 --
 -- @since 1.4.200.0
 dropEnd :: Int -> PLATFORM_STRING -> PLATFORM_STRING
-dropEnd = coerce BS.dropEnd
+dropEnd = coerce BSP.dropEnd
 
 -- | Similar to 'Prelude.dropWhile',
 -- drops the longest (possibly empty) prefix of elements
@@ -692,7 +690,7 @@ dropEnd = coerce BS.dropEnd
 --
 -- @since 1.4.200.0
 dropWhile :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> PLATFORM_STRING
-dropWhile = coerce BS.dropWhile
+dropWhile = coerce BSP.dropWhile
 
 -- | Similar to 'Prelude.dropWhileEnd',
 -- drops the longest (possibly empty) suffix of elements
@@ -702,7 +700,7 @@ dropWhile = coerce BS.dropWhile
 --
 -- @since 1.4.200.0
 dropWhileEnd :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> PLATFORM_STRING
-dropWhileEnd = coerce BS.dropWhileEnd
+dropWhileEnd = coerce BSP.dropWhileEnd
 
 -- | Returns the longest (possibly empty) suffix of elements which __do not__
 -- satisfy the predicate and the remainder of the string.
@@ -711,7 +709,7 @@ dropWhileEnd = coerce BS.dropWhileEnd
 --
 -- @since 1.4.200.0
 breakEnd :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-breakEnd = coerce BS.breakEnd
+breakEnd = coerce BSP.breakEnd
 
 -- | Similar to 'Prelude.break',
 -- returns the longest (possibly empty) prefix of elements which __do not__
@@ -721,7 +719,7 @@ breakEnd = coerce BS.breakEnd
 --
 -- @since 1.4.200.0
 break :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-break = coerce BS.break
+break = coerce BSP.break
 
 -- | Similar to 'Prelude.span',
 -- returns the longest (possibly empty) prefix of elements
@@ -731,7 +729,7 @@ break = coerce BS.break
 --
 -- @since 1.4.200.0
 span :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-span = coerce BS.span
+span = coerce BSP.span
 
 -- | Returns the longest (possibly empty) suffix of elements
 -- satisfying the predicate and the remainder of the string.
@@ -750,13 +748,13 @@ span = coerce BS.span
 --
 -- @since 1.4.200.0
 spanEnd :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-spanEnd = coerce BS.spanEnd
+spanEnd = coerce BSP.spanEnd
 
 -- | /O(n)/ 'splitAt' @n sbs@ is equivalent to @('take' n sbs, 'drop' n sbs)@.
 --
 -- @since 1.4.200.0
 splitAt :: Int -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-splitAt = coerce BS.splitAt
+splitAt = coerce BSP.splitAt
 
 -- | /O(n)/ Break a 'OsString' into pieces separated by the byte
 -- argument, consuming the delimiter. I.e.
@@ -773,7 +771,7 @@ splitAt = coerce BS.splitAt
 --
 -- @since 1.4.200.0
 split :: PLATFORM_WORD -> PLATFORM_STRING -> [PLATFORM_STRING]
-split = coerce BS.split
+split = coerce BSP.split
 
 -- | /O(n)/ Splits a 'OsString' into components delimited by
 -- separators, where the predicate returns True for a separator element.
@@ -785,7 +783,7 @@ split = coerce BS.split
 --
 -- @since 1.4.200.0
 splitWith :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> [PLATFORM_STRING]
-splitWith = coerce BS.splitWith
+splitWith = coerce BSP.splitWith
 
 -- | /O(n)/ The 'stripSuffix' function takes two OsStrings and returns 'Just'
 -- the remainder of the second iff the first is its suffix, and otherwise
@@ -793,7 +791,7 @@ splitWith = coerce BS.splitWith
 --
 -- @since 1.4.200.0
 stripSuffix :: PLATFORM_STRING -> PLATFORM_STRING -> Maybe PLATFORM_STRING
-stripSuffix = coerce BS.stripSuffix
+stripSuffix = coerce BSP.stripSuffix
 
 -- | /O(n)/ The 'stripPrefix' function takes two OsStrings and returns 'Just'
 -- the remainder of the second iff the first is its prefix, and otherwise
@@ -801,20 +799,20 @@ stripSuffix = coerce BS.stripSuffix
 --
 -- @since 1.4.200.0
 stripPrefix :: PLATFORM_STRING -> PLATFORM_STRING -> Maybe PLATFORM_STRING
-stripPrefix = coerce BS.stripPrefix
+stripPrefix = coerce BSP.stripPrefix
 
 
 -- | Check whether one string is a substring of another.
 --
 -- @since 1.4.200.0
 isInfixOf :: PLATFORM_STRING -> PLATFORM_STRING -> Bool
-isInfixOf = coerce BS.isInfixOf
+isInfixOf = coerce BSP.isInfixOf
 
 -- |/O(n)/ The 'isPrefixOf' function takes two OsStrings and returns 'True'
 --
 -- @since 1.4.200.0
 isPrefixOf :: PLATFORM_STRING -> PLATFORM_STRING -> Bool
-isPrefixOf = coerce BS.isPrefixOf
+isPrefixOf = coerce BSP.isPrefixOf
 
 -- | /O(n)/ The 'isSuffixOf' function takes two OsStrings and returns 'True'
 -- iff the first is a suffix of the second.
@@ -825,7 +823,7 @@ isPrefixOf = coerce BS.isPrefixOf
 --
 -- @since 1.4.200.0
 isSuffixOf :: PLATFORM_STRING -> PLATFORM_STRING -> Bool
-isSuffixOf = coerce BS.isSuffixOf
+isSuffixOf = coerce BSP.isSuffixOf
 
 
 -- | Break a string on a substring, returning a pair of the part of the
@@ -854,13 +852,13 @@ isSuffixOf = coerce BS.isSuffixOf
 --
 -- @since 1.4.200.0
 breakSubstring :: PLATFORM_STRING -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-breakSubstring = coerce BS.breakSubstring
+breakSubstring = coerce BSP.breakSubstring
 
 -- | /O(n)/ 'elem' is the 'OsString' membership predicate.
 --
 -- @since 1.4.200.0
 elem :: PLATFORM_WORD -> PLATFORM_STRING -> Bool
-elem = coerce BS.elem
+elem = coerce BSP.elem
 
 -- | /O(n)/ The 'find' function takes a predicate and a OsString,
 -- and returns the first element in matching the predicate, or 'Nothing'
@@ -870,7 +868,7 @@ elem = coerce BS.elem
 --
 -- @since 1.4.200.0
 find :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> Maybe PLATFORM_WORD
-find = coerce BS.find
+find = coerce BSP.find
 
 -- | /O(n)/ 'filter', applied to a predicate and a OsString,
 -- returns a OsString containing those characters that satisfy the
@@ -878,7 +876,7 @@ find = coerce BS.find
 --
 -- @since 1.4.200.0
 filter :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> PLATFORM_STRING
-filter = coerce BS.filter
+filter = coerce BSP.filter
 
 -- | /O(n)/ The 'partition' function takes a predicate a OsString and returns
 -- the pair of OsStrings with elements which do and do not satisfy the
@@ -888,13 +886,13 @@ filter = coerce BS.filter
 --
 -- @since 1.4.200.0
 partition :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> (PLATFORM_STRING, PLATFORM_STRING)
-partition = coerce BS.partition
+partition = coerce BSP.partition
 
 -- | /O(1)/ 'OsString' index (subscript) operator, starting from 0.
 --
 -- @since 1.4.200.0
 index :: HasCallStack => PLATFORM_STRING -> Int -> PLATFORM_WORD
-index = coerce BS.index
+index = coerce BSP.index
 
 -- | /O(1)/ 'OsString' index, starting from 0, that returns 'Just' if:
 --
@@ -902,7 +900,7 @@ index = coerce BS.index
 --
 -- @since 1.4.200.0
 indexMaybe :: PLATFORM_STRING -> Int -> Maybe PLATFORM_WORD
-indexMaybe = coerce BS.indexMaybe
+indexMaybe = coerce BSP.indexMaybe
 
 -- | /O(1)/ 'OsString' index, starting from 0, that returns 'Just' if:
 --
@@ -918,20 +916,20 @@ indexMaybe = coerce BS.indexMaybe
 --
 -- @since 1.4.200.0
 elemIndex :: PLATFORM_WORD -> PLATFORM_STRING -> Maybe Int
-elemIndex = coerce BS.elemIndex
+elemIndex = coerce BSP.elemIndex
 
 -- | /O(n)/ The 'elemIndices' function extends 'elemIndex', by returning
 -- the indices of all elements equal to the query element, in ascending order.
 --
 -- @since 1.4.200.0
 elemIndices :: PLATFORM_WORD -> PLATFORM_STRING -> [Int]
-elemIndices = coerce BS.elemIndices
+elemIndices = coerce BSP.elemIndices
 
 -- | count returns the number of times its argument appears in the OsString
 --
 -- @since 1.4.200.0
 count :: PLATFORM_WORD -> PLATFORM_STRING -> Int
-count = coerce BS.count
+count = coerce BSP.count
 
 -- | /O(n)/ The 'findIndex' function takes a predicate and a 'OsString' and
 -- returns the index of the first element in the OsString
@@ -939,11 +937,11 @@ count = coerce BS.count
 --
 -- @since 1.4.200.0
 findIndex :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> Maybe Int
-findIndex = coerce BS.findIndex
+findIndex = coerce BSP.findIndex
 
 -- | /O(n)/ The 'findIndices' function extends 'findIndex', by returning the
 -- indices of all elements satisfying the predicate, in ascending order.
 --
 -- @since 1.4.200.0
 findIndices :: (PLATFORM_WORD -> Bool) -> PLATFORM_STRING -> [Int]
-findIndices = coerce BS.findIndices
+findIndices = coerce BSP.findIndices
