@@ -1,13 +1,14 @@
+{-# LANGUAGE PackageImports #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Arbitrary where
 
 import Data.Char
 import Data.Maybe
-import System.OsString
-import System.OsString.Internal.Types
-import qualified System.OsString.Posix as Posix
-import qualified System.OsString.Windows as Windows
+import "os-string" System.OsString
+import "os-string" System.OsString.Internal.Types
+import qualified "os-string" System.OsString.Posix as Posix
+import qualified "os-string" System.OsString.Windows as Windows
 import Data.ByteString ( ByteString )
 import qualified Data.ByteString as ByteString
 import Test.QuickCheck

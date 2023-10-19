@@ -5,6 +5,7 @@ _Note: below all `FilePath` values are unquoted, so `\\` really means two backsl
 ## 1.4.200.0 *??? 2023*
 
 * Introduce bytestring-like functions (substrings, predicates, searching, etc.) to `System.OsString`, `System.OsString.Windows` and `System.OsString.Posix`
+* split `OsString` functionality out into [`os-string` package](http://hackage.haskell.org/package/os-string) and deprecate relevant modules
 
 ## 1.4.100.4 *Jul 2023*
 

@@ -1,20 +1,21 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE PackageImports #-}
 
 module Main where
 
 import System.OsPath.Types
-import System.OsPath.Encoding ( ucs2le )
-import qualified System.OsString.Internal.Types as OST
+import "os-string" System.OsString.Encoding ( ucs2le )
+import qualified "os-string" System.OsString.Internal.Types as OST
 import qualified Data.ByteString.Short as SBS
 
 import Test.Tasty.Bench
 
 import qualified System.FilePath.Posix as PF
 import qualified System.FilePath.Posix as WF
-import qualified System.OsString.Posix as OSP
-import qualified System.OsString.Windows as WSP
+import qualified "os-string" System.OsString.Posix as OSP
+import qualified "os-string" System.OsString.Windows as WSP
 import qualified System.OsPath.Posix as APF
 import qualified System.OsPath.Windows as AWF
 

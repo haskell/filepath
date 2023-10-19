@@ -22,6 +22,7 @@ main = do
         , "{-# LANGUAGE ViewPatterns #-}"
 #endif
         , "{-# LANGUAGE CPP #-}"
+        , "{-# LANGUAGE PackageImports #-}"
         , "{-# OPTIONS_GHC -Wno-name-shadowing #-}"
         , "{-# OPTIONS_GHC -Wno-orphans #-}"
         ,"module TestGen(tests) where"
@@ -34,11 +35,11 @@ main = do
         ,"import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )"
         ,"import GHC.IO.Encoding.UTF16 ( mkUTF16le )"
         ,"import GHC.IO.Encoding.UTF8 ( mkUTF8 )"
-        ,"import System.OsString.Internal.Types"
-        ,"import System.OsPath.Encoding.Internal"
+        ,"import \"os-string\" System.OsString.Internal.Types"
+        ,"import \"os-string\" System.OsString.Encoding.Internal"
         ,"import qualified Data.Char as C"
-        ,"import qualified System.OsPath.Data.ByteString.Short as SBS"
-        ,"import qualified System.OsPath.Data.ByteString.Short.Word16 as SBS16"
+        ,"import qualified \"os-string\" System.OsString.Data.ByteString.Short as SBS"
+        ,"import qualified \"os-string\" System.OsString.Data.ByteString.Short.Word16 as SBS16"
         ,"import qualified System.FilePath.Windows as W"
         ,"import qualified System.FilePath.Posix as P"
 #ifdef GHC_MAKE

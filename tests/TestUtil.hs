@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE PackageImports #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module TestUtil(
@@ -24,8 +25,8 @@ import qualified System.OsPath.Windows as AFP_W
 import qualified System.OsPath.Posix as AFP_P
 import System.OsPath.Types
 #endif
-import System.OsString.Internal.Types
-import System.OsPath.Encoding.Internal
+import "os-string" System.OsString.Internal.Types
+import "os-string" System.OsString.Encoding.Internal
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import GHC.IO.Encoding.Failure

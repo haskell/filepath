@@ -54,8 +54,6 @@ extra-source-files:
   Makefile
   System/FilePath/Internal.hs
   System/OsPath/Common.hs
-  System/OsString/Common.hs
-  tests/bytestring-tests/Properties/Common.hs
 
 extra-doc-files:
   changelog.md
@@ -94,6 +92,9 @@ library
     System.OsString.Posix
     System.OsString.Windows
 
+  default-extensions:
+    PackageImports
+
   other-extensions:
     CPP
     PatternGuards
@@ -108,6 +109,7 @@ library
     , deepseq
     , exceptions
     , template-haskell
+    , os-string         >=1.0.0
 
   ghc-options:      -Wall
 
@@ -127,6 +129,7 @@ test-suite filepath-tests
     , base
     , bytestring  >=0.11.3.0
     , filepath
+    , os-string         >=1.0.0
     , QuickCheck  >=2.7      && <2.15
 
   default-language: Haskell2010
@@ -148,26 +151,7 @@ test-suite filepath-equivalent-tests
     , base
     , bytestring  >=0.11.3.0
     , filepath
-    , QuickCheck  >=2.7      && <2.15
-
-test-suite bytestring-tests
-  default-language: Haskell2010
-  ghc-options:      -Wall
-  type:             exitcode-stdio-1.0
-  main-is:          Main.hs
-  hs-source-dirs:   tests tests/bytestring-tests
-  other-modules:
-    Properties.ShortByteString
-    Properties.WindowsString
-    Properties.PosixString
-    Properties.OsString
-    Properties.ShortByteString.Word16
-    TestUtil
-
-  build-depends:
-    , base
-    , bytestring  >=0.11.3.0
-    , filepath
+    , os-string         >=1.0.0
     , QuickCheck  >=2.7      && <2.15
 
 test-suite abstract-filepath
@@ -187,6 +171,7 @@ test-suite abstract-filepath
     , bytestring  >=0.11.3.0
     , deepseq
     , filepath
+    , os-string         >=1.0.0
     , QuickCheck  >=2.7      && <2.15
     , quickcheck-classes-base ^>=0.6.2
 
@@ -201,6 +186,7 @@ benchmark bench-filepath
     , bytestring  >=0.11.3.0
     , deepseq
     , filepath
+    , os-string         >=1.0.0
     , tasty-bench
 
   ghc-options: -with-rtsopts=-A32m

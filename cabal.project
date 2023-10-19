@@ -1,1 +1,8 @@
 packages: ./
+
+-- TODO: remove
+source-repository-package
+    type: git
+    location: https://github.com/haskell/os-string.git
+    tag: d06d98f71e0e93154c856a4cd6e66a635dfeacfd
+

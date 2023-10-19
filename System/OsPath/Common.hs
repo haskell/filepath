@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE PackageImports #-}
 -- This template expects CPP definitions for:
 --
 --     WINDOWS defined? = no            | yes              | no
@@ -109,7 +110,7 @@ where
 
 #ifdef WINDOWS
 import System.OsPath.Types
-import System.OsString.Windows as PS
+import "os-string" System.OsString.Windows as PS
     ( unsafeFromChar
     , toChar
     , decodeUtf
@@ -141,7 +142,7 @@ import Language.Haskell.TH.Syntax
 
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.OsPath.Types
-import System.OsString.Posix as PS
+import "os-string" System.OsString.Posix as PS
     ( unsafeFromChar
     , toChar
     , decodeUtf
@@ -171,7 +172,7 @@ import System.OsPath.Internal as PS
     )
 import System.OsPath.Types
     ( OsPath )
-import System.OsString ( unsafeFromChar, toChar )
+import "os-string" System.OsString ( unsafeFromChar, toChar )
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import qualified System.OsPath.Windows as C
@@ -182,7 +183,7 @@ import qualified System.OsPath.Posix as C
 import Data.Bifunctor
     ( bimap )
 #endif
-import System.OsString.Internal.Types
+import "os-string" System.OsString.Internal.Types
 
 
 ------------------------

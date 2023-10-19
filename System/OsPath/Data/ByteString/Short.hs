@@ -23,7 +23,7 @@
 --
 -- > import qualified Data.ByteString.Short as B.Short
 --
-module System.OsPath.Data.ByteString.Short (
+module System.OsPath.Data.ByteString.Short {-# DEPRECATED "Use System.OsString.Data.ByteString.Short from os-string package instead" #-} (
 
     -- * The @ShortByteString@ type
 
@@ -174,18 +174,5 @@ module System.OsPath.Data.ByteString.Short (
     useAsCStringLen,
   ) where
 
-import Data.ByteString.Short.Internal
-import System.OsPath.Data.ByteString.Short.Internal
+import System.OsString.Data.ByteString.Short
 
-import Prelude (Maybe(..), Ord(..), Num(..), ($), otherwise)
-import Data.Word (Word8)
-
-uncons2 :: ShortByteString -> Maybe (Word8, Word8, ShortByteString)
-uncons2 = \sbs ->
-  let l  = length sbs
-      nl = l - 2
-  in if | l <= 1 -> Nothing
-        | otherwise -> let h  = indexWord8Array (asBA sbs) 0
-                           h' = indexWord8Array (asBA sbs) 1
-                           t  = create nl $ \mba -> copyByteArray (asBA sbs) 1 mba 0 nl
-                       in Just (h, h', t)

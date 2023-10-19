@@ -1,13 +1,4 @@
-{-# LANGUAGE CPP #-}
-#undef POSIX
-#define MODULE_NAME     Windows
-#define PLATFORM_STRING WindowsString
-#define PLATFORM_WORD   WindowsChar
-#define IS_WINDOWS      True
-#define WINDOWS
-#include "Common.hs"
-#undef MODULE_NAME
-#undef FILEPATH_NAME
-#undef OSSTRING_NAME
-#undef IS_WINDOWS
-#undef WINDOWS
+module System.OsString.Windows {-# DEPRECATED "Use System.OsString.Windows from os-string package instead. This module will be removed in filepath >= 1.5." #-} (module W) where
+
+import "os-string" System.OsString.Windows as W
+

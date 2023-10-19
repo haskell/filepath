@@ -18,7 +18,7 @@ module System.OsPath.Types
   )
 where
 
-import System.OsString.Internal.Types
+import "os-string" System.OsString.Internal.Types
 
 
 -- | Filepaths are @wchar_t*@ data on windows as passed to syscalls.

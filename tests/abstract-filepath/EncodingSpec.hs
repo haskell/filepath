@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE PackageImports #-}
 
 module EncodingSpec where
 
@@ -12,8 +13,8 @@ import Arbitrary
 import Test.QuickCheck
 
 import Data.Either ( isRight )
-import qualified System.OsPath.Data.ByteString.Short as BS8
-import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
+import qualified "os-string" System.OsString.Data.ByteString.Short as BS8
+import qualified "os-string" System.OsString.Data.ByteString.Short.Word16 as BS16
 import System.OsPath.Encoding.Internal
 import GHC.IO (unsafePerformIO)
 import GHC.IO.Encoding ( setFileSystemEncoding )

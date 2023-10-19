@@ -2,20 +2,21 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE PackageImports #-}
 
 module OsPathSpec where
 
 import Data.Maybe
 
 import System.OsPath as OSP
-import System.OsString.Internal.Types
+import "os-string" System.OsString.Internal.Types
 import System.OsPath.Posix as Posix
 import System.OsPath.Windows as Windows
 import System.OsPath.Encoding
-import qualified System.OsString.Internal.Types as OS
-import System.OsPath.Data.ByteString.Short ( toShort )
-import System.OsString.Posix as PosixS hiding (map)
-import System.OsString.Windows as WindowsS hiding (map)
+import qualified "os-string" System.OsString.Internal.Types as OS
+import "os-string" System.OsString.Data.ByteString.Short ( toShort )
+import "os-string" System.OsString.Posix as PosixS hiding (map)
+import "os-string" System.OsString.Windows as WindowsS hiding (map)
 
 import Control.Exception
 import Data.ByteString ( ByteString )
@@ -29,8 +30,8 @@ import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import Control.DeepSeq
 import Data.Bifunctor ( first )
 import qualified Data.ByteString.Char8 as C
-import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
-import qualified System.OsPath.Data.ByteString.Short as SBS
+import qualified "os-string" System.OsString.Data.ByteString.Short.Word16 as BS16
+import qualified "os-string" System.OsString.Data.ByteString.Short as SBS
 import Data.Char ( ord )
 import Data.Proxy ( Proxy(..) )
 
