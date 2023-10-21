@@ -6,6 +6,9 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE UnliftedFFITypes         #-}
 
+-- Required for WORDS_BIGENDIAN
+#include <ghcautoconf.h>
+
 -- |
 -- Module      :  System.OsPath.Data.ByteString.Short.Internal
 -- Copyright   :  © 2022 Julian Ospald
@@ -21,7 +24,6 @@ module System.OsPath.Data.ByteString.Short.Internal where
 
 import Control.Monad.ST
 import Control.Exception (assert, throwIO)
-import Data.Bits (Bits(..))
 import Data.ByteString.Short.Internal (ShortByteString(..), length)
 #if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup
@@ -282,64 +284,38 @@ packLenWord16Rev len ws0 =
       go mba (i - 2) ws
 
 
--- | This isn't strictly Word16 array write. Instead it's two consecutive Word8 array
--- writes to avoid endianness issues due to primops doing automatic alignment based
--- on host platform. We want to always write LE to the byte array.
+-- | Encode Word16 as little-endian.
 writeWord16Array :: MBA s
                  -> Int      -- ^ Word8 index (not Word16)
                  -> Word16
                  -> ST s ()
-writeWord16Array (MBA# mba#) (I# i#) (W16# w#) =
-  case encodeWord16LE# w# of
-    (# lsb#, msb# #) ->
-      ST (\s -> case writeWord8Array# mba# i# lsb# s of
-          s' -> (# s', () #)) >>
-      ST (\s -> case writeWord8Array# mba# (i# +# 1#) msb# s of
-          s' -> (# s', () #))
+writeWord16Array (MBA# mba#) (I# i#) (W16# w#) = ST $ \s ->
+  case writeWord8ArrayAsWord16# mba# i# (word16ToLE# w#) s of
+    s' -> (# s', () #)
 
 indexWord8Array :: BA
                 -> Int      -- ^ Word8 index
                 -> Word8
 indexWord8Array (BA# ba#) (I# i#) = W8# (indexWord8Array# ba# i#)
 
--- | This isn't strictly Word16 array read. Instead it's two Word8 array reads
--- to avoid endianness issues due to primops doing automatic alignment based
--- on host platform. We expect the byte array to be LE always.
+-- | Decode Word16 from little-endian.
 indexWord16Array :: BA
                  -> Int      -- ^ Word8 index (not Word16)
                  -> Word16
-indexWord16Array ba i = fromIntegral lsb .|. (fromIntegral msb `shiftL` 8)
-  where
-    lsb = indexWord8Array ba i
-    msb = indexWord8Array ba (i + 1)
+indexWord16Array (BA# ba#) (I# i#) =
+  W16# (word16FromLE# (indexWord8ArrayAsWord16# ba# i#))
 
-#if !MIN_VERSION_base(4,16,0)
-
-encodeWord16LE# :: Word#              -- ^ Word16
-                -> (# Word#, Word# #) -- ^ Word8 (LSB, MSB)
-encodeWord16LE# x# = (# x# `and#` int2Word# 0xff#
-                     ,  x# `and#` int2Word# 0xff00# `shiftRL#` 8# #)
-
-decodeWord16LE# :: (# Word#, Word# #) -- ^ Word8 (LSB, MSB)
-                -> Word#              -- ^ Word16
-decodeWord16LE# (# lsb#, msb# #) = msb# `shiftL#` 8# `or#` lsb#
-
+#if MIN_VERSION_base(4,16,0)
+word16ToLE#, word16FromLE# :: Word16# -> Word16#
 #else
-
-encodeWord16LE# :: Word16#              -- ^ Word16
-                -> (# Word8#, Word8# #) -- ^ Word8 (LSB, MSB)
-encodeWord16LE# x# = (# word16ToWord8# x#
-                     ,  word16ToWord8# (x# `uncheckedShiftRLWord16#` 8#) #)
-  where
-    word16ToWord8# y = wordToWord8# (word16ToWord# y)
-
-decodeWord16LE# :: (# Word8#, Word8# #) -- ^ Word8 (LSB, MSB)
-                -> Word16#              -- ^ Word16
-decodeWord16LE# (# lsb#, msb# #) = ((word8ToWord16# msb# `uncheckedShiftLWord16#` 8#) `orWord16#` word8ToWord16# lsb#)
-  where
-    word8ToWord16# y = wordToWord16# (word8ToWord# y)
-
+word16ToLE#, word16FromLE# :: Word# -> Word#
 #endif
+#ifdef WORDS_BIGENDIAN
+word16ToLE# = byteSwap16#
+#else
+word16ToLE# w# = w#
+#endif
+word16FromLE# = word16ToLE#
 
 setByteArray :: MBA s -> Int -> Int -> Int -> ST s ()
 setByteArray (MBA# dst#) (I# off#) (I# len#) (I# c#) =
