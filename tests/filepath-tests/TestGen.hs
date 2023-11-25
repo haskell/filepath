@@ -15,10 +15,10 @@ import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.OsString.Internal.Types
-import System.OsPath.Encoding.Internal
+import System.OsString.Encoding.Internal
 import qualified Data.Char as C
-import qualified System.OsPath.Data.ByteString.Short as SBS
-import qualified System.OsPath.Data.ByteString.Short.Word16 as SBS16
+import qualified System.OsString.Data.ByteString.Short as SBS
+import qualified System.OsString.Data.ByteString.Short.Word16 as SBS16
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 import qualified System.OsPath.Windows as AFP_W

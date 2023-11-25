@@ -2,7 +2,11 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
-## 1.4.200.0 *Jul 2023*
+## 1.5.0.0 *Nov 2023*
+
+* remove `OsString` modules
+
+## 1.4.200.0 *Nov 2023*
 
 * deprecate `OsString` modules
 
