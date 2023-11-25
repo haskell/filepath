@@ -28,4 +28,4 @@ module System.OsPath.Encoding
   )
   where
 
-import System.OsPath.Encoding.Internal
+import System.OsString.Encoding.Internal

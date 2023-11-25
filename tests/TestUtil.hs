@@ -25,7 +25,7 @@ import qualified System.OsPath.Posix as AFP_P
 import System.OsPath.Types
 #endif
 import System.OsString.Internal.Types
-import System.OsPath.Encoding.Internal
+import System.OsString.Encoding.Internal
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import GHC.IO.Encoding.Failure
