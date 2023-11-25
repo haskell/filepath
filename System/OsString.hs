@@ -14,7 +14,7 @@
 --
 -- It captures the notion of syscall specific encoding (or the lack thereof) to avoid roundtrip issues
 -- and memory fragmentation by using unpinned byte arrays. Bytes are not touched or interpreted.
-module System.OsString
+module System.OsString {-# DEPRECATED "Use System.OsString from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
   (
   -- * String types
     OsString

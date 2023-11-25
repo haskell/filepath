@@ -1,6 +1,6 @@
 cabal-version:      2.2
 name:               filepath
-version:            1.4.100.4
+version:            1.4.200.0
 
 -- NOTE: Don't forget to update ./changelog.md
 license:            BSD-3-Clause

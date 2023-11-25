@@ -2,7 +2,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE UnliftedFFITypes #-}
 
-module System.OsString.Internal where
+module System.OsString.Internal {-# DEPRECATED "Use System.OsString.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-} where
 
 import System.OsString.Internal.Types
 
