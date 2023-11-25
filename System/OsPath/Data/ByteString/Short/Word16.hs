@@ -29,7 +29,7 @@
 --
 -- All functions will error out if the input string is not a valid UTF16 stream (uneven number of bytes).
 -- So use this module with caution.
-module System.OsPath.Data.ByteString.Short.Word16 (
+module System.OsPath.Data.ByteString.Short.Word16 {-# DEPRECATED "Use System.OsString.Data.ByteString.Short.Word16 from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-} (
     -- * The @ShortByteString@ type and representation
     ShortByteString(..),
 

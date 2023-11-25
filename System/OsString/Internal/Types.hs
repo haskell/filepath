@@ -8,7 +8,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE PatternSynonyms #-}
 
-module System.OsString.Internal.Types
+module System.OsString.Internal.Types {-# DEPRECATED "Use System.OsString.Internal.Types from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
   (
     WindowsString(..)
   , pattern WS

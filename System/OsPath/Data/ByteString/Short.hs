@@ -23,7 +23,9 @@
 --
 -- > import qualified Data.ByteString.Short as B.Short
 --
-module System.OsPath.Data.ByteString.Short (
+module System.OsPath.Data.ByteString.Short {-# DEPRECATED "Use System.OsString.Data.ByteString.Short from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+
+ (
 
     -- * The @ShortByteString@ type
 

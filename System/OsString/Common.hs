@@ -11,7 +11,7 @@
 #define POSIX_DOC
 #endif
 
-module System.OsString.MODULE_NAME
+module System.OsString.MODULE_NAME {-# DEPRECATED "Use System.OsString.MODULE_NAME from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
   (
   -- * Types
 #ifdef WINDOWS
