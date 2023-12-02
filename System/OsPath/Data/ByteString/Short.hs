@@ -1,7 +1,6 @@
-{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 -- |
--- Module      : System.OsPath.Data.ByteString.Short.Hidden
+-- Module      : System.OsPath.Data.ByteString.Short
 -- Copyright   : (c) Duncan Coutts 2012-2013, Julian Ospald 2022
 -- License     : BSD-style
 --
@@ -23,7 +22,7 @@
 --
 -- > import qualified Data.ByteString.Short as B.Short
 --
-module System.OsPath.Data.ByteString.Short.Hidden
+module System.OsPath.Data.ByteString.Short {-# DEPRECATED "Use System.OsString.Data.ByteString.Short from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
 
  (
 
@@ -176,18 +175,4 @@ module System.OsPath.Data.ByteString.Short.Hidden
     useAsCStringLen,
   ) where
 
-import Data.ByteString.Short.Internal
-import System.OsPath.Data.ByteString.Short.Internal.Hidden
-
-import Prelude (Maybe(..), Ord(..), Num(..), ($), otherwise)
-import Data.Word (Word8)
-
-uncons2 :: ShortByteString -> Maybe (Word8, Word8, ShortByteString)
-uncons2 = \sbs ->
-  let l  = length sbs
-      nl = l - 2
-  in if | l <= 1 -> Nothing
-        | otherwise -> let h  = indexWord8Array (asBA sbs) 0
-                           h' = indexWord8Array (asBA sbs) 1
-                           t  = create nl $ \mba -> copyByteArray (asBA sbs) 1 mba 0 nl
-                       in Just (h, h', t)
+import System.OsPath.Data.ByteString.Short.Hidden

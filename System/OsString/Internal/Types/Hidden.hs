@@ -8,7 +8,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE PatternSynonyms #-}
 
-module System.OsString.Internal.Types.Hidden {-# DEPRECATED "Use System.OsString.Internal.Types.Hidden from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+module System.OsString.Internal.Types.Hidden
   (
     WindowsString(..)
   , pattern WS
@@ -156,7 +156,7 @@ type PlatformChar = PosixChar
 -- depending on the platform. Both use unpinned
 -- 'ShortByteString' for efficiency.
 --
--- The constructor is only exported via "System.OsString.Internal.Types.Hidden", since
+-- The constructor is only exported via "System.OsString.Internal.Types", since
 -- dealing with the internals isn't generally recommended, but supported
 -- in case you need to write platform specific code.
 newtype OsString = OsString { getOsString :: PlatformString }

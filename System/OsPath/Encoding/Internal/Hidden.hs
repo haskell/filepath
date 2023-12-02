@@ -6,7 +6,7 @@
 {-# OPTIONS_GHC  -funbox-strict-fields #-}
 
 
-module System.OsPath.Encoding.Internal.Hidden {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-} where
+module System.OsPath.Encoding.Internal.Hidden where
 
 import qualified System.OsPath.Data.ByteString.Short.Hidden as BS8
 import qualified System.OsPath.Data.ByteString.Short.Word16.Hidden as BS16

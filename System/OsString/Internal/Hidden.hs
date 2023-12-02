@@ -2,7 +2,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE UnliftedFFITypes #-}
 
-module System.OsString.Internal.Hidden {-# DEPRECATED "Use System.OsString.Internal.Hidden from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-} where
+module System.OsString.Internal.Hidden where
 
 import System.OsString.Internal.Types.Hidden
 

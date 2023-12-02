@@ -171,7 +171,7 @@ import System.OsPath.Internal as PS
     )
 import System.OsPath.Types
     ( OsPath )
-import System.OsString ( unsafeFromChar, toChar )
+import System.OsString.Internal.Hidden ( unsafeFromChar, toChar )
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import qualified System.OsPath.Windows as C

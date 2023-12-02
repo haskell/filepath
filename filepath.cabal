@@ -77,11 +77,11 @@ library
     System.FilePath.Posix
     System.FilePath.Windows
     System.OsPath
-    System.OsPath.Data.ByteString.Short.Hidden
-    System.OsPath.Data.ByteString.Short.Internal.Hidden
-    System.OsPath.Data.ByteString.Short.Word16.Hidden
+    System.OsPath.Data.ByteString.Short
+    System.OsPath.Data.ByteString.Short.Internal
+    System.OsPath.Data.ByteString.Short.Word16
     System.OsPath.Encoding
-    System.OsPath.Encoding.Internal.Hidden
+    System.OsPath.Encoding.Internal
     System.OsPath.Internal
     System.OsPath.Posix
     System.OsPath.Posix.Internal
@@ -89,6 +89,16 @@ library
     System.OsPath.Windows
     System.OsPath.Windows.Internal
     System.OsString
+    System.OsString.Internal
+    System.OsString.Internal.Types
+    System.OsString.Posix
+    System.OsString.Windows
+
+  other-modules:
+    System.OsPath.Data.ByteString.Short.Hidden
+    System.OsPath.Data.ByteString.Short.Internal.Hidden
+    System.OsPath.Data.ByteString.Short.Word16.Hidden
+    System.OsPath.Encoding.Internal.Hidden
     System.OsString.Internal.Hidden
     System.OsString.Internal.Types.Hidden
     System.OsString.Posix.Hidden
