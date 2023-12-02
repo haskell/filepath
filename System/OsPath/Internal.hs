@@ -1,6 +1,8 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE UnliftedFFITypes #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE ViewPatterns #-}  -- needed to quote a view pattern
 
 module System.OsPath.Internal where
 
@@ -111,7 +113,8 @@ fromBytes = OS.fromBytes
 
 -- | QuasiQuote an 'OsPath'. This accepts Unicode characters
 -- and encodes as UTF-8 on unix and UTF-16LE on windows. Runs 'isValid'
--- on the input.
+-- on the input. If used as a pattern, requires turning on the @ViewPatterns@
+-- extension.
 osp :: QuasiQuoter
 osp = QuasiQuoter
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
@@ -119,24 +122,28 @@ osp = QuasiQuoter
       osp' <- either (fail . show) (pure . OsString) . PF.encodeWith (mkUTF16le ErrorOnCodingFailure) $ s
       when (not $ isValid osp') $ fail ("filepath not valid: " ++ show osp')
       lift osp'
-  , quotePat  = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
+  , quotePat = \s -> do
+      osp' <- either (fail . show) (pure . OsString) . PF.encodeWith (mkUTF16le ErrorOnCodingFailure) $ s
+      when (not $ isValid osp') $ fail ("filepath not valid: " ++ show osp')
+      [p|((==) osp' -> True)|]
   , quoteType = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a type)"
+      fail "illegal QuasiQuote (allowed as expression or pattern only, used as a type)"
   , quoteDec  = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
+      fail "illegal QuasiQuote (allowed as expression or pattern only, used as a declaration)"
   }
 #else
   { quoteExp = \s -> do
       osp' <- either (fail . show) (pure . OsString) . PF.encodeWith (mkUTF8 ErrorOnCodingFailure) $ s
       when (not $ isValid osp') $ fail ("filepath not valid: " ++ show osp')
       lift osp'
-  , quotePat  = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a pattern)"
+  , quotePat = \s -> do
+      osp' <- either (fail . show) (pure . OsString) . PF.encodeWith (mkUTF8 ErrorOnCodingFailure) $ s
+      when (not $ isValid osp') $ fail ("filepath not valid: " ++ show osp')
+      [p|((==) osp' -> True)|]
   , quoteType = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a type)"
+      fail "illegal QuasiQuote (allowed as expression or pattern only, used as a type)"
   , quoteDec  = \_ ->
-      fail "illegal QuasiQuote (allowed as expression only, used as a declaration)"
+      fail "illegal QuasiQuote (allowed as expression or pattern only, used as a declaration)"
   }
 #endif
 
