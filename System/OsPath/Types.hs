@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 module System.OsPath.Types
   (

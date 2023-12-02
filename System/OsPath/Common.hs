@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 -- This template expects CPP definitions for:
 --
 --     WINDOWS defined? = no            | yes              | no

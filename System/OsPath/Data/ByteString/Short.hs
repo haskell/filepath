@@ -1,5 +1,6 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 -- |
 -- Module      : System.OsPath.Data.ByteString.Short
 -- Copyright   : (c) Duncan Coutts 2012-2013, Julian Ospald 2022

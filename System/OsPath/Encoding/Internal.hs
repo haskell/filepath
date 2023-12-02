@@ -5,6 +5,7 @@
            , CPP
   #-}
 {-# OPTIONS_GHC  -funbox-strict-fields #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 #if __GLASGOW_HASKELL__ < 908
 module System.OsPath.Encoding.Internal {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-} where

@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE UnliftedFFITypes #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 module System.OsPath.Internal where
 

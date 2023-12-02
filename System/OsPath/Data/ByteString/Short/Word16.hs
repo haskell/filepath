@@ -7,7 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 
-{-# OPTIONS_GHC -fno-warn-name-shadowing -fexpose-all-unfoldings #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing -fexpose-all-unfoldings -Wno-deprecations #-}
 
 -- |
 -- Module      :  System.OsPath.Data.ByteString.Short.Word16

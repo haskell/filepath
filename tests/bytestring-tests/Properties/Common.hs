@@ -6,6 +6,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- We are happy to sacrifice optimizations in exchange for faster compilation,
 -- but need to test rewrite rules. As one can check using -ddump-rule-firings,

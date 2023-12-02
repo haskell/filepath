@@ -7,6 +7,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 module System.OsString.Internal.Types {-# DEPRECATED "Use System.OsString.Internal.Types from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
   (

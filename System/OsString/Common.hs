@@ -1,6 +1,7 @@
 {- HLINT ignore "Unused LANGUAGE pragma" -}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 -- This template expects CPP definitions for:
 --     MODULE_NAME = Posix | Windows
 --     IS_WINDOWS  = False | True

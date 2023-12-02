@@ -4,6 +4,7 @@
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 module TestGen(tests) where
 import TestUtil
 #if !MIN_VERSION_base(4,11,0)

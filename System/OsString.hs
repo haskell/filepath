@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-deprecations #-}
+
 -- |
 -- Module      :  OsString
 -- Copyright   :  © 2021 Julian Ospald
