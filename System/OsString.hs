@@ -43,7 +43,7 @@ module System.OsString {-# DEPRECATED "Use System.OsString from os-string >= 2.0
   )
 where
 
-import System.OsString.Internal
+import System.OsString.Internal.Hidden
     ( unsafeFromChar
     , toChar
     , encodeUtf
@@ -56,5 +56,5 @@ import System.OsString.Internal
     , decodeFS
     , unpack
     )
-import System.OsString.Internal.Types
+import System.OsString.Internal.Types.Hidden
     ( OsString, OsChar )

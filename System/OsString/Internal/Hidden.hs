@@ -2,9 +2,9 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE UnliftedFFITypes #-}
 
-module System.OsString.Internal {-# DEPRECATED "Use System.OsString.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-} where
+module System.OsString.Internal.Hidden {-# DEPRECATED "Use System.OsString.Internal.Hidden from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-} where
 
-import System.OsString.Internal.Types
+import System.OsString.Internal.Types.Hidden
 
 import Control.Monad.Catch
     ( MonadThrow )
@@ -22,10 +22,10 @@ import System.OsPath.Encoding ( EncodingException(..) )
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import qualified System.OsString.Windows as PF
+import qualified System.OsString.Windows.Hidden as PF
 #else
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
-import qualified System.OsString.Posix as PF
+import qualified System.OsString.Posix.Hidden as PF
 #endif
 
 

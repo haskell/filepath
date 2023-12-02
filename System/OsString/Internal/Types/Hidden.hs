@@ -8,7 +8,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE PatternSynonyms #-}
 
-module System.OsString.Internal.Types {-# DEPRECATED "Use System.OsString.Internal.Types from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+module System.OsString.Internal.Types.Hidden {-# DEPRECATED "Use System.OsString.Internal.Types.Hidden from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
   (
     WindowsString(..)
   , pattern WS
@@ -40,9 +40,9 @@ import Data.Semigroup
 #endif
 import GHC.Generics (Generic)
 
-import System.OsPath.Encoding.Internal
-import qualified System.OsPath.Data.ByteString.Short as BS
-import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
+import System.OsPath.Encoding.Internal.Hidden
+import qualified System.OsPath.Data.ByteString.Short.Hidden as BS
+import qualified System.OsPath.Data.ByteString.Short.Word16.Hidden as BS16
 #if MIN_VERSION_template_haskell(2,16,0)
 import qualified Language.Haskell.TH.Syntax as TH
 #endif
@@ -156,7 +156,7 @@ type PlatformChar = PosixChar
 -- depending on the platform. Both use unpinned
 -- 'ShortByteString' for efficiency.
 --
--- The constructor is only exported via "System.OsString.Internal.Types", since
+-- The constructor is only exported via "System.OsString.Internal.Types.Hidden", since
 -- dealing with the internals isn't generally recommended, but supported
 -- in case you need to write platform specific code.
 newtype OsString = OsString { getOsString :: PlatformString }

@@ -7,7 +7,7 @@ module System.OsPath.Internal where
 import {-# SOURCE #-} System.OsPath
     ( isValid )
 import System.OsPath.Types
-import qualified System.OsString.Internal as OS
+import qualified System.OsString.Internal.Hidden as OS
 
 import Control.Monad.Catch
     ( MonadThrow )
@@ -19,7 +19,7 @@ import Language.Haskell.TH.Syntax
     ( Lift (..), lift )
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 
-import System.OsString.Internal.Types
+import System.OsString.Internal.Types.Hidden
 import System.OsPath.Encoding
 import Control.Monad (when)
 import System.IO

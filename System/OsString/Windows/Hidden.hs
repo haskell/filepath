@@ -5,7 +5,7 @@
 #define PLATFORM_WORD   WindowsChar
 #define IS_WINDOWS      True
 #define WINDOWS
-#include "Common.hs"
+#include "../Common.hs"
 #undef MODULE_NAME
 #undef FILEPATH_NAME
 #undef OSSTRING_NAME

@@ -10,7 +10,7 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fexpose-all-unfoldings #-}
 
 -- |
--- Module      :  System.OsPath.Data.ByteString.Short.Word16
+-- Module      :  System.OsPath.Data.ByteString.Short.Word16.Hidden
 -- Copyright   :  © 2022 Julian Ospald
 -- License     :  MIT
 --
@@ -29,7 +29,7 @@
 --
 -- All functions will error out if the input string is not a valid UTF16 stream (uneven number of bytes).
 -- So use this module with caution.
-module System.OsPath.Data.ByteString.Short.Word16 {-# DEPRECATED "Use System.OsString.Data.ByteString.Short.Word16 from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-} (
+module System.OsPath.Data.ByteString.Short.Word16.Hidden {-# DEPRECATED "Use System.OsString.Data.ByteString.Short.Word16 from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-} (
     -- * The @ShortByteString@ type and representation
     ShortByteString(..),
 
@@ -145,8 +145,8 @@ module System.OsPath.Data.ByteString.Short.Word16 {-# DEPRECATED "Use System.OsS
     useAsCWStringLen
   )
 where
-import System.OsPath.Data.ByteString.Short ( append, intercalate, concat, stripSuffix, stripPrefix, isPrefixOf, isSuffixOf, length, empty, null, ShortByteString(..), fromShort, toShort )
-import System.OsPath.Data.ByteString.Short.Internal
+import System.OsPath.Data.ByteString.Short.Hidden ( append, intercalate, concat, stripSuffix, stripPrefix, isPrefixOf, isSuffixOf, length, empty, null, ShortByteString(..), fromShort, toShort )
+import System.OsPath.Data.ByteString.Short.Internal.Hidden
 import Data.Bits
     ( shiftR
     )

@@ -6,15 +6,15 @@ module Main where
 
 import System.OsPath.Types
 import System.OsPath.Encoding ( ucs2le )
-import qualified System.OsString.Internal.Types as OST
+import qualified System.OsString.Internal.Types.Hidden as OST
 import qualified Data.ByteString.Short as SBS
 
 import Test.Tasty.Bench
 
 import qualified System.FilePath.Posix as PF
 import qualified System.FilePath.Posix as WF
-import qualified System.OsString.Posix as OSP
-import qualified System.OsString.Windows as WSP
+import qualified System.OsString.Posix.Hidden as OSP
+import qualified System.OsString.Windows.Hidden as WSP
 import qualified System.OsPath.Posix as APF
 import qualified System.OsPath.Windows as AWF
 

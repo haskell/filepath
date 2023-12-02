@@ -11,7 +11,7 @@
 #define POSIX_DOC
 #endif
 
-module System.OsString.MODULE_NAME {-# DEPRECATED "Use System.OsString.MODULE_NAME from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+module System.OsString.MODULE_NAME.Hidden {-# DEPRECATED "Use System.OsString.MODULE_NAME.Hidden from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
   (
   -- * Types
 #ifdef WINDOWS
@@ -46,7 +46,7 @@ where
 
 
 
-import System.OsString.Internal.Types (
+import System.OsString.Internal.Types.Hidden (
 #ifdef WINDOWS
   WindowsString(..), WindowsChar(..)
 #else
@@ -78,14 +78,14 @@ import System.OsPath.Encoding
 import System.IO
     ( TextEncoding, utf16le )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
-import qualified System.OsPath.Data.ByteString.Short as BS8
+import qualified System.OsPath.Data.ByteString.Short.Word16.Hidden as BS16
+import qualified System.OsPath.Data.ByteString.Short.Hidden as BS8
 #else
 import System.OsPath.Encoding
 import System.IO
     ( TextEncoding, utf8 )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
-import qualified System.OsPath.Data.ByteString.Short as BS
+import qualified System.OsPath.Data.ByteString.Short.Hidden as BS
 #endif
 
 

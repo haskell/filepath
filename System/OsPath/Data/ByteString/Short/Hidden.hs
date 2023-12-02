@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 -- |
--- Module      : System.OsPath.Data.ByteString.Short
+-- Module      : System.OsPath.Data.ByteString.Short.Hidden
 -- Copyright   : (c) Duncan Coutts 2012-2013, Julian Ospald 2022
 -- License     : BSD-style
 --
@@ -23,7 +23,7 @@
 --
 -- > import qualified Data.ByteString.Short as B.Short
 --
-module System.OsPath.Data.ByteString.Short {-# DEPRECATED "Use System.OsString.Data.ByteString.Short from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+module System.OsPath.Data.ByteString.Short.Hidden {-# DEPRECATED "Use System.OsString.Data.ByteString.Short from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
 
  (
 
@@ -177,7 +177,7 @@ module System.OsPath.Data.ByteString.Short {-# DEPRECATED "Use System.OsString.D
   ) where
 
 import Data.ByteString.Short.Internal
-import System.OsPath.Data.ByteString.Short.Internal
+import System.OsPath.Data.ByteString.Short.Internal.Hidden
 
 import Prelude (Maybe(..), Ord(..), Num(..), ($), otherwise)
 import Data.Word (Word8)

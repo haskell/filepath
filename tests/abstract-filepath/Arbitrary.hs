@@ -5,9 +5,9 @@ module Arbitrary where
 import Data.Char
 import Data.Maybe
 import System.OsString
-import System.OsString.Internal.Types
-import qualified System.OsString.Posix as Posix
-import qualified System.OsString.Windows as Windows
+import System.OsString.Internal.Types.Hidden
+import qualified System.OsString.Posix.Hidden as Posix
+import qualified System.OsString.Windows.Hidden as Windows
 import Data.ByteString ( ByteString )
 import qualified Data.ByteString as ByteString
 import Test.QuickCheck
