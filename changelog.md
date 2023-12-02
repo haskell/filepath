@@ -2,6 +2,10 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+## 1.5.1.0 *??? 2023*
+
+* make `osp :: QuasiQuoter` valid as a pattern wrt [#210](https://github.com/haskell/filepath/pull/210)
+
 ## 1.5.0.0 *Nov 2023*
 
 * remove `OsString` modules
