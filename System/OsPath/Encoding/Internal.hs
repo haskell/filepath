@@ -2,11 +2,55 @@
            , BangPatterns
            , TypeApplications
            , MultiWayIf
+           , CPP
   #-}
 {-# OPTIONS_GHC  -funbox-strict-fields #-}
 
-
+#if __GLASGOW_HASKELL__ < 908
 module System.OsPath.Encoding.Internal {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-} where
+#else
+module System.OsPath.Encoding.Internal
+  ( {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    EncodingException (..),
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    cWcharsToChars_UCS2,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    decodeWithBasePosix,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    decodeWithBaseWindows,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    encodeWithBasePosix,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    encodeWithBaseWindows,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    mkUcs2le,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    mkUTF16le_b,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    showEncodingException,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    ucs2le,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    ucs2le_decode,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    ucs2le_DF,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    ucs2le_EF,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    ucs2le_encode,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    utf16le_b,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    utf16le_b_decode,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    utf16le_b_DF,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    utf16le_b_EF,
+    {-# DEPRECATED "Use System.OsString.Encoding.Internal from os-string >= 2.0.0 package instead. This module will be removed in filepath >= 1.5." #-}
+    utf16le_b_encode,
+  )
+where
+#endif
 
 import qualified System.OsPath.Data.ByteString.Short as BS8
 import qualified System.OsPath.Data.ByteString.Short.Word16 as BS16
