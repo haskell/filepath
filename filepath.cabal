@@ -94,6 +94,16 @@ library
     System.OsString.Posix
     System.OsString.Windows
 
+  other-modules:
+    System.OsPath.Data.ByteString.Short.Hidden
+    System.OsPath.Data.ByteString.Short.Internal.Hidden
+    System.OsPath.Data.ByteString.Short.Word16.Hidden
+    System.OsPath.Encoding.Internal.Hidden
+    System.OsString.Internal.Hidden
+    System.OsString.Internal.Types.Hidden
+    System.OsString.Posix.Hidden
+    System.OsString.Windows.Hidden
+
   other-extensions:
     CPP
     PatternGuards

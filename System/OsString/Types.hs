@@ -11,4 +11,4 @@ module System.OsString.Types {-# DEPRECATED "Use System.OsString.Types from os-s
   )
 where
 
-import System.OsString.Internal.Types
+import System.OsString.Internal.Types.Hidden

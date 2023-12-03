@@ -109,7 +109,7 @@ where
 
 #ifdef WINDOWS
 import System.OsPath.Types
-import System.OsString.Windows as PS
+import System.OsString.Windows.Hidden as PS
     ( unsafeFromChar
     , toChar
     , decodeUtf
@@ -141,7 +141,7 @@ import Language.Haskell.TH.Syntax
 
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.OsPath.Types
-import System.OsString.Posix as PS
+import System.OsString.Posix.Hidden as PS
     ( unsafeFromChar
     , toChar
     , decodeUtf
@@ -171,7 +171,7 @@ import System.OsPath.Internal as PS
     )
 import System.OsPath.Types
     ( OsPath )
-import System.OsString ( unsafeFromChar, toChar )
+import System.OsString.Internal.Hidden ( unsafeFromChar, toChar )
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import qualified System.OsPath.Windows as C
@@ -182,7 +182,7 @@ import qualified System.OsPath.Posix as C
 import Data.Bifunctor
     ( bimap )
 #endif
-import System.OsString.Internal.Types
+import System.OsString.Internal.Types.Hidden
 
 
 ------------------------

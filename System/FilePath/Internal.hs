@@ -138,8 +138,8 @@ import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import qualified GHC.Foreign as GHC
 import Data.Word ( Word16 )
-import System.OsPath.Data.ByteString.Short.Word16
-import System.OsPath.Data.ByteString.Short ( packCStringLen )
+import System.OsPath.Data.ByteString.Short.Word16.Hidden
+import System.OsPath.Data.ByteString.Short.Hidden ( packCStringLen )
 #define CHAR Word16
 #define STRING ShortByteString
 #define FILEPATH ShortByteString
@@ -148,7 +148,7 @@ import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import qualified GHC.Foreign as GHC
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import Data.Word ( Word8 )
-import System.OsPath.Data.ByteString.Short
+import System.OsPath.Data.ByteString.Short.Hidden
 #define CHAR Word8
 #define STRING ShortByteString
 #define FILEPATH ShortByteString
