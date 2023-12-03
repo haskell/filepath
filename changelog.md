@@ -2,7 +2,11 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
-## 1.4.200.0 *Jul 2023*
+## 1.4.200.1. *Dec 2023*
+
+* Improve deprecation warnings wrt [#209](https://github.com/haskell/filepath/issues/209)
+
+## 1.4.200.0 *Nov 2023*
 
 * deprecate `OsString` modules
 
