@@ -22,6 +22,7 @@ pstr =
       lift ps
   , quotePat = \s -> do
       osp' <- either (fail . show) pure . encodeWith (mkUTF8 ErrorOnCodingFailure) $ s
+      when (not $ isValid osp') $ fail ("filepath not valid: " ++ show osp')
       [p|((==) osp' -> True)|]
   , quoteType = \_ ->
       fail "illegal QuasiQuote (allowed as expression or pattern only, used as a type)"
