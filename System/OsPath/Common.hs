@@ -42,6 +42,7 @@ module System.OsPath
 #endif
   -- * Filepath construction
   , PS.encodeUtf
+  , PS.unsafeEncodeUtf
   , PS.encodeWith
   , PS.encodeFS
 #if defined(WINDOWS) || defined(POSIX)
@@ -117,6 +118,7 @@ import System.OsString.Windows as PS
     , decodeFS
     , pack
     , encodeUtf
+    , unsafeEncodeUtf
     , encodeWith
     , encodeFS
     , unpack
@@ -149,6 +151,7 @@ import System.OsString.Posix as PS
     , decodeFS
     , pack
     , encodeUtf
+    , unsafeEncodeUtf
     , encodeWith
     , encodeFS
     , unpack
@@ -165,6 +168,7 @@ import System.OsPath.Internal as PS
     , decodeFS
     , pack
     , encodeUtf
+    , unsafeEncodeUtf
     , encodeWith
     , encodeFS
     , unpack
