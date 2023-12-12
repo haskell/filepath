@@ -149,7 +149,6 @@ test-suite abstract-filepath
   hs-source-dirs:   tests tests/abstract-filepath
   other-modules:
     Arbitrary
-    EncodingSpec
     OsPathSpec
     TestUtil
 
