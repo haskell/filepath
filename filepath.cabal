@@ -7,7 +7,7 @@ license:            BSD-3-Clause
 license-file:       LICENSE
 author:             Neil Mitchell <ndmitchell@gmail.com>
 maintainer:         Julian Ospald <hasufell@posteo.de>
-copyright:          Neil Mitchell 2005-2020, Julain Ospald 2021-2022
+copyright:          Neil Mitchell 2005-2020, Julian Ospald 2021-2022
 bug-reports:        https://github.com/haskell/filepath/issues
 homepage:
   https://github.com/haskell/filepath/blob/master/README.md
