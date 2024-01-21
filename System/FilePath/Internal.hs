@@ -602,6 +602,7 @@ isDrive x = not (null x) && null (dropDrive x)
 -- > Posix:   splitFileName "/" == ("/","")
 -- > Windows: splitFileName "c:" == ("c:","")
 -- > Windows: splitFileName "\\\\?\\A:\\fred" == ("\\\\?\\A:\\","fred")
+-- > Windows: splitFileName "\\\\?\\A:" == ("\\\\?\\A:","")
 splitFileName :: FILEPATH -> (STRING, STRING)
 splitFileName x = if null path
     then (dotSlash, file)
@@ -671,6 +672,7 @@ replaceFileName x y = a </> y where (a,_) = splitFileName_ x
 --
 -- > dropFileName "/directory/file.ext" == "/directory/"
 -- > dropFileName x == fst (splitFileName x)
+-- > isPrefixOf (takeDrive x) (dropFileName x)
 dropFileName :: FILEPATH -> FILEPATH
 dropFileName = fst . splitFileName
 
