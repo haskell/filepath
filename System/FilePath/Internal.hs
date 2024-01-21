@@ -645,15 +645,26 @@ splitFileName_ fp
   -- or UNC location "\\?\UNC\foo", where path separator is a part of the drive name.
   -- We can test this by trying dropDrive and falling back to splitDrive.
   | isWindows
-  , Just (s1, _s2, bs') <- uncons2 dirSlash
-  , isPathSeparator s1
-  -- If bs' is empty, then s2 as the last character of dirSlash must be a path separator,
-  -- so we are in the middle of shared drive.
-  -- Otherwise, since s1 is a path separator, we might be in the middle of UNC path.
-  , null bs' || maybe False isIncompleteUNC (readDriveUNC dirSlash)
-  = (fp, mempty)
+  = case uncons2 dirSlash of
+    Just (s1, s2, bs')
+      | isPathSeparator s1
+      -- If bs' is empty, then s2 as the last character of dirSlash must be a path separator,
+      -- so we are in the middle of shared drive.
+      -- Otherwise, since s1 is a path separator, we might be in the middle of UNC path.
+      , null bs' || maybe False isIncompleteUNC (readDriveUNC dirSlash)
+      -> (fp, mempty)
+      -- This handles inputs like "//?/A:" and "//?/A:foo"
+      | isPathSeparator s1
+      , isPathSeparator s2
+      , Just (s3, s4, bs'') <- uncons2 bs'
+      , s3 == _question
+      , isPathSeparator s4
+      , null bs''
+      , Just (drive, rest) <- readDriveLetter file
+      -> (dirSlash <> drive, rest)
+    _ -> (dirSlash, file)
   | otherwise
-  = (dirSlash, file)
+    = (dirSlash, file)
   where
     (dirSlash, file) = breakEnd isPathSeparator fp
 
