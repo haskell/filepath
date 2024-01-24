@@ -37,6 +37,10 @@ instance {-# OVERLAPPABLE #-} Show a => AltShow a where
 instance {-# OVERLAPS #-} AltShow String where
   altShow = id
 
+instance {-# OVERLAPPABLE #-} AltShow a => AltShow (Maybe a) where
+  altShow Nothing = ""
+  altShow (Just a) = altShow a
+
 
 newtype WindowsFilePaths = WindowsFilePaths { unWindowsFilePaths :: [WindowsFilePath] }
   deriving (Show, Eq, Ord, Generic)
