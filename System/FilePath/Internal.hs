@@ -1,5 +1,6 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE MultiWayIf #-}
 
 -- This template expects CPP definitions for:
 --     MODULE_NAME = Posix | Windows
@@ -667,9 +668,24 @@ splitFileName_ fp
     = (dirSlash, file)
   where
     (dirSlash, file) = breakEnd isPathSeparator fp
+    -- an adjustant variant of 'dropTrailingPathSeparator' that normalises trailing path separators
+    -- on windows
+    dropTrailingPathSeparator' x =
+        if hasTrailingPathSeparator x
+        then let x' = dropWhileEnd isPathSeparator x
+             in if | null x' -> singleton (last x)
+                   | isDrive x -> addTrailingPathSeparator x'
+                   | otherwise -> x'
+        else x
 
+    -- an "incomplete" UNC is one without a path (but potentially a drive)
     isIncompleteUNC (pref, suff) = null suff && not (hasPenultimateColon pref)
-    hasPenultimateColon = maybe False (maybe False ((== _colon) . snd) . unsnoc . fst) . unsnoc
+
+    -- e.g. @//?/a:/@ or @//?/a://@, but not @//?/a:@
+    hasPenultimateColon pref
+      | hasTrailingPathSeparator pref
+      = maybe False (maybe False ((== _colon) . snd) . unsnoc . fst) . unsnoc . dropTrailingPathSeparator' $ pref
+      | otherwise = False
 
 -- | Set the filename.
 --
