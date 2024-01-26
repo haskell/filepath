@@ -2,8 +2,9 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
-## 1.5.1.0 *??? 2023*
+## 1.5.2.0 *??? 2024*
 
+* Fix a bug in `[splitFileName](https://github.com/haskell/filepath/issues/219)`
 * make `osp :: QuasiQuoter` valid as a pattern wrt [#210](https://github.com/haskell/filepath/pull/210)
 * Add `unsafeEncodeUtf` from os-string
 
