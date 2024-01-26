@@ -50,7 +50,9 @@ jobs:
         set -eux
         cabal update
         cabal build --enable-tests --enable-benchmarks
-        cabal test
+        cabal test --test-show-details=direct filepath-tests
+        cabal test --test-show-details=direct --test-options='--quickcheck-tests 50_000' filepath-equivalent-tests
+        cabal test --test-show-details=direct abstract-filepath
         cabal bench
         cabal haddock
         cabal check

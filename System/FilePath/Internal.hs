@@ -1,5 +1,6 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE MultiWayIf #-}
 
 -- This template expects CPP definitions for:
 --     MODULE_NAME = Posix | Windows
@@ -602,6 +603,7 @@ isDrive x = not (null x) && null (dropDrive x)
 -- > Posix:   splitFileName "/" == ("/","")
 -- > Windows: splitFileName "c:" == ("c:","")
 -- > Windows: splitFileName "\\\\?\\A:\\fred" == ("\\\\?\\A:\\","fred")
+-- > Windows: splitFileName "\\\\?\\A:" == ("\\\\?\\A:","")
 splitFileName :: FILEPATH -> (STRING, STRING)
 splitFileName x = if null path
     then (dotSlash, file)
@@ -644,20 +646,43 @@ splitFileName_ fp
   -- or UNC location "\\?\UNC\foo", where path separator is a part of the drive name.
   -- We can test this by trying dropDrive and falling back to splitDrive.
   | isWindows
-  , Just (s1, _s2, bs') <- uncons2 dirSlash
-  , isPathSeparator s1
-  -- If bs' is empty, then s2 as the last character of dirSlash must be a path separator,
-  -- so we are in the middle of shared drive.
-  -- Otherwise, since s1 is a path separator, we might be in the middle of UNC path.
-  , null bs' || maybe False isIncompleteUNC (readDriveUNC dirSlash)
-  = (fp, mempty)
+  = case uncons2 dirSlash of
+    Just (s1, s2, bs')
+      | isPathSeparator s1
+      -- If bs' is empty, then s2 as the last character of dirSlash must be a path separator,
+      -- so we are in the middle of shared drive.
+      -- Otherwise, since s1 is a path separator, we might be in the middle of UNC path.
+      , null bs' || maybe False isIncompleteUNC (readDriveUNC dirSlash)
+      -> (fp, mempty)
+      -- This handles inputs like "//?/A:" and "//?/A:foo"
+      | isPathSeparator s1
+      , isPathSeparator s2
+      , Just (s3, s4, bs'') <- uncons2 bs'
+      , s3 == _question
+      , isPathSeparator s4
+      , null bs''
+      , Just (drive, rest) <- readDriveLetter file
+      -> (dirSlash <> drive, rest)
+    _ -> (dirSlash, file)
   | otherwise
-  = (dirSlash, file)
+    = (dirSlash, file)
   where
     (dirSlash, file) = breakEnd isPathSeparator fp
+    dropExcessTrailingPathSeparators x
+      | hasTrailingPathSeparator x
+      , let x' = dropWhileEnd isPathSeparator x
+      , otherwise = if | null x' -> singleton (last x)
+                       | otherwise -> addTrailingPathSeparator x'
+      | otherwise = x
 
+    -- an "incomplete" UNC is one without a path (but potentially a drive)
     isIncompleteUNC (pref, suff) = null suff && not (hasPenultimateColon pref)
-    hasPenultimateColon = maybe False (maybe False ((== _colon) . snd) . unsnoc . fst) . unsnoc
+
+    -- e.g. @//?/a:/@ or @//?/a://@, but not @//?/a:@
+    hasPenultimateColon pref
+      | hasTrailingPathSeparator pref
+      = maybe False (maybe False ((== _colon) . snd) . unsnoc . fst) . unsnoc . dropExcessTrailingPathSeparators $ pref
+      | otherwise = False
 
 -- | Set the filename.
 --
@@ -671,6 +696,7 @@ replaceFileName x y = a </> y where (a,_) = splitFileName_ x
 --
 -- > dropFileName "/directory/file.ext" == "/directory/"
 -- > dropFileName x == fst (splitFileName x)
+-- > isPrefixOf (takeDrive x) (dropFileName x)
 dropFileName :: FILEPATH -> FILEPATH
 dropFileName = fst . splitFileName
 
