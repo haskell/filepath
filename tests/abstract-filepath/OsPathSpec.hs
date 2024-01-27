@@ -20,7 +20,6 @@ import System.OsString.Windows as WindowsS hiding (map)
 import Control.Exception
 import Data.ByteString ( ByteString )
 import qualified Data.ByteString as BS
-import Test.QuickCheck
 import qualified Test.QuickCheck.Classes.Base as QC
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
