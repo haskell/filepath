@@ -133,6 +133,7 @@ test-suite filepath-equivalent-tests
     Legacy.System.FilePath.Posix
     Legacy.System.FilePath.Windows
     TestUtil
+    Gen
 
   build-depends:
     , base
