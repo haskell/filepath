@@ -21,7 +21,6 @@ import qualified Legacy.System.FilePath.Windows as LW
 import qualified Legacy.System.FilePath.Posix as LP
 
 
-
 main :: IO ()
 main = defaultMain equivalentTests
 
@@ -431,16 +430,4 @@ equivalentTests = testGroup "equivalence"
       )
     ]
   ]
-
-
-
-
-
-
-
-
-
-
-
-
 

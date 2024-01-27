@@ -148,7 +148,7 @@ data RelFilePath = Rel1 (NonEmpty (NonEmptyString, NonEmpty Separator)) (Maybe F
   deriving Arbitrary via (GenericArbitraryRec '[2, 1] `AndShrinking` RelFilePath)
 
 instance AltShow RelFilePath where
-  altShow (Rel1 ns mf) = (mconcat $ NE.toList $ fmap (\(a, b) -> altShow a ++ altShow b) ns) ++ altShow mf
+  altShow (Rel1 ns mf) = mconcat (NE.toList $ fmap (\(a, b) -> altShow a ++ altShow b) ns) ++ altShow mf
   altShow (Rel2 fn) = altShow fn
 
 --  file-name = 1*pchar [ stream ]
@@ -156,6 +156,8 @@ data FileName = FileName NonEmptyString (Maybe DataStream)
   deriving (GShow, Show, Eq, Ord, Generic)
 
 instance Arbitrary FileName where
+  -- make sure that half of the filenames include a dot '.'
+  -- so that we can deal with extensions
   arbitrary = do
     ns <- arbitrary
     ds <- arbitrary
