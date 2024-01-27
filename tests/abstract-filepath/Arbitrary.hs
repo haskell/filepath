@@ -10,7 +10,7 @@ import qualified System.OsString.Posix as Posix
 import qualified System.OsString.Windows as Windows
 import Data.ByteString ( ByteString )
 import qualified Data.ByteString as ByteString
-import Test.QuickCheck
+import Test.Tasty.QuickCheck
 
 
 instance Arbitrary OsString where

@@ -117,7 +117,8 @@ test-suite filepath-tests
     , bytestring  >=0.11.3.0
     , filepath
     , os-string   >=2.0.1
-    , QuickCheck  >=2.7      && <2.15
+    , tasty
+    , tasty-quickcheck
 
   default-language: Haskell2010
   ghc-options:      -Wall
@@ -133,6 +134,7 @@ test-suite filepath-equivalent-tests
     Legacy.System.FilePath.Posix
     Legacy.System.FilePath.Windows
     TestUtil
+    Gen
 
   build-depends:
     , base
@@ -141,7 +143,6 @@ test-suite filepath-equivalent-tests
     , generic-random
     , generic-deriving
     , os-string   >=2.0.1
-    , QuickCheck  >=2.7      && <2.15
     , tasty
     , tasty-quickcheck
 
@@ -162,8 +163,9 @@ test-suite abstract-filepath
     , deepseq
     , filepath
     , os-string   >=2.0.1
-    , QuickCheck  >=2.7      && <2.15
     , quickcheck-classes-base ^>=0.6.2
+    , tasty
+    , tasty-quickcheck
 
 benchmark bench-filepath
   default-language: Haskell2010

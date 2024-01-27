@@ -1,7 +1,7 @@
 module Main (main) where
 
 import qualified OsPathSpec
-import TestUtil
+import Test.Tasty
 
 main :: IO ()
-main = runTests (OsPathSpec.tests)
+main = defaultMain OsPathSpec.tests
