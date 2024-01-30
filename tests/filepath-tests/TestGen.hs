@@ -14,11 +14,11 @@ import Data.String
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
-import System.OsString.Internal.Types
-import System.OsPath.Encoding.Internal
+import System.OsString.Internal.Types.Hidden
+import System.OsPath.Encoding.Internal.Hidden
 import qualified Data.Char as C
-import qualified System.OsPath.Data.ByteString.Short as SBS
-import qualified System.OsPath.Data.ByteString.Short.Word16 as SBS16
+import qualified System.OsPath.Data.ByteString.Short.Hidden as SBS
+import qualified System.OsPath.Data.ByteString.Short.Word16.Hidden as SBS16
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 import qualified System.OsPath.Windows as AFP_W
@@ -458,6 +458,8 @@ tests =
     ,("AFP_W.splitFileName (\"c:\") == ((\"c:\"), (\"\"))", property $ AFP_W.splitFileName ("c:") == (("c:"), ("")))
     ,("W.splitFileName \"\\\\\\\\?\\\\A:\\\\fred\" == (\"\\\\\\\\?\\\\A:\\\\\", \"fred\")", property $ W.splitFileName "\\\\?\\A:\\fred" == ("\\\\?\\A:\\", "fred"))
     ,("AFP_W.splitFileName (\"\\\\\\\\?\\\\A:\\\\fred\") == ((\"\\\\\\\\?\\\\A:\\\\\"), (\"fred\"))", property $ AFP_W.splitFileName ("\\\\?\\A:\\fred") == (("\\\\?\\A:\\"), ("fred")))
+    ,("W.splitFileName \"\\\\\\\\?\\\\A:\" == (\"\\\\\\\\?\\\\A:\", \"\")", property $ W.splitFileName "\\\\?\\A:" == ("\\\\?\\A:", ""))
+    ,("AFP_W.splitFileName (\"\\\\\\\\?\\\\A:\") == ((\"\\\\\\\\?\\\\A:\"), (\"\"))", property $ AFP_W.splitFileName ("\\\\?\\A:") == (("\\\\?\\A:"), ("")))
     ,("P.replaceFileName \"/directory/other.txt\" \"file.ext\" == \"/directory/file.ext\"", property $ P.replaceFileName "/directory/other.txt" "file.ext" == "/directory/file.ext")
     ,("W.replaceFileName \"/directory/other.txt\" \"file.ext\" == \"/directory/file.ext\"", property $ W.replaceFileName "/directory/other.txt" "file.ext" == "/directory/file.ext")
     ,("AFP_P.replaceFileName (\"/directory/other.txt\") (\"file.ext\") == (\"/directory/file.ext\")", property $ AFP_P.replaceFileName ("/directory/other.txt") ("file.ext") == ("/directory/file.ext"))
