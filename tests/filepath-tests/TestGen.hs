@@ -14,11 +14,11 @@ import Data.String
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
-import System.OsString.Internal.Types.Hidden
-import System.OsPath.Encoding.Internal.Hidden
+import System.OsString.Internal.Types
+import System.OsPath.Encoding.Internal
 import qualified Data.Char as C
-import qualified System.OsPath.Data.ByteString.Short.Hidden as SBS
-import qualified System.OsPath.Data.ByteString.Short.Word16.Hidden as SBS16
+import qualified System.OsPath.Data.ByteString.Short as SBS
+import qualified System.OsPath.Data.ByteString.Short.Word16 as SBS16
 import qualified System.FilePath.Windows as W
 import qualified System.FilePath.Posix as P
 import qualified System.OsPath.Windows as AFP_W
