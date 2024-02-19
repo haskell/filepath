@@ -426,7 +426,6 @@ stripExtension ext path = case uncons ext of
 -- > splitExtensions "file.tar.gz" == ("file",".tar.gz")
 -- > uncurry (<>) (splitExtensions x) == x
 -- > Valid x => uncurry addExtension (splitExtensions x) == x
--- > splitExtensions "file.tar.gz" == ("file",".tar.gz")
 splitExtensions :: FILEPATH -> (FILEPATH, STRING)
 splitExtensions x = (a <> c, d)
     where
