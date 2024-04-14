@@ -2,7 +2,7 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
-## 1.4.300.0. *Jan 2024*
+## 1.4.300.1. *Jan 2024*
 
 * Backport bugfix for [`splitFileName`](https://github.com/haskell/filepath/issues/219) on windows
 
