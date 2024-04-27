@@ -17,10 +17,10 @@ jobs:
         ghc: ['8.6', '8.8', '8.10', '9.0', '9.2', '9.4', '9.6', '9.8']
         cabal: ['3.8.1.0']
         include:
-          - os: macOS-latest
+          - os: macos-12
             ghc: '9.4'
             cabal: '3.8.1.0'
-          - os: macOS-latest
+          - os: macos-12
             ghc: '9.6'
             cabal: '3.8.1.0'
           - os: windows-latest
@@ -102,7 +102,7 @@ jobs:
           args: "find . -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +"
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - if: matrix.arch == 'arm32v7'
         uses: docker://hasufell/arm32v7-ubuntu-haskell:focal
@@ -132,7 +132,7 @@ jobs:
             ghc: 9.4.4
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run build
         run: |
@@ -162,7 +162,7 @@ jobs:
             ghc: 9.6.4
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run build
         run: |
