@@ -33,7 +33,7 @@ import Data.Word
 
 import Control.Arrow
 import Data.Foldable
-import Data.List as L
+import Data.List as L hiding (unsnoc)
 import Data.Semigroup
 import Data.Tuple
 import Test.QuickCheck

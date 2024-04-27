@@ -39,7 +39,9 @@ tests =
       let str = [toEnum 55296, toEnum 55297]
           encoded = encodeWithTE utf16le str
           decoded = decodeWithTE utf16le =<< encoded
-#if __GLASGOW_HASKELL__ >= 904
+#if __GLASGOW_HASKELL__ >= 910
+      in decoded === Left (EncodingError ("recoverEncode: invalid argument (cannot encode character " <> show (head str) <> ")\n") Nothing))
+#elif __GLASGOW_HASKELL__ >= 904
       in decoded === Left (EncodingError ("recoverEncode: invalid argument (cannot encode character " <> show (head str) <> ")") Nothing))
 #else
       in decoded === Left (EncodingError "recoverEncode: invalid argument (invalid character)" Nothing))
@@ -69,7 +71,9 @@ tests =
       let str = [toEnum 0xDFF0, toEnum 0xDFF2]
           encoded = encodeWithTE (mkUTF8 RoundtripFailure) str
           decoded = decodeWithTE (mkUTF8 RoundtripFailure) =<< encoded
-#if __GLASGOW_HASKELL__ >= 904
+#if __GLASGOW_HASKELL__ >= 910
+      in decoded === Left (EncodingError ("recoverEncode: invalid argument (cannot encode character " <> show (head str) <> ")\n") Nothing))
+#elif __GLASGOW_HASKELL__ >= 904
       in decoded === Left (EncodingError ("recoverEncode: invalid argument (cannot encode character " <> show (head str) <> ")") Nothing))
 #else
       in decoded === Left (EncodingError "recoverEncode: invalid argument (invalid character)" Nothing))

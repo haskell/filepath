@@ -2,11 +2,15 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
-## 1.4.300.1. *Jan 2024*
+## 1.4.300.2 *Apr 2024*
+
+* Fix compabitiliby with GHC 9.10
+
+## 1.4.300.1 *Jan 2024*
 
 * Backport bugfix for [`splitFileName`](https://github.com/haskell/filepath/issues/219) on windows
 
-## 1.4.200.1. *Dec 2023*
+## 1.4.200.1 *Dec 2023*
 
 * Improve deprecation warnings wrt [#209](https://github.com/haskell/filepath/issues/209)
 
