@@ -56,8 +56,12 @@ unsafeEncodeUtf :: HasCallStack => String -> OsString
 unsafeEncodeUtf = OS.unsafeEncodeUtf
 
 -- | Encode a 'FilePath' with the specified encoding.
+--
+-- Note: on windows, we expect a "wide char" encoding (e.g. UCS-2 or UTF-16). Anything
+-- that works with @Word16@ boundaries. Picking an incompatible encoding may crash
+-- filepath operations.
 encodeWith :: TextEncoding  -- ^ unix text encoding
-           -> TextEncoding  -- ^ windows text encoding
+           -> TextEncoding  -- ^ windows text encoding (wide char)
            -> FilePath
            -> Either EncodingException OsPath
 encodeWith = OS.encodeWith
