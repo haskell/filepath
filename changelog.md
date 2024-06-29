@@ -2,6 +2,10 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+## 1.5.3.0 *Jun 2024*
+
+* Adjust for `encodeFS`/`decodedFS` deprecation in os-string
+
 ## 1.5.2.0 *Jan 2024*
 
 * Fix a bug in `[splitFileName](https://github.com/haskell/filepath/issues/219)`
