@@ -129,8 +129,8 @@ import Data.List(stripPrefix, isSuffixOf, uncons, dropWhileEnd)
 #define STRING String
 #define FILEPATH FilePath
 #else
-import Prelude (fromIntegral)
-import Control.Exception ( SomeException, evaluate, try, displayException )
+import Prelude (fromIntegral, return, IO, Either(..))
+import Control.Exception ( catch, displayException, evaluate, fromException, toException, throwIO, Exception, SomeAsyncException(..), SomeException )
 import Control.DeepSeq (force)
 import GHC.IO (unsafePerformIO)
 import qualified Data.Char as C
@@ -1270,15 +1270,31 @@ snoc :: String -> Char -> String
 snoc str = \c -> str <> [c]
 
 #else
+-- | Like 'try', but rethrows async exceptions.
+trySafe :: Exception e => IO a -> IO (Either e a)
+trySafe ioA = catch action eHandler
+ where
+  action = do
+    v <- ioA
+    return (Right v)
+  eHandler e
+    | isAsyncException e = throwIO e
+    | otherwise = return (Left e)
+
+isAsyncException :: Exception e => e -> Bool
+isAsyncException e =
+    case fromException (toException e) of
+        Just (SomeAsyncException _) -> True
+        Nothing -> False
 #ifdef WINDOWS
 fromString :: P.String -> STRING
 fromString str = P.either (P.error . P.show) P.id $ unsafePerformIO $ do
-  r <- try @SomeException $ GHC.withCStringLen (mkUTF16le ErrorOnCodingFailure) str $ \cstr -> packCStringLen cstr
+  r <- trySafe @SomeException $ GHC.withCStringLen (mkUTF16le ErrorOnCodingFailure) str $ \cstr -> packCStringLen cstr
   evaluate $ force $ first displayException r
 #else
 fromString :: P.String -> STRING
 fromString str = P.either (P.error . P.show) P.id $ unsafePerformIO $ do
-  r <- try @SomeException $ GHC.withCStringLen (mkUTF8 ErrorOnCodingFailure) str $ \cstr -> packCStringLen cstr
+  r <- trySafe @SomeException $ GHC.withCStringLen (mkUTF8 ErrorOnCodingFailure) str $ \cstr -> packCStringLen cstr
   evaluate $ force $ first displayException r
 #endif
 
