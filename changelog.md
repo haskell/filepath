@@ -2,7 +2,11 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
-## 1.4.101.0. *Jan 2024*
+## 1.4.102.0 *Nov 2024*
+
+* Don't catch async exceptions in internal functions wrt https://github.com/haskell/os-string/issues/22
+
+## 1.4.101.0 *Jan 2024*
 
 * Backport bugfix for [`splitFileName`](https://github.com/haskell/filepath/issues/219) on windows
 
