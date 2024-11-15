@@ -2,6 +2,10 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+## 1.5.4.0 *Nov 2024*
+
+* Don't catch async exceptions in internal functions wrt https://github.com/haskell/os-string/issues/22
+
 ## 1.5.3.0 *Jun 2024*
 
 * Adjust for `encodeFS`/`decodedFS` deprecation in os-string
