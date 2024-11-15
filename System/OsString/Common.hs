@@ -60,7 +60,7 @@ import Control.Monad.Catch
 import Data.ByteString.Internal
     ( ByteString )
 import Control.Exception
-    ( SomeException, try, displayException )
+    ( SomeException, displayException )
 import Control.DeepSeq ( force )
 import Data.Bifunctor ( first )
 import GHC.IO
@@ -70,7 +70,7 @@ import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
 import Language.Haskell.TH.Syntax
     ( Lift (..), lift )
-
+import System.OsPath.Encoding.Internal.Hidden ( trySafe )
 
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 #ifdef WINDOWS
@@ -116,10 +116,10 @@ encodeWith :: TextEncoding
            -> Either EncodingException PLATFORM_STRING
 encodeWith enc str = unsafePerformIO $ do
 #ifdef WINDOWS
-  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> WindowsString <$> BS8.packCStringLen cstr
+  r <- trySafe @SomeException $ GHC.withCStringLen enc str $ \cstr -> WindowsString <$> BS8.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
-  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> PosixString <$> BS.packCStringLen cstr
+  r <- trySafe @SomeException $ GHC.withCStringLen enc str $ \cstr -> PosixString <$> BS.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
 
@@ -176,7 +176,7 @@ decodeWith :: TextEncoding
            -> PLATFORM_STRING
            -> Either EncodingException String
 decodeWith winEnc (WindowsString ba) = unsafePerformIO $ do
-  r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen winEnc fp
+  r <- trySafe @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen winEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #else
 -- | Decode a 'PosixString' with the specified encoding.
@@ -186,7 +186,7 @@ decodeWith :: TextEncoding
        -> PLATFORM_STRING
        -> Either EncodingException String
 decodeWith unixEnc (PosixString ba) = unsafePerformIO $ do
-  r <- try @SomeException $ BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
+  r <- trySafe @SomeException $ BS.useAsCStringLen ba $ \fp -> GHC.peekCStringLen unixEnc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 #endif
 

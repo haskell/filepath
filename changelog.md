@@ -2,6 +2,10 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+## 1.4.301.0 *Nov 2024*
+
+* Don't catch async exceptions in internal functions wrt https://github.com/haskell/os-string/issues/22
+
 ## 1.4.300.2 *Apr 2024*
 
 * Fix compabitiliby with GHC 9.10
