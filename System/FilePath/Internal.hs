@@ -130,9 +130,10 @@ import Data.List(stripPrefix, isSuffixOf, uncons, dropWhileEnd)
 #define FILEPATH FilePath
 #else
 import Prelude (fromIntegral)
-import Control.Exception ( SomeException, evaluate, try, displayException )
+import Control.Exception ( SomeException, evaluate, displayException )
 import Control.DeepSeq (force)
 import GHC.IO (unsafePerformIO)
+import System.OsPath.Encoding.Internal (trySafe)
 import qualified Data.Char as C
 #ifdef WINDOWS
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
@@ -1273,12 +1274,12 @@ snoc str = \c -> str <> [c]
 #ifdef WINDOWS
 fromString :: P.String -> STRING
 fromString str = P.either (P.error . P.show) P.id $ unsafePerformIO $ do
-  r <- try @SomeException $ GHC.withCStringLen (mkUTF16le ErrorOnCodingFailure) str $ \cstr -> packCStringLen cstr
+  r <- trySafe @SomeException $ GHC.withCStringLen (mkUTF16le ErrorOnCodingFailure) str $ \cstr -> packCStringLen cstr
   evaluate $ force $ first displayException r
 #else
 fromString :: P.String -> STRING
 fromString str = P.either (P.error . P.show) P.id $ unsafePerformIO $ do
-  r <- try @SomeException $ GHC.withCStringLen (mkUTF8 ErrorOnCodingFailure) str $ \cstr -> packCStringLen cstr
+  r <- trySafe @SomeException $ GHC.withCStringLen (mkUTF8 ErrorOnCodingFailure) str $ \cstr -> packCStringLen cstr
   evaluate $ force $ first displayException r
 #endif
 
