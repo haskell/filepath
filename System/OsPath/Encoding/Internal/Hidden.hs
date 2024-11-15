@@ -19,7 +19,7 @@ import GHC.IO.Buffer
 import GHC.IO.Encoding.Failure
 import GHC.IO.Encoding.Types
 import Data.Bits
-import Control.Exception (SomeException, try, Exception (displayException), evaluate)
+import Control.Exception (SomeException, try, Exception (displayException), evaluate, SomeAsyncException(..), catch, fromException, toException, throwIO)
 import qualified GHC.Foreign as GHC
 import Data.Either (Either)
 import GHC.IO (unsafePerformIO)
@@ -31,7 +31,7 @@ import Numeric (showHex)
 import Foreign.C (CStringLen)
 import Data.Char (chr)
 import Foreign
-import Prelude (FilePath)
+import Prelude (FilePath, Either(..))
 import GHC.IO.Encoding (getFileSystemEncoding)
 
 -- -----------------------------------------------------------------------------
@@ -277,13 +277,13 @@ peekFilePathPosix fp = getFileSystemEncoding >>= \enc -> GHC.peekCStringLen enc 
 -- | Decode with the given 'TextEncoding'.
 decodeWithTE :: TextEncoding -> BS8.ShortByteString -> Either EncodingException String
 decodeWithTE enc ba = unsafePerformIO $ do
-  r <- try @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
+  r <- trySafe @SomeException $ BS8.useAsCStringLen ba $ \fp -> GHC.peekCStringLen enc fp
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 
 -- | Encode with the given 'TextEncoding'.
 encodeWithTE :: TextEncoding -> String -> Either EncodingException BS8.ShortByteString
 encodeWithTE enc str = unsafePerformIO $ do
-  r <- try @SomeException $ GHC.withCStringLen enc str $ \cstr -> BS8.packCStringLen cstr
+  r <- trySafe @SomeException $ GHC.withCStringLen enc str $ \cstr -> BS8.packCStringLen cstr
   evaluate $ force $ first (flip EncodingError Nothing . displayException) r
 
 -- -----------------------------------------------------------------------------
@@ -347,3 +347,24 @@ instance NFData EncodingException where
 
 wNUL :: Word16
 wNUL = 0x00
+
+-- -----------------------------------------------------------------------------
+-- Exceptions
+--
+
+-- | Like 'try', but rethrows async exceptions.
+trySafe :: Exception e => IO a -> IO (Either e a)
+trySafe ioA = catch action eHandler
+ where
+  action = do
+    v <- ioA
+    return (Right v)
+  eHandler e
+    | isAsyncException e = throwIO e
+    | otherwise = return (Left e)
+
+isAsyncException :: Exception e => e -> Bool
+isAsyncException e =
+    case fromException (toException e) of
+        Just (SomeAsyncException _) -> True
+        Nothing -> False
