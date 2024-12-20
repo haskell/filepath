@@ -88,7 +88,7 @@ jobs:
         repository: andreabedini/haskell-actions
         ref: 'main'
         path: ghcup
-    - uses: ./ghcup/ghcup
+    - uses: ../ghcup/ghcup
     - uses: actions/checkout@v1
     - name: Test
       run: |
