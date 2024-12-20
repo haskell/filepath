@@ -36,7 +36,7 @@ jobs:
       with:
         repository: andreabedini/haskell-actions
         path: ghcup
-    - uses: ./ghcup
+    - uses: ./ghcup/ghcup
 
     - name: Install dependencies (Ubuntu)
       if: runner.os == 'Linux'
@@ -87,7 +87,7 @@ jobs:
       with:
         repository: andreabedini/haskell-actions
         path: ghcup
-    - uses: ./ghcup
+    - uses: ./ghcup/ghcup
     - uses: actions/checkout@v1
     - name: Test
       run: |
@@ -149,7 +149,7 @@ jobs:
         with:
           repository: andreabedini/haskell-actions
           path: ghcup
-      - uses: ./ghcup
+      - uses: ./ghcup/ghcup
 
       - name: Run build
         run: |
@@ -186,7 +186,7 @@ jobs:
         with:
           repository: andreabedini/haskell-actions
           path: ghcup
-      - uses: ./ghcup
+      - uses: ./ghcup/ghcup
 
       - name: Run build
         run: |
