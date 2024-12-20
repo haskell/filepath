@@ -164,6 +164,7 @@ jobs:
           . .github/scripts/env.sh
           ghcup install ghc --set ${{ matrix.ghc }}
           ghcup install cabal --set latest
+          cabal update
           cabal test
           cabal bench
         env:
