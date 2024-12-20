@@ -188,7 +188,6 @@ jobs:
         with:
           repository: andreabedini/haskell-actions
           path: ghcup
-          ref: 'freebsd'
       - uses: ./ghcup/ghcup
 
       - name: Run build
