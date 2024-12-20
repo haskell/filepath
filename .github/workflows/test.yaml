@@ -42,7 +42,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install libtinfo5 libtinfo6 libncurses5 libncurses6
+        sudo apt-get -y install libtinfo6 libncurses6
 
     - name: Install ghc/cabal
       run: |
@@ -82,7 +82,7 @@ jobs:
     - name: Install
       run: |
         apt-get update -y
-        apt-get install -y autoconf build-essential zlib1g-dev libgmp-dev curl libncurses5 libtinfo5 libncurses5-dev libtinfo-dev git
+        apt-get install -y autoconf build-essential zlib1g-dev libgmp-dev curl libtinfo-dev git
     - uses: actions/checkout@v4
       with:
         repository: andreabedini/haskell-actions
