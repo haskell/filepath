@@ -32,6 +32,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - uses: actions/checkout@v4
+      with:
+        repository: andreabedini/haskell-actions
+        path: ghcup
+    - uses: ./ghcup
+
     - name: Install dependencies (Ubuntu)
       if: runner.os == 'Linux'
       run: |
@@ -77,11 +83,16 @@ jobs:
       run: |
         apt-get update -y
         apt-get install -y autoconf build-essential zlib1g-dev libgmp-dev curl libncurses5 libtinfo5 libncurses5-dev libtinfo-dev git
-        curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_INSTALL_NO_STACK=1 sh
+    - uses: actions/checkout@v4
+      with:
+        repository: andreabedini/haskell-actions
+        path: ghcup
+    - uses: ./ghcup
     - uses: actions/checkout@v1
     - name: Test
       run: |
-        . ~/.ghcup/env
+        ghcup install ghc --set recommended
+        ghcup install cabal --set latest
         cabal update
         cabal test
         cabal bench
@@ -134,6 +145,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - uses: actions/checkout@v4
+        with:
+          repository: andreabedini/haskell-actions
+          path: ghcup
+      - uses: ./ghcup
+
       - name: Run build
         run: |
           bash .github/scripts/brew.sh git coreutils llvm@13 autoconf automake
@@ -144,7 +161,8 @@ jobs:
           export AR="$HOME/.brew/opt/llvm@13/bin/llvm-ar"
           export RANLIB="$HOME/.brew/opt/llvm@13/bin/llvm-ranlib"
           . .github/scripts/env.sh
-          curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_INSTALL_NO_STACK=1 BOOTSTRAP_HASKELL_GHC_VERSION=${{ matrix.ghc }} BOOTSTRAP_HASKELL_ADJUST_BASHRC=yes sh
+          ghcup install ghc --set ${{ matrix.ghc }}
+          ghcup install cabal --set latest
           cabal test
           cabal bench
         env:
@@ -164,10 +182,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - uses: actions/checkout@v4
+        with:
+          repository: andreabedini/haskell-actions
+          path: ghcup
+      - uses: ./ghcup
+
       - name: Run build
         run: |
           pkg install -y curl gcc gmp gmake ncurses perl5 libffi libiconv git bash misc/compat10x misc/compat11x misc/compat12x gmake llvm14
           . .github/scripts/env.sh
-          curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_INSTALL_NO_STACK=1 BOOTSTRAP_HASKELL_GHC_VERSION=${{ matrix.ghc }} BOOTSTRAP_HASKELL_ADJUST_BASHRC=yes sh
+          ghcup install ghc --set ${{ matrix.ghc }}
           cabal test
           cabal bench
