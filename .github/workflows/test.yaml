@@ -77,7 +77,7 @@ jobs:
   i386:
     runs-on: ubuntu-latest
     container:
-      image: i386/ubuntu:bionic
+      image: i386/ubuntu:focal
     steps:
     - name: Install
       run: |
@@ -88,7 +88,7 @@ jobs:
         repository: andreabedini/haskell-actions
         ref: 'main'
         path: ghcup
-    - uses: ../ghcup/ghcup
+    - uses: ./../ghcup/ghcup
     - uses: actions/checkout@v1
     - name: Test
       run: |
