@@ -192,7 +192,7 @@ jobs:
 
       - name: Run build
         run: |
-          pkg install -y curl gcc gmp gmake ncurses perl5 libffi libiconv git bash misc/compat10x misc/compat11x misc/compat12x gmake llvm14
+          sudo pkg install -y curl gcc gmp gmake ncurses perl5 libffi libiconv git bash misc/compat10x misc/compat11x misc/compat12x gmake llvm14
           . .github/scripts/env.sh
           ghcup install ghc --set ${{ matrix.ghc }}
           cabal test
