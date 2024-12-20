@@ -83,7 +83,7 @@ jobs:
       run: |
         apt-get update -y
         apt-get install -y autoconf build-essential zlib1g-dev libgmp-dev curl libtinfo-dev git
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v1
       with:
         repository: andreabedini/haskell-actions
         path: ghcup
