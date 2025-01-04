@@ -147,7 +147,6 @@ jobs:
         run: |
           cabal update
           cabal test
-          cabal bench
 
   freebsd:
     runs-on: ${{ matrix.os }}
