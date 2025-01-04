@@ -15,20 +15,15 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         ghc: ['8.6', '8.8', '8.10', '9.0', '9.2', '9.4', '9.6', '9.8']
-        cabal: ['3.8.1.0']
         include:
           - os: macos-13
             ghc: '9.4'
-            cabal: '3.8.1.0'
           - os: macos-13
             ghc: '9.6'
-            cabal: '3.8.1.0'
           - os: windows-latest
             ghc: '9.4'
-            cabal: '3.8.1.0'
           - os: windows-latest
             ghc: '9.6'
-            cabal: '3.8.1.0'
     steps:
     - uses: actions/checkout@v4
 
@@ -41,7 +36,7 @@ jobs:
     - uses: haskell/ghcup-setup@v1
       with:
         ghc: ${{ matrix.ghc }}
-        cabal: ${{ matrix.cabal }}
+        cabal: latest
 
     - name: Build
       run: |
@@ -146,7 +141,7 @@ jobs:
       - uses: haskell/ghcup-setup@v1
         with:
           ghc: ${{ matrix.ghc }}
-          cabal: ${{ matrix.cabal }}
+          cabal: latest
 
       - name: Run build
         run: |
@@ -175,7 +170,7 @@ jobs:
       - uses: haskell/ghcup-setup@v1
         with:
           ghc: ${{ matrix.ghc }}
-          cabal: ${{ matrix.cabal }}
+          cabal: latest
 
       - name: Run build
         run: |
