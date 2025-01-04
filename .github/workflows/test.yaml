@@ -30,9 +30,7 @@ jobs:
             ghc: '9.6'
             cabal: '3.8.1.0'
     steps:
-    - uses: actions/checkout@v3
-
-    - uses: haskell/ghcup-setup@v1
+    - uses: actions/checkout@v4
 
     - name: Install dependencies (Ubuntu)
       if: runner.os == 'Linux'
@@ -40,12 +38,10 @@ jobs:
         sudo apt-get -y update
         sudo apt-get -y install libtinfo6 libncurses6
 
-    - name: Install ghc/cabal
-      run: |
-        set -eux
-        ghcup install ghc --set ${{ matrix.ghc }}
-        ghcup install cabal ${{ matrix.cabal }}
-      shell: bash
+    - uses: haskell/ghcup-setup@v1
+      with:
+        ghc: ${{ matrix.ghc }}
+        cabal: ${{ matrix.cabal }}
 
     - name: Build
       run: |
@@ -122,6 +118,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       MACOSX_DEPLOYMENT_TARGET: 10.13
+      HOMEBREW_CHANGE_ARCH_TO_ARM: 1
     strategy:
       fail-fast: false
       matrix:
@@ -136,25 +133,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install prerequisites
+        run: |
+          bash .github/scripts/brew.sh git coreutils llvm@13 autoconf automake
+          echo PATH="$HOME/.brew/bin:$HOME/.brew/sbin:$HOME/.brew/opt/llvm@13/bin:$PATH" >> "$GITHUB_ENV"
+          echo CC="$HOME/.brew/opt/llvm@13/bin/clang" >> "$GITHUB_ENV"
+          echo CXX="$HOME/.brew/opt/llvm@13/bin/clang++" >> "$GITHUB_ENV"
+          echo LD=ld >> "$GITHUB_ENV"
+          echo AR="$HOME/.brew/opt/llvm@13/bin/llvm-ar" >> "$GITHUB_ENV"
+          echo RANLIB="$HOME/.brew/opt/llvm@13/bin/llvm-ranlib" >> "$GITHUB_ENV"
+
       - uses: haskell/ghcup-setup@v1
+        with:
+          ghc: ${{ matrix.ghc }}
+          cabal: ${{ matrix.cabal }}
 
       - name: Run build
         run: |
-          bash .github/scripts/brew.sh git coreutils llvm@13 autoconf automake
-          export PATH="$HOME/.brew/bin:$HOME/.brew/sbin:$HOME/.brew/opt/llvm@13/bin:$PATH"
-          export CC="$HOME/.brew/opt/llvm@13/bin/clang"
-          export CXX="$HOME/.brew/opt/llvm@13/bin/clang++"
-          export LD=ld
-          export AR="$HOME/.brew/opt/llvm@13/bin/llvm-ar"
-          export RANLIB="$HOME/.brew/opt/llvm@13/bin/llvm-ranlib"
-          . .github/scripts/env.sh
-          ghcup install ghc --set ${{ matrix.ghc }}
-          ghcup install cabal --set latest
           cabal update
           cabal test
           cabal bench
-        env:
-          HOMEBREW_CHANGE_ARCH_TO_ARM: 1
 
   freebsd:
     runs-on: ${{ matrix.os }}
@@ -170,14 +168,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install prerequisites
+        run: |
+          sudo pkg install -y curl gcc gmp gmake ncurses perl5 libffi libiconv git bash misc/compat10x misc/compat11x misc/compat12x gmake llvm14
+
       - uses: haskell/ghcup-setup@v1
+        with:
+          ghc: ${{ matrix.ghc }}
+          cabal: ${{ matrix.cabal }}
 
       - name: Run build
         run: |
-          sudo pkg install -y curl gcc gmp gmake ncurses perl5 libffi libiconv git bash misc/compat10x misc/compat11x misc/compat12x gmake llvm14
-          . .github/scripts/env.sh
-          ghcup install ghc --set ${{ matrix.ghc }}
-          ghcup install cabal --set recommended
           cabal update
           cabal test
           cabal bench
