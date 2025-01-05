@@ -13,17 +13,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        ghc: ['8.6', '8.8', '8.10', '9.0', '9.2', '9.4', '9.6', '9.8']
+        os: [ubuntu-latest, macOS-13, windows-latest]
+        ghc: ['9.4', '9.6', '9.8', '9.10', '9.12']
         include:
-          - os: macos-13
-            ghc: '9.4'
-          - os: macos-13
-            ghc: '9.6'
-          - os: windows-latest
-            ghc: '9.4'
-          - os: windows-latest
-            ghc: '9.6'
+          - os: ubuntu-latest
+            ghc: '8.6'
+          - os: ubuntu-latest
+            ghc: '8.8'
+          - os: ubuntu-latest
+            ghc: '8.10'
+          - os: ubuntu-latest
+            ghc: '9.0'
+          - os: ubuntu-latest
+            ghc: '9.2'
     steps:
     - uses: actions/checkout@v4
 
@@ -46,13 +48,15 @@ jobs:
         cabal test --test-show-details=direct filepath-tests
         cabal test --test-show-details=direct --test-options='--quickcheck-tests 50_000' filepath-equivalent-tests
         cabal test --test-show-details=direct abstract-filepath
-        cabal bench
         cabal haddock
         cabal check
         cabal sdist
       shell: bash
 
-    - if: matrix.os == 'ubuntu-latest'
+    - if: runner.os == 'Linux'
+      run: cabal bench
+
+    - if: runner.os == 'Linux'
       name: make all
       run: |
         set -eux
@@ -77,7 +81,6 @@ jobs:
         . ~/.ghcup/env
         cabal update
         cabal test
-        cabal bench
 
   # We use github.com/haskell self-hosted runners for ARM testing.
   # If they become unavailable in future, put ['armv7', 'aarch64']
@@ -101,13 +104,13 @@ jobs:
         uses: docker://hasufell/arm32v7-ubuntu-haskell:focal
         name: Run build (arm32v7 linux)
         with:
-          args: sh -c "cabal update && ghcup install ghc --isolate=/usr --force 9.2.2 && cabal test -w ghc-9.2.2 && cabal bench -w ghc-9.2.2"
+          args: sh -c "cabal update && ghcup install ghc --isolate=/usr --force 9.2.2 && cabal test -w ghc-9.2.2"
 
       - if: matrix.arch == 'arm64v8'
         uses: docker://hasufell/arm64v8-ubuntu-haskell:focal
         name: Run build (arm64v8 linux)
         with:
-          args: sh -c "cabal update && ghcup install ghc --isolate=/usr --force 9.2.2 && cabal test -w ghc-9.2.2 && cabal bench -w ghc-9.2.2"
+          args: sh -c "cabal update && ghcup install ghc --isolate=/usr --force 9.2.2 && cabal test -w ghc-9.2.2"
 
   darwin_arm:
     runs-on: ${{ matrix.os }}
