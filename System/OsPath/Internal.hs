@@ -15,10 +15,17 @@ import Control.Monad.Catch
     ( MonadThrow )
 import Data.ByteString
     ( ByteString )
+#if __GLASGOW_HASKELL__ >= 914
+import Language.Haskell.TH.Lift
+    ( Lift(..), lift )
+import Language.Haskell.TH.QuasiQuoter
+    ( QuasiQuoter (..) )
+#else
+import Language.Haskell.TH.Syntax
+    ( Lift(..), lift )
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
-import Language.Haskell.TH.Syntax
-    ( Lift (..), lift )
+#endif
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 
 import System.OsString.Internal.Types

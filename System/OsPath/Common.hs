@@ -124,20 +124,34 @@ import System.OsString.Windows as PS
 import Data.Bifunctor ( bimap )
 import qualified System.OsPath.Windows.Internal as C
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
+#if __GLASGOW_HASKELL__ >= 914
+import Language.Haskell.TH.Lift
+    ( Lift(..), lift )
+import Language.Haskell.TH.QuasiQuoter
+    ( QuasiQuoter (..) )
+#else
+import Language.Haskell.TH.Syntax
+    ( Lift(..), lift )
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
-import Language.Haskell.TH.Syntax
-    ( Lift (..), lift )
+#endif
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import Control.Monad ( when )
 
 #elif defined(POSIX)
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import Control.Monad ( when )
+#if __GLASGOW_HASKELL__ >= 914
+import Language.Haskell.TH.Lift
+    ( Lift(..), lift )
+import Language.Haskell.TH.QuasiQuoter
+    ( QuasiQuoter (..) )
+#else
+import Language.Haskell.TH.Syntax
+    ( Lift(..), lift )
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
-import Language.Haskell.TH.Syntax
-    ( Lift (..), lift )
+#endif
 
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
 import System.OsPath.Types
