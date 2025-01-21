@@ -15,9 +15,9 @@ import Control.Monad.Catch
     ( MonadThrow )
 import Data.ByteString
     ( ByteString )
-import Language.Haskell.TH.Quote
+import Language.Haskell.TH.QuasiQuoter
     ( QuasiQuoter (..) )
-import Language.Haskell.TH.Syntax
+import Language.Haskell.TH.Lift
     ( Lift (..), lift )
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 
