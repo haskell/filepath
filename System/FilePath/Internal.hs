@@ -122,7 +122,7 @@ import qualified Data.List as L
 #ifndef OS_PATH
 import Data.String (fromString)
 import System.Environment(getEnv)
-import Prelude (String, map, FilePath, Eq, IO, id, last, init, reverse, dropWhile, null, break, take, all, elem, any, span)
+import Prelude (String, map, FilePath, Eq, IO, id, reverse, dropWhile, null, break, take, all, elem, any, span)
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.List(stripPrefix, isSuffixOf, uncons, dropWhileEnd)
 #define CHAR Char
@@ -299,14 +299,15 @@ getSearchPath = fmap splitSearchPath (getEnv "PATH")
 -- Instead we speculatively split on the extension separator first, then check
 -- whether results are well-formed.
 splitExtension :: FILEPATH -> (STRING, STRING)
-splitExtension x
+splitExtension x = case unsnoc nameDot of
   -- Imagine x = "no-dots", then nameDot = ""
-  | null nameDot = (x, mempty)
-  -- Imagine x = "\\shared.with.dots\no-dots"
-  | isWindows && null (dropDrive nameDot) = (x, mempty)
-  -- Imagine x = "dir.with.dots/no-dots"
-  | any isPathSeparator ext = (x, mempty)
-  | otherwise = (init nameDot, extSeparator `cons` ext)
+  Nothing -> (x, mempty)
+  Just (initNameDot, _)
+    -- Imagine x = "\\shared.with.dots\no-dots"
+    | isWindows && null (dropDrive nameDot) -> (x, mempty)
+    -- Imagine x = "dir.with.dots/no-dots"
+    | any isPathSeparator ext -> (x, mempty)
+    | otherwise -> (initNameDot, extSeparator `cons` ext)
   where
     (nameDot, ext) = breakEnd isExtSeparator x
 
@@ -668,9 +669,9 @@ splitFileName_ fp
   where
     (dirSlash, file) = breakEnd isPathSeparator fp
     dropExcessTrailingPathSeparators x
-      | hasTrailingPathSeparator x
+      | Just lastX <- getTrailingPathSeparator x
       , let x' = dropWhileEnd isPathSeparator x
-      , otherwise = if | null x' -> singleton (last x)
+      , otherwise = if | null x' -> singleton lastX
                        | otherwise -> addTrailingPathSeparator x'
       | otherwise = x
 
@@ -742,10 +743,13 @@ replaceBaseName pth nam = combineAlways a (nam <.> ext)
 -- > hasTrailingPathSeparator "test" == False
 -- > hasTrailingPathSeparator "test/" == True
 hasTrailingPathSeparator :: FILEPATH -> Bool
-hasTrailingPathSeparator x
-  | null x = False
-  | otherwise = isPathSeparator $ last x
+hasTrailingPathSeparator = isJust . getTrailingPathSeparator
 
+getTrailingPathSeparator :: FILEPATH -> Maybe CHAR
+getTrailingPathSeparator x = case unsnoc x of
+  Just (_, lastX)
+    | isPathSeparator lastX -> Just lastX
+  _ -> Nothing
 
 hasLeadingPathSeparator :: FILEPATH -> Bool
 hasLeadingPathSeparator = maybe False (isPathSeparator . fst) . uncons
@@ -767,11 +771,12 @@ addTrailingPathSeparator x = if hasTrailingPathSeparator x then x else x <> sing
 -- > Windows:  dropTrailingPathSeparator "\\" == "\\"
 -- > Posix:    not (hasTrailingPathSeparator (dropTrailingPathSeparator x)) || isDrive x
 dropTrailingPathSeparator :: FILEPATH -> FILEPATH
-dropTrailingPathSeparator x =
-    if hasTrailingPathSeparator x && not (isDrive x)
-    then let x' = dropWhileEnd isPathSeparator x
-         in if null x' then singleton (last x) else x'
-    else x
+dropTrailingPathSeparator x = case getTrailingPathSeparator x of
+  Just lastX
+    | not (isDrive x)
+    -> let x' = dropWhileEnd isPathSeparator x
+        in if null x' then singleton lastX else x'
+  _ -> x
 
 
 -- | Get the directory name, move up one level.
@@ -1044,9 +1049,9 @@ normalise filepath =
       && not (hasTrailingPathSeparator result)
       && not (isRelativeDrive drv)
 
-    isDirPath xs = hasTrailingPathSeparator xs
-        || not (null xs) && last xs == _period
-           && hasTrailingPathSeparator (init xs)
+    isDirPath xs = hasTrailingPathSeparator xs || case unsnoc xs of
+      Nothing -> False
+      Just (initXs, lastXs) -> lastXs == _period && hasTrailingPathSeparator initXs
 
     f = joinPath . dropDots . propSep . splitDirectories
 
