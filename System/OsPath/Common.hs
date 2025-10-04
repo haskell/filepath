@@ -45,11 +45,13 @@ module System.OsPath
   , PS.unsafeEncodeUtf
   , PS.encodeWith
   , encodeFS
+#if !defined(__MHS__)
 #if defined(WINDOWS) || defined(POSIX)
   , pstr
 #else
   , osp
 #endif
+#endif /* !defined(__MHS__) */
   , PS.pack
 
   -- * Filepath deconstruction
@@ -124,22 +126,26 @@ import System.OsString.Windows as PS
 import Data.Bifunctor ( bimap )
 import qualified System.OsPath.Windows.Internal as C
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
+#if !defined(__MHS__)
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
 import Language.Haskell.TH.Syntax
     ( Lift (..), lift )
+#endif
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import Control.Monad ( when )
 
 #elif defined(POSIX)
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import Control.Monad ( when )
+#if !defined(__MHS__)
 import Language.Haskell.TH.Quote
     ( QuasiQuoter (..) )
 import Language.Haskell.TH.Syntax
     ( Lift (..), lift )
-
+#endif
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
+
 import System.OsPath.Types
 import System.OsString.Posix as PS
     ( unsafeFromChar
@@ -158,14 +164,16 @@ import qualified System.OsPath.Posix.Internal as C
 #else
 
 import System.OsPath.Internal as PS
-    ( osp
-    , decodeUtf
+    ( decodeUtf
     , decodeWith
     , pack
     , encodeUtf
     , unsafeEncodeUtf
     , encodeWith
     , unpack
+#if !defined(__MHS__)
+    , osp
+#endif
     )
 import System.OsPath.Types
     ( OsPath )

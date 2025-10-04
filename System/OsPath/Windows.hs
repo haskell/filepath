@@ -11,7 +11,7 @@
 
 #include "Common.hs"
 
-
+#if !defined(__MHS__)
 -- | QuasiQuote a 'WindowsPath'. This accepts Unicode characters
 -- and encodes as UTF-16LE. Runs 'isValid' on the input.
 pstr :: QuasiQuoter
@@ -30,3 +30,4 @@ pstr =
   , quoteDec  = \_ ->
       fail "illegal QuasiQuote (allowed as expression or pattern only, used as a declaration)"
   }
+#endif /* !defined(__MHS__) */
