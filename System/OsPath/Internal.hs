@@ -24,8 +24,12 @@ import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import System.OsString.Internal.Types
 import System.OsPath.Encoding
 import Control.Monad (when)
+#if !defined(__MHS__)
 import System.IO
     ( TextEncoding )
+#else
+import GHC.IO.Encoding.Types ( TextEncoding )
+#endif
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import qualified System.OsPath.Windows as PF
@@ -124,6 +128,7 @@ fromBytes = OS.fromBytes
 
 
 
+#if defined(MIN_VERSION_template_haskell) || defined(MIN_VERSION_template_haskell_quasi_quoter)
 -- | QuasiQuote an 'OsPath'. This accepts Unicode characters
 -- and encodes as UTF-8 on unix and UTF-16LE on windows. Runs 'isValid'
 -- on the input. If used as a pattern, requires turning on the @ViewPatterns@
@@ -159,6 +164,10 @@ osp = QuasiQuoter
       fail "illegal QuasiQuote (allowed as expression or pattern only, used as a declaration)"
   }
 #endif
+#else
+osp :: a
+osp = error "Systen.OsPath.Internal.ostr: no Template Haskell"
+#endif /* defined(MIN_VERSION_template_haskell) || defined(MIN_VERSION_template_haskell_quasi_quoter) */
 
 
 -- | Unpack an 'OsPath' to a list of 'OsChar'.

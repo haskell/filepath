@@ -1,6 +1,7 @@
 GNUmakefile
 dist-install/
 dist-newstyle/
+dist-mcabal/
 dist/
 ghc.mk
 .stack-work/
