@@ -11,7 +11,7 @@
 
 #include "Common.hs"
 
-#if !defined(__MHS__)
+#if defined(MIN_VERSION_template_haskell) || defined(MIN_VERSION_template_haskell_quasi_quoter)
 -- | QuasiQuote a 'PosixPath'. This accepts Unicode characters
 -- and encodes as UTF-8. Runs 'isValid' on the input.
 pstr :: QuasiQuoter
@@ -30,5 +30,8 @@ pstr =
   , quoteDec  = \_ ->
       fail "illegal QuasiQuote (allowed as expression or pattern only, used as a declaration)"
   }
-#endif /* !defined(__MHS__) */
+#else
+pstr :: a
+pstr = error "Systen.OsPath.Posix.pstr: no Template Haskell"
+#endif /* defined(MIN_VERSION_template_haskell) || defined(MIN_VERSION_template_haskell_quasi_quoter) */
 
