@@ -124,9 +124,9 @@ import System.OsString.Windows as PS
 import Data.Bifunctor ( bimap )
 import qualified System.OsPath.Windows.Internal as C
 import GHC.IO.Encoding.UTF16 ( mkUTF16le )
-import Language.Haskell.TH.Quote
+import Language.Haskell.TH.QuasiQuoter
     ( QuasiQuoter (..) )
-import Language.Haskell.TH.Syntax
+import Language.Haskell.TH.Lift
     ( Lift (..), lift )
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import Control.Monad ( when )
@@ -134,9 +134,9 @@ import Control.Monad ( when )
 #elif defined(POSIX)
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
 import Control.Monad ( when )
-import Language.Haskell.TH.Quote
+import Language.Haskell.TH.QuasiQuoter
     ( QuasiQuoter (..) )
-import Language.Haskell.TH.Syntax
+import Language.Haskell.TH.Lift
     ( Lift (..), lift )
 
 import GHC.IO.Encoding.UTF8 ( mkUTF8 )
