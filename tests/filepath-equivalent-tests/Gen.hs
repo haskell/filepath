@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -196,7 +197,8 @@ instance Arbitrary [Separator] where
   arbitrary = listOf' arbitrary
   shrink = genericShrink
 
+#if !MIN_VERSION_QuickCheck(2,17,0)
 instance Arbitrary a => Arbitrary (NonEmpty a) where
   arbitrary = NE.fromList <$> listOf1' arbitrary
   shrink = genericShrink
-
+#endif
