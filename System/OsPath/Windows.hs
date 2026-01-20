@@ -11,7 +11,7 @@
 
 #include "Common.hs"
 
-
+#if defined(MIN_VERSION_template_haskell) || defined(MIN_VERSION_template_haskell_quasiquoter)
 -- | QuasiQuote a 'WindowsPath'. This accepts Unicode characters
 -- and encodes as UTF-16LE. Runs 'isValid' on the input.
 pstr :: QuasiQuoter
@@ -30,3 +30,7 @@ pstr =
   , quoteDec  = \_ ->
       fail "illegal QuasiQuote (allowed as expression or pattern only, used as a declaration)"
   }
+#else
+pstr :: a
+pstr = error "Systen.OsPath.Windows.pstr: no Template Haskell"
+#endif /* defined(MIN_VERSION_template_haskell) || defined(MIN_VERSION_template_haskellquasi_quoter) */

@@ -132,7 +132,7 @@ import Data.List(stripPrefix, isSuffixOf, uncons, dropWhileEnd)
 import Prelude (fromIntegral, return, IO, Either(..))
 import Control.Exception ( catch, displayException, evaluate, fromException, toException, throwIO, Exception, SomeAsyncException(..), SomeException )
 import Control.DeepSeq (force)
-import GHC.IO (unsafePerformIO)
+import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.Char as C
 #ifdef WINDOWS
 import GHC.IO.Encoding.Failure ( CodingFailureMode(..) )
