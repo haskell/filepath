@@ -2,6 +2,11 @@
 
 _Note: below all `FilePath` values are unquoted, so `\\` really means two backslashes._
 
+## 1.5.5.0 *Jan 2026*
+
+* support MicroHS wrt [#257](https://github.com/haskell/filepath/pull/257)
+* Switch from template-haskell to template-haskell-quasiquoter and -lift wrt [#258](https://github.com/haskell/filepath/pull/258)
+
 ## 1.5.4.0 *Nov 2024*
 
 * Don't catch async exceptions in internal functions wrt https://github.com/haskell/os-string/issues/22
