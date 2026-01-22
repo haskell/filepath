@@ -13,19 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-13, windows-latest]
-        ghc: ['9.4', '9.6', '9.8', '9.10', '9.12']
-        include:
-          - os: ubuntu-latest
-            ghc: '8.6'
-          - os: ubuntu-latest
-            ghc: '8.8'
-          - os: ubuntu-latest
-            ghc: '8.10'
-          - os: ubuntu-latest
-            ghc: '9.0'
-          - os: ubuntu-latest
-            ghc: '9.2'
+        os: [ubuntu-latest, ubuntu-24.04-arm, macOS-15-intel, macOS-latest, windows-latest]
+        ghc: ['9.6', '9.8', '9.10', '9.12', '9.14']
     steps:
     - uses: actions/checkout@v4
 
@@ -33,7 +22,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install libtinfo6 libncurses6
+        sudo apt-get -y install build-essential curl libffi-dev libffi8 libgmp-dev libgmp10 libncurses-dev pkg-config libtinfo6 libncurses6
 
     - uses: haskell/ghcup-setup@v1
       with:
@@ -81,75 +70,6 @@ jobs:
         . ~/.ghcup/env
         cabal update
         cabal test
-
-  # We use github.com/haskell self-hosted runners for ARM testing.
-  # If they become unavailable in future, put ['armv7', 'aarch64']
-  # back to emulation jobs above.
-  arm:
-    runs-on: [self-hosted, Linux, ARM64]
-    strategy:
-      fail-fast: true
-      matrix:
-        arch: [arm32v7, arm64v8]
-    steps:
-      - uses: docker://hasufell/arm64v8-ubuntu-haskell:focal
-        name: Cleanup
-        with:
-          args: "find . -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +"
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - if: matrix.arch == 'arm32v7'
-        uses: docker://hasufell/arm32v7-ubuntu-haskell:focal
-        name: Run build (arm32v7 linux)
-        with:
-          args: sh -c "cabal update && ghcup install ghc --isolate=/usr --force 9.2.2 && cabal test -w ghc-9.2.2"
-
-      - if: matrix.arch == 'arm64v8'
-        uses: docker://hasufell/arm64v8-ubuntu-haskell:focal
-        name: Run build (arm64v8 linux)
-        with:
-          args: sh -c "cabal update && ghcup install ghc --isolate=/usr --force 9.2.2 && cabal test -w ghc-9.2.2"
-
-  darwin_arm:
-    runs-on: ${{ matrix.os }}
-    env:
-      MACOSX_DEPLOYMENT_TARGET: 10.13
-      HOMEBREW_CHANGE_ARCH_TO_ARM: 1
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: [self-hosted, macOS, ARM64]
-            ghc: 8.10.7
-          - os: [self-hosted, macOS, ARM64]
-            ghc: 9.2.6
-          - os: [self-hosted, macOS, ARM64]
-            ghc: 9.4.4
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install prerequisites
-        run: |
-          bash .github/scripts/brew.sh git coreutils llvm@13 autoconf automake
-          echo PATH="$HOME/.brew/bin:$HOME/.brew/sbin:$HOME/.brew/opt/llvm@13/bin:$PATH" >> "$GITHUB_ENV"
-          echo CC="$HOME/.brew/opt/llvm@13/bin/clang" >> "$GITHUB_ENV"
-          echo CXX="$HOME/.brew/opt/llvm@13/bin/clang++" >> "$GITHUB_ENV"
-          echo LD=ld >> "$GITHUB_ENV"
-          echo AR="$HOME/.brew/opt/llvm@13/bin/llvm-ar" >> "$GITHUB_ENV"
-          echo RANLIB="$HOME/.brew/opt/llvm@13/bin/llvm-ranlib" >> "$GITHUB_ENV"
-
-      - uses: haskell/ghcup-setup@v1
-        with:
-          ghc: ${{ matrix.ghc }}
-          cabal: latest
-
-      - name: Run build
-        run: |
-          cabal update
-          cabal test
 
   freebsd:
     runs-on: ${{ matrix.os }}
