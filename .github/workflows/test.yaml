@@ -7,14 +7,45 @@ on:
     branches: [ master ]
 
 jobs:
+  tool-output:
+    runs-on: ubuntu-latest
+    outputs:
+      ghc_versions: ${{ steps.gen_output.outputs.ghc_versions }}
+
+    steps:
+
+    - uses: haskell/ghcup-setup@v1
+
+    - name: Generate output
+      id: gen_output
+      run: |
+        all="$(ghcup -s GHCupURL list -r -t ghc -c available)"
+        rec=$(echo "${all}"         | grep recommended | awk '{ print $2 }')
+        latest=$(echo "${all}"      | grep latest      | awk '{ print $2 }')
+
+        other_major=$(echo "${all}" | awk '{ print $2 }' | awk -F '.' '{ print $1 "." $2}' | sort -Vu | tail -${GHC_TEST_NUM:=5})
+        other=$(for v in $other_major ; do point_releases=$(echo "$all" | awk '{ print $2 }' | grep --color=never "^$v.") ; echo "${point_releases}" | tail -n1  ; done)
+
+        selected=$(echo -n ${rec} ${latest} ${other} | tr " " "\n"  | sort -Vu)
+        selected_json=$(echo -n $selected | jq -c -r -R 'split(" ") | [ .[] | if length > 0 then . else empty end ]')
+
+        echo "${selected}"
+        echo "${selected_json}"
+
+        echo ghc_versions="${selected_json}" >> "$GITHUB_OUTPUT"
+      shell: bash
+      env:
+        GHC_TEST_NUM: ${{ vars.GHC_TEST_NUM }}
+
   build:
 
     runs-on: ${{ matrix.os }}
+    needs: ["tool-output"]
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm, macOS-15-intel, macOS-latest, windows-latest]
-        ghc: ['9.6', '9.8', '9.10', '9.12', '9.14']
+        ghc: ${{ fromJSON(needs.tool-output.outputs.ghc_versions) }}
     steps:
     - uses: actions/checkout@v4
 
