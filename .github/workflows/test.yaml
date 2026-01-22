@@ -5,6 +5,8 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
   tool-output:
@@ -27,15 +29,23 @@ jobs:
         other=$(for v in $other_major ; do point_releases=$(echo "$all" | awk '{ print $2 }' | grep --color=never "^$v.") ; echo "${point_releases}" | tail -n1  ; done)
 
         selected=$(echo -n ${rec} ${latest} ${other} | tr " " "\n"  | sort -Vu)
-        selected_json=$(echo -n $selected | jq -c -r -R 'split(" ") | [ .[] | if length > 0 then . else empty end ]')
+        ghc_exclude=( $GHC_EXCLUDE )
+        selected_filtered=()
+        for ghc in $selected ; do
+          printf '%s\0' "${ghc_exclude[@]}" | grep --quiet --color=never -F -x -z -- $ghc || selected_filtered+=( $ghc )
+        done
+        unset ghc
+        selected_json=$(echo -n ${selected_filtered[@]} | jq -c -r -R 'split(" ") | [ .[] | if length > 0 then . else empty end ]')
 
         echo "${selected}"
+        echo "${selected_filtered}"
         echo "${selected_json}"
 
         echo ghc_versions="${selected_json}" >> "$GITHUB_OUTPUT"
       shell: bash
       env:
         GHC_TEST_NUM: ${{ vars.GHC_TEST_NUM }}
+        GHC_EXCLUDE: ${{ vars.GHC_EXCLUDE }}
 
   build:
 
