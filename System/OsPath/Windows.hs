@@ -33,4 +33,4 @@ pstr =
 #else
 pstr :: a
 pstr = error "Systen.OsPath.Windows.pstr: no Template Haskell"
-#endif /* defined(MIN_VERSION_template_haskell) || defined(MIN_VERSION_template_haskellquasi_quoter) */
+#endif /* defined(MIN_VERSION_template_haskell) || defined(MIN_VERSION_template_haskellquasiquoter) */
