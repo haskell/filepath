@@ -268,7 +268,6 @@ splitSearchPath = f
         | otherwise -> [x]
 
 
--- TODO for AFPP
 #ifndef OS_PATH
 -- | Get a list of 'FILEPATH's in the $PATH variable.
 getSearchPath :: IO [FILEPATH]

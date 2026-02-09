@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE PackageImports #-}
 -- This template expects CPP definitions for:
 --
 --     WINDOWS defined? = no            | yes              | no
@@ -16,6 +17,19 @@
 #define WINDOWS_DOC
 #elif defined(POSIX)
 #define POSIX_DOC
+#endif
+
+#ifdef mingw32_HOST_OS
+#ifndef __WINDOWS_CCONV_H
+#define __WINDOWS_CCONV_H
+#if defined(i386_HOST_ARCH)
+# define WINDOWS_CCONV stdcall
+#elif defined(x86_64_HOST_ARCH)
+# define WINDOWS_CCONV ccall
+#else
+# error Unknown mingw32 arch
+#endif
+#endif
 #endif
 
 #ifdef WINDOWS
@@ -75,6 +89,10 @@ module System.OsPath
 
   -- * $PATH methods
   , splitSearchPath,
+#if defined(WINDOWS) || defined(POSIX)
+#else
+    getSearchPath,
+#endif
 
   -- * Extension functions
     splitExtension,
@@ -187,8 +205,27 @@ import System.OsString ( unsafeFromChar, toChar )
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 import qualified System.OsPath.Windows as C
+import Control.Exception (throwIO, try)
+import Data.Char (isSpace)
+import Data.Bifunctor ( first )
+import Data.Word (Word32, Word8)
+import Foreign.C.Error (errnoToIOError, Errno(..))
+import Foreign.C.String (peekCWString)
+import Foreign.C.Types (CWchar, CInt(..))
+import Foreign.Ptr (nullPtr, Ptr)
+import GHC.IO.Exception
+import GHC.Ptr (castPtr)
+import Numeric (showHex)
+import System.IO.Error (ioeSetErrorString)
+import qualified "os-string" System.OsString.Data.ByteString.Short as B
+import "os-string" System.OsString.Data.ByteString.Short.Word16 (useAsCWString, useAsCWStringLen, packCWStringLen)
 #else
 import qualified System.OsPath.Posix as C
+import GHC.IO.Exception
+import Control.Exception (try)
+import Foreign
+import Foreign.C
+import qualified "os-string" System.OsString.Data.ByteString.Short as B
 #endif
 
 import Data.Bifunctor
@@ -1481,3 +1518,137 @@ decodeFS (OsString (PosixString x)) = decodeWithBasePosix x
 
 #endif
 
+#ifdef WINDOWS
+#elif defined(POSIX)
+#else
+
+-- | Get a list of 'FILEPATH's in the $PATH variable.
+getSearchPath :: IO [OsPath]
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+getSearchPath = do
+  path <- getEnv name >>= maybe handleError return
+  pure $ splitSearchPath (OsString path)
+ where
+  name = C.unsafeEncodeUtf "PATH"
+  handleError = do
+        err <- getLastError
+        if err == eERROR_ENVVAR_NOT_FOUND
+            then ioe_missingEnvVar name
+            else failWith "getSearchPath" err
+
+eERROR_ENVVAR_NOT_FOUND :: DWORD
+eERROR_ENVVAR_NOT_FOUND = 203
+
+ioe_missingEnvVar :: C.WindowsString -> IO a
+ioe_missingEnvVar name = do
+  name' <- either (const (fmap C.toChar . C.unpack $ name)) id <$> try @IOException (C.decodeFS name)
+  ioException (IOError Nothing NoSuchThing "getSearchPath"
+    "no environment variable" Nothing (Just name'))
+
+failWith :: String -> ErrCode -> IO a
+failWith fn_name err_code = do
+  c_msg <- getErrorMessage err_code
+  msg <- if c_msg == nullPtr
+           then return $ "Error 0x" ++ Numeric.showHex err_code ""
+           else do msg <- peekCWString c_msg
+                   -- We ignore failure of freeing c_msg, given we're already failing
+                   _ <- localFree c_msg
+                   return msg
+  -- turn GetLastError() into errno, which errnoToIOError knows how to convert
+  -- to an IOException we can throw.
+  errno <- c_maperrno_func err_code
+  let msg' = reverse $ dropWhile isSpace $ reverse msg -- drop trailing \n
+      ioerror = errnoToIOError fn_name errno Nothing Nothing
+                  `ioeSetErrorString` msg'
+  throwIO ioerror
+
+errorWin :: String -> IO a
+errorWin fn_name = do
+  err_code <- getLastError
+  failWith fn_name err_code
+
+foreign import WINDOWS_CCONV unsafe "windows.h LocalFree"
+  localFree :: Ptr a -> IO (Ptr a)
+
+foreign import ccall unsafe "errors.h"
+  getErrorMessage :: DWORD -> IO LPWSTR
+
+foreign import ccall unsafe "maperrno_func"
+   c_maperrno_func :: ErrCode -> IO Errno
+
+getEnv :: C.WindowsString -> IO (Maybe C.WindowsString)
+getEnv name =
+  withTString name $ \c_name -> withTStringBufferLen maxLength $ \(buf, len) -> do
+    let c_len = fromIntegral len
+    c_len' <- c_GetEnvironmentVariableW c_name buf c_len
+    case c_len' of
+      0 -> do
+        err_code <- getLastError
+        if err_code  == eERROR_ENVVAR_NOT_FOUND
+        then return Nothing
+        else errorWin "GetEnvironmentVariableW"
+      _ | c_len' > fromIntegral maxLength ->
+            ioError (IOError Nothing OtherError "GetEnvironmentVariableW" ("Unexpected return code: " <> show c_len') Nothing Nothing)
+        | otherwise -> do
+            let len' = fromIntegral c_len'
+            Just <$> peekTStringLen (buf, len')
+ where
+  maxLength :: Int
+  maxLength = 65535
+
+foreign import WINDOWS_CCONV unsafe "windows.h GetLastError"
+  getLastError :: IO ErrCode
+
+foreign import WINDOWS_CCONV unsafe "processenv.h GetEnvironmentVariableW"
+        c_GetEnvironmentVariableW :: LPCWSTR -> LPWSTR -> DWORD -> IO DWORD
+
+withTStringBufferLen :: Int -> ((LPTSTR, Int) -> IO a) -> IO a
+withTStringBufferLen maxLength
+  = let dummyBuffer = WindowsString $ B.pack $ replicate (if even maxLength then maxLength else maxLength + 1) _nul
+    in  withTStringLen dummyBuffer
+
+_nul :: Word8
+_nul = 0x00
+
+withTString :: C.WindowsString -> (LPTSTR -> IO a) -> IO a
+withTString (WindowsString str) f = useAsCWString str (\ptr -> f (castPtr ptr))
+
+withTStringLen :: C.WindowsString -> ((LPTSTR, Int) -> IO a) -> IO a
+withTStringLen (WindowsString str) f = useAsCWStringLen str (\(ptr, len) -> f (castPtr ptr, len))
+
+peekTStringLen :: (LPCTSTR, Int) -> IO C.WindowsString
+peekTStringLen = fmap WindowsString . packCWStringLen . first castPtr
+
+type DWORD = Word32
+type ErrCode = DWORD
+type LPWSTR = Ptr CWchar
+type LPCWSTR = LPWSTR
+type LPTSTR = Ptr TCHAR
+type LPCTSTR = LPTSTR
+type TCHAR   = CWchar
+
+#else
+getSearchPath = do
+  path <- getEnv name >>= maybe (ioe_missingEnvVar name) return
+  pure $ splitSearchPath (OsString path)
+ where
+  name = C.unsafeEncodeUtf "PATH"
+
+ioe_missingEnvVar :: C.PosixPath -> IO a
+ioe_missingEnvVar name = do
+  name' <- either (const (fmap C.toChar . C.unpack $ name)) id <$> try @IOException (C.decodeFS name)
+  ioException (IOError Nothing NoSuchThing "getSearchPath"
+    "no environment variable" Nothing (Just name'))
+
+getEnv :: PosixString -> IO (Maybe PosixString)
+getEnv (PS name) = do
+  litstring <- B.useAsCString name c_getenv
+  if litstring /= nullPtr
+     then (Just . PS) <$> B.packCString litstring
+     else return Nothing
+
+foreign import ccall unsafe "getenv"
+   c_getenv :: CString -> IO CString
+#endif
+
+#endif
